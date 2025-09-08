@@ -1,1 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+@theme {
+  --text: oklch(94.16% 0.011 123.46);
+  --background: oklch(17.53% 0.020 121.92);
+  --primary: oklch(87.73% 0.105 121.80);
+  --secondary: oklch(61.19% 0.151 126.53);
+  --accent: oklch(91.52% 0.225 126.25);
+}
