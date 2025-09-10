@@ -35,7 +35,6 @@ export class AuthService {
   readonly error = computed(() => this.authState().error);
 
   constructor() {
-    // Restore authentication state from localStorage on app startup
     this.initializeAuthFromStorage();
   }
 
@@ -80,7 +79,6 @@ export class AuthService {
       error: null,
     }));
 
-    // Show logout success toast
     this.toastService.show(
       'success',
       'Déconnexion réussie',
@@ -92,9 +90,6 @@ export class AuthService {
     );
   }
 
-  /**
-   * Check if user is authenticated
-   */
   checkAuthStatus(): boolean {
     const token = this.getStoredToken();
     return !!token;
@@ -111,7 +106,6 @@ export class AuthService {
       error: null,
     }));
 
-    // Show success toast
     this.toastService.show(
       'success',
       'Connexion réussie',
@@ -145,7 +139,6 @@ export class AuthService {
       error: errorMessage,
     }));
 
-    // Show error toast
     this.toastService.show('danger', "Erreur d'authentification", errorMessage, {
       duration: 5000,
       dismissible: true,
@@ -177,7 +170,6 @@ export class AuthService {
 
   private getStoredUser(): User | null {
     const userStr = localStorage.getItem('auth_user');
-    // Vérifie que la valeur n'est pas null, vide ou 'undefined'
     if (!userStr || userStr === 'undefined') {
       return null;
     }
@@ -193,16 +185,12 @@ export class AuthService {
     localStorage.removeItem('auth_user');
   }
 
-  /**
-   * Update user data in auth state and storage
-   */
   updateUserData(user: User): void {
     this.authState.update((state) => ({
       ...state,
       user,
     }));
 
-    // Update stored user data
     localStorage.setItem('auth_user', JSON.stringify(user));
   }
 

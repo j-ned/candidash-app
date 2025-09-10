@@ -46,22 +46,22 @@ Fournir une référence moderne, claire et générique pour structurer, coder, t
 
 **Barrels** (`index.ts`): autorisés avec parcimonie; éviter les cycles.
 
-### Conventions de nommage (officielles Angular)
-- **Composants**: `feature-name.component.ts`
-- **Services**: `feature-name.service.ts`
-- **Guards**: `feature-name.guard.ts`
-- **Directives**: `feature-name.directive.ts`
-- **Pipes**: `feature-name.pipe.ts`
-- **Modèles/Types**: `feature-name.model.ts` (ou `.types.ts`)
-- **Tests**: `feature-name.component.spec.ts` (selon l'artefact)
+### Conventions de nommage (officielles Angular) - (Plus de suffixes type - Trouver des noms adapter pour fichiers et les ranger dans des dossiers adéquat)
+- **Composants**: `feature-name.ts`
+- **Services**: `feature-name.ts`
+- **Guards**: `feature-name.ts`
+- **Directives**: `feature-name.ts`
+- **Pipes**: `feature-name.ts`
+- **Modèles/Types**: `feature-name.ts` (ou `.types.ts`)
+- **Tests**: `feature-name.component.ts` (selon l'artefact)
 
 Fichiers en **kebab-case**; classes en **PascalCase**.
 
 ## Philosophie moderne (Angular 20+)
 
 ### Architecture standalone
-- Tous les composants/directives/pipes sont **standalone**.
-- Déclarez explicitement `standalone: true` dans le décorateur (même si la CLI le génère).
+- Tous les composants/directives/pipes sont **standalone** par default.
+- Ne pas déclarez explicitement `standalone: true` dans le décorateur car il est par default donc inutile de le déclarer.
 - Les NgModules ne sont plus nécessaires pour organiser le code.
 
 ### Réactivité par signaux
@@ -113,7 +113,7 @@ import {
     '[attr.aria-busy]': 'loading()',
   },
 })
-export class FeatureWidgetComponent {
+export class FeatureWidget {
   title = input.required<string>();
   visible = model<boolean>(true);
   active = input(false);
@@ -152,7 +152,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
-      import('@features/dashboard/dashboard.page').then(m => m.DashboardPageComponent),
+      import('@features/dashboard/dashboard.page').then(m => m.DashboardPage),
   },
   {
     path: 'admin',
@@ -320,13 +320,13 @@ pnpm lint-staged
 
 ## Récapitulatif des règles clés
 
-- **Standalone** partout, `standalone: true` explicite.
+- **Standalone** par default donc inutile de le mettre dans les composants.
 - **OnPush** par défaut.
 - `input()` / `output()` et `model()` pour le two-way.
 - `inject()` en services/guards/interceptors; constructor DI autorisé en composants.
 - **Nouveau contrôle de flux** (`@if` / `@for` / `@switch`) et `track` dans `@for`.
 - **Signals**: `set`/`update`; `mutate` seulement si justifié.
 - **Lazy-load**: `loadComponent` pour pages simples; `loadChildren` + `canMatch` pour features complexes.
-- **Suffixes officiels** (`*.component.ts`, `*.service.ts`, …).
+- **Suffixes officiels** maintenant plus de suffixes type (`*.component.ts`, `*.service.ts`, …) mais maintenant les fichiers sont (`*.ts, *.html`), juste nommé explicitement sans suffixes !
 - **Environnements**: Vite (`import.meta.env`) ou environments Angular — ne pas mélanger.
 - **Lint + Prettier + Typecheck** en pré-commit; Vitest pour les tests.
