@@ -16,17 +16,17 @@ import { NgOptimizedImage } from '@angular/common';
   selector: 'app-signup',
   imports: [ReactiveFormsModule, ButtonComponent, NgOptimizedImage],
   template: `
-    <!-- Container responsive mobile-first -->
-    <div class="w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl">
-      <div class="bg-surface border border-border rounded-lg p-4 shadow-sm sm:rounded-xl sm:p-8 md:shadow-lg">
-        
-        <!-- Title responsive -->
+    <div
+      class="w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl"
+    >
+      <div
+        class="bg-surface border border-border rounded-lg p-4 shadow-sm sm:rounded-xl sm:p-8 md:shadow-lg"
+      >
         <h2 class="text-2xl font-bold text-center mb-4 text-text sm:text-3xl sm:mb-8 md:text-4xl">
           Créer un compte
         </h2>
 
         <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-6">
-          
           <!-- Email Field -->
           <div class="space-y-1 sm:space-y-2">
             <label for="email" class="block text-sm font-medium text-text sm:text-base">
@@ -52,7 +52,6 @@ import { NgOptimizedImage } from '@angular/common';
             }
           </div>
 
-          <!-- Username Field -->
           <div class="space-y-1 sm:space-y-2">
             <label for="username" class="block text-sm font-medium text-text sm:text-base">
               Nom d'utilisateur
@@ -78,7 +77,6 @@ import { NgOptimizedImage } from '@angular/common';
             }
           </div>
 
-          <!-- Password Field -->
           <div class="space-y-1 sm:space-y-2">
             <label for="password" class="block text-sm font-medium text-text sm:text-base">
               Mot de passe <span class="text-error">*</span>
@@ -129,7 +127,6 @@ import { NgOptimizedImage } from '@angular/common';
             }
           </div>
 
-          <!-- Confirm Password Field -->
           <div class="space-y-1 sm:space-y-2">
             <label for="confirmPassword" class="block text-sm font-medium text-text sm:text-base">
               Confirmer le mot de passe <span class="text-error">*</span>
@@ -184,7 +181,6 @@ import { NgOptimizedImage } from '@angular/common';
             }
           </div>
 
-          <!-- Submit Button -->
           <app-button
             type="submit"
             color="primary"
@@ -200,7 +196,6 @@ import { NgOptimizedImage } from '@angular/common';
           </app-button>
         </form>
 
-        <!-- Sign in link -->
         <div class="mt-3 text-center sm:mt-6">
           <p class="text-muted text-sm sm:text-base">
             Déjà un compte ?
@@ -246,13 +241,9 @@ export class SignupComponent {
 
       this.authService.signup(userData).subscribe({
         next: () => {
-          // Redirect to dashboard or home page after successful registration
           this.router.navigate(['/']);
         },
-        error: () => {
-          // Error is handled by the auth service and displayed in template
-          // For now, this will show the "not implemented" message
-        },
+        error: () => {},
       });
     }
   }

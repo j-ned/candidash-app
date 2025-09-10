@@ -10,21 +10,20 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
   selector: 'app-signin',
   imports: [ReactiveFormsModule, ButtonComponent, CommonModule, NgOptimizedImage],
   template: `
-    <!-- Container responsive mobile-first -->
-    <div class="w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl">
-      <div class="bg-surface border border-border rounded-lg p-6 shadow-sm sm:rounded-xl sm:p-8 md:shadow-lg">
-        
-        <!-- Title responsive -->
+    <div
+      class="w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl"
+    >
+      <div
+        class="bg-surface border border-border rounded-lg p-6 shadow-sm sm:rounded-xl sm:p-8 md:shadow-lg"
+      >
         <h2 class="text-2xl font-bold text-center mb-6 text-text sm:text-3xl sm:mb-8 md:text-4xl">
           Se connecter
         </h2>
 
         <form [formGroup]="signinForm" (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-6">
-          
-          <!-- Email Field -->
           <div class="space-y-1 sm:space-y-2">
-            <label for="email" class="block text-sm font-medium text-text sm:text-base"> 
-              Email 
+            <label for="email" class="block text-sm font-medium text-text sm:text-base">
+              Email
             </label>
             <input
               id="email"
@@ -46,10 +45,9 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
             }
           </div>
 
-          <!-- Password Field -->
           <div class="space-y-1 sm:space-y-2">
-            <label for="password" class="block text-sm font-medium text-text sm:text-base"> 
-              Mot de passe 
+            <label for="password" class="block text-sm font-medium text-text sm:text-base">
+              Mot de passe
             </label>
             <div class="relative">
               <input
@@ -97,7 +95,6 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
             }
           </div>
 
-          <!-- Submit Button -->
           <app-button
             type="submit"
             color="primary"
@@ -113,7 +110,6 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
           </app-button>
         </form>
 
-        <!-- Sign up link -->
         <div class="mt-4 text-center sm:mt-6">
           <p class="text-muted text-sm sm:text-base">
             Pas encore de compte ?
@@ -149,12 +145,9 @@ export class SigninComponent {
 
       this.authService.signin(credentials).subscribe({
         next: () => {
-          // Redirect to dashboard after successful login
           this.router.navigate(['/dashboard']);
         },
-        error: () => {
-          // Error is handled by the auth service and displayed in template
-        },
+        error: () => {},
       });
     }
   }

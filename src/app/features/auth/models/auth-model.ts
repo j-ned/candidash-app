@@ -1,8 +1,3 @@
-/**
- * Authentication related models and interfaces
- * Based on the backend API DTOs from nest-candidash-app
- */
-
 export interface LoginRequest {
   email: string;
   password: string;
@@ -30,7 +25,7 @@ export interface AuthResponse {
 
 export enum UserRole {
   USER = 'USER',
-  ADMIN = 'ADMIN'
+  ADMIN = 'ADMIN',
 }
 
 export interface AuthState {

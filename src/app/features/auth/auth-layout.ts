@@ -10,34 +10,32 @@ import { SignupComponent } from './components/signup';
   imports: [LayoutComponent, SigninComponent, SignupComponent],
   template: `
     <app-layout>
-      <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-12">
-          <h1 class="text-6xl font-bold mb-4 text-text custom-stroke">Candidash</h1>
-          <p class="text-lg text-muted max-w-2xl mx-auto">Gérez vos candidatures efficacement</p>
+      <div
+        class="w-full max-w-sm mx-auto px-4 py-4 sm:max-w-md sm:px-6 sm:py-6 md:max-w-4xl lg:max-w-6xl"
+      >
+        <div class="text-center mb-6 sm:mb-8 md:mb-12">
+          <h1
+            class="text-4xl font-bold mb-2 text-text transition-all duration-300 hover:scale-105 hover:brightness-110 sm:text-5xl sm:mb-3 md:text-6xl md:mb-4 lg:text-7xl"
+            style="-webkit-text-stroke: 1px #10b981; -webkit-text-fill-color: var(--color-background);"
+          >
+            Candidash
+          </h1>
+          <p
+            class="text-base text-muted max-w-sm mx-auto sm:text-lg sm:max-w-md md:max-w-2xl lg:text-xl"
+          >
+            Gérez vos candidatures efficacement
+          </p>
         </div>
 
-        @if (isSigninRoute()) {
-          <app-signin></app-signin>
-        } @else if (isSignupRoute()) {
-          <app-signup></app-signup>
-        }
+        <div class="w-full">
+          @if (isSigninRoute()) {
+            <app-signin></app-signin>
+          } @else if (isSignupRoute()) {
+            <app-signup></app-signup>
+          }
+        </div>
       </div>
     </app-layout>
-  `,
-  styles: `
-    .custom-stroke {
-      -webkit-text-stroke: 2px #10b981;
-      -webkit-text-fill-color: var(--color-background);
-    }
-
-    h1:hover {
-      transform: scale(1.02);
-      text-shadow:
-        0 0 15px var(--color-accent-500),
-        0 0 25px var(--color-accent-400);
-      filter: brightness(1.1);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -47,10 +45,8 @@ export class AuthLayout implements OnInit {
   private readonly currentRoute = signal('');
 
   ngOnInit(): void {
-    // Initialize with current URL
     this.currentRoute.set(this.router.url);
 
-    // Listen to navigation events
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
@@ -59,12 +55,10 @@ export class AuthLayout implements OnInit {
   }
 
   isSigninRoute(): boolean {
-    // Accepte /auth/signin, /auth/signin/, /auth/signin?...
     return /^\/auth\/signin(\/?|\?.*)?$/.test(this.currentRoute());
   }
 
   isSignupRoute(): boolean {
-    // Accepte /auth/signup, /auth/signup/, /auth/signup?...
     return /^\/auth\/signup(\/?|\?.*)?$/.test(this.currentRoute());
   }
 }
