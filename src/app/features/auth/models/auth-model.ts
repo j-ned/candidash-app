@@ -23,6 +23,10 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface RefreshResponse {
+  access_token: string;
+}
+
 export enum UserRole {
   USER = 'USER',
   ADMIN = 'ADMIN',

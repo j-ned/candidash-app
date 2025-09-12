@@ -1,16 +1,19 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { environment } from '@environments/environment';
 import {
   AuthResponse,
   AuthState,
   LoginRequest,
   RegisterRequest,
+  RefreshResponse,
   User,
 } from '@features/auth/models/auth-model';
 import { ToastService } from '@shared/ui/toast/service/toast';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { TokenService } from './token';
+import { Observable, BehaviorSubject, throwError, EMPTY } from 'rxjs';
+import { catchError, tap, switchMap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -18,6 +21,8 @@ import { catchError, tap } from 'rxjs/operators';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly toastService = inject(ToastService);
+  private readonly tokenService = inject(TokenService);
+  private readonly router = inject(Router);
   private readonly baseUrl = `${environment.apiUrl}`;
 
   private readonly authState = signal<AuthState>({
@@ -28,11 +33,16 @@ export class AuthService {
     error: null,
   });
 
+  private readonly userSubject = new BehaviorSubject<User | null>(null);
+  private refreshInProgress = false;
+  private autoLoginInProgress = false;
+
   readonly isAuthenticated = computed(() => this.authState().isAuthenticated);
   readonly user = computed(() => this.authState().user);
   readonly token = computed(() => this.authState().token);
   readonly isLoading = computed(() => this.authState().isLoading);
   readonly error = computed(() => this.authState().error);
+  readonly user$ = this.userSubject.asObservable();
 
   constructor() {
     this.initializeAuthFromStorage();
@@ -45,6 +55,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, credentials).pipe(
       tap((response) => {
         this.handleAuthSuccess(response);
+        this.router.navigate(['/dashboard']);
       }),
       catchError((error) => {
         this.handleAuthError(error);
@@ -60,6 +71,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseUrl}/accounts/registration`, userData).pipe(
       tap((response) => {
         this.handleAuthSuccess(response);
+        this.router.navigate(['/dashboard']);
       }),
       catchError((error) => {
         this.handleAuthError(error);
@@ -68,35 +80,90 @@ export class AuthService {
     );
   }
 
-  signout(): void {
-    this.clearAuthStorage();
-    this.authState.update((state) => ({
-      ...state,
-      isAuthenticated: false,
-      user: null,
-      token: null,
-      isLoading: false,
-      error: null,
-    }));
+  signout(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/auth/logout`, {}).pipe(
+      tap(() => this.clearAuthData()),
+      catchError(() => {
+        this.clearAuthData();
+        return EMPTY;
+      }),
+    );
+  }
 
-    this.toastService.show(
-      'success',
-      'Déconnexion réussie',
-      'Vous avez été déconnecté avec succès',
-      {
-        duration: 3000,
-        dismissible: true,
-      },
+  refreshToken(): Observable<RefreshResponse> {
+    if (this.refreshInProgress) {
+      return EMPTY;
+    }
+
+    if (!this.tokenService.hasValidRefreshToken()) {
+      this.handleRefreshError();
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    this.refreshInProgress = true;
+
+    return this.http.post<RefreshResponse>(`${this.baseUrl}/auth/refresh`, {}).pipe(
+      tap((response) => {
+        // Stocker uniquement l'access token en mémoire
+        this.tokenService.setAccessToken(response.access_token);
+        this.authState.update((state) => ({
+          ...state,
+          token: response.access_token,
+        }));
+        this.refreshInProgress = false;
+      }),
+      catchError((error) => {
+        this.refreshInProgress = false;
+        this.handleRefreshError();
+        return throwError(() => error);
+      }),
     );
   }
 
   checkAuthStatus(): boolean {
-    const token = this.getStoredToken();
-    return !!token;
+    return this.tokenService.hasValidRefreshToken();
+  }
+
+  autoLogin(): Observable<boolean> {
+    if (!this.tokenService.hasValidRefreshToken()) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    if (this.autoLoginInProgress) {
+      return EMPTY;
+    }
+
+    this.autoLoginInProgress = true;
+
+    return this.refreshToken().pipe(
+      switchMap(() => {
+        const user = this.getStoredUser();
+        if (user) {
+          this.authState.update((state) => ({
+            ...state,
+            isAuthenticated: true,
+            user,
+            token: this.tokenService.getAccessToken(),
+          }));
+          this.userSubject.next(user);
+          this.autoLoginInProgress = false;
+          return [true];
+        }
+        this.autoLoginInProgress = false;
+        return throwError(() => new Error('No user data available'));
+      }),
+      catchError(() => {
+        this.autoLoginInProgress = false;
+        this.clearAuthData();
+        return [false];
+      }),
+    );
   }
 
   private handleAuthSuccess(response: AuthResponse): void {
-    this.storeAuthData(response.access_token, response.user);
+    this.tokenService.setAccessToken(response.access_token);
+    this.storeUserData(response.user);
+
     this.authState.update((state) => ({
       ...state,
       isAuthenticated: true,
@@ -105,6 +172,8 @@ export class AuthService {
       isLoading: false,
       error: null,
     }));
+
+    this.userSubject.next(response.user);
 
     this.toastService.show(
       'success',
@@ -159,13 +228,8 @@ export class AuthService {
     }));
   }
 
-  private storeAuthData(token: string, user: User): void {
-    localStorage.setItem('auth_token', token);
+  private storeUserData(user: User): void {
     localStorage.setItem('auth_user', JSON.stringify(user));
-  }
-
-  private getStoredToken(): string | null {
-    return localStorage.getItem('auth_token');
   }
 
   private getStoredUser(): User | null {
@@ -180,9 +244,33 @@ export class AuthService {
     }
   }
 
-  private clearAuthStorage(): void {
-    localStorage.removeItem('auth_token');
+  private clearAuthData(): void {
+    this.tokenService.clearAccessToken();
     localStorage.removeItem('auth_user');
+
+    this.authState.update((state) => ({
+      ...state,
+      isAuthenticated: false,
+      user: null,
+      token: null,
+      isLoading: false,
+      error: null,
+    }));
+
+    this.userSubject.next(null);
+
+    const currentUrl = this.router.url;
+    if (!currentUrl.includes('/auth/')) {
+      this.router.navigate(['/auth/signin']);
+    }
+  }
+
+  private handleRefreshError(): void {
+    this.clearAuthData();
+    this.toastService.show('warning', 'Session expirée', 'Veuillez vous reconnecter', {
+      duration: 4000,
+      dismissible: true,
+    });
   }
 
   updateUserData(user: User): void {
@@ -191,22 +279,35 @@ export class AuthService {
       user,
     }));
 
-    localStorage.setItem('auth_user', JSON.stringify(user));
+    this.userSubject.next(user);
+    this.storeUserData(user);
   }
 
   private initializeAuthFromStorage(): void {
-    const token = this.getStoredToken();
     const user = this.getStoredUser();
+    const hasRefreshToken = this.tokenService.hasValidRefreshToken();
 
-    if (token && user) {
+    if (user && hasRefreshToken) {
       this.authState.update((state) => ({
         ...state,
-        isAuthenticated: true,
         user,
-        token,
+        // Pas encore authentifié - l'access token sera récupéré via refresh
+        isAuthenticated: false,
+        token: null,
+      }));
+      this.userSubject.next(user);
+    } else if (!hasRefreshToken) {
+      this.tokenService.clearAccessToken();
+      localStorage.removeItem('auth_user');
+      this.authState.update((state) => ({
+        ...state,
+        isAuthenticated: false,
+        user: null,
+        token: null,
         isLoading: false,
         error: null,
       }));
+      this.userSubject.next(null);
     }
   }
 }
