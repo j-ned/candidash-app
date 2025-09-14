@@ -38,7 +38,6 @@ export interface DeleteCvResponse {
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
-  confirmPassword: string;
 }
 
 export interface ProfileStats {

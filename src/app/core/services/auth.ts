@@ -9,6 +9,8 @@ import {
   RegisterRequest,
   RefreshResponse,
   User,
+  RegistrationResponse,
+  VerifyRegistrationRequest,
 } from '@features/auth/models/auth-model';
 import { ToastService } from '@shared/ui/toast/service/toast';
 import { TokenService } from './token';
@@ -64,20 +66,76 @@ export class AuthService {
     );
   }
 
-  signup(userData: RegisterRequest): Observable<AuthResponse> {
+  signup(userData: RegisterRequest): Observable<RegistrationResponse> {
     this.setLoading(true);
     this.clearError();
 
-    return this.http.post<AuthResponse>(`${this.baseUrl}/accounts/registration`, userData).pipe(
-      tap((response) => {
-        this.handleAuthSuccess(response);
-        this.router.navigate(['/dashboard']);
+    return this.http.post<RegistrationResponse>(`${this.baseUrl}/auth/register`, userData).pipe(
+      tap(() => {
+        this.setLoading(false);
+        this.toastService.show(
+          'success',
+          'Code de validation envoyé',
+          'Vérifiez votre boîte mail pour le code de validation',
+          {
+            duration: 5000,
+            dismissible: true,
+          },
+        );
       }),
       catchError((error) => {
         this.handleAuthError(error);
         return throwError(() => error);
       }),
     );
+  }
+
+  verifyRegistration(verificationData: VerifyRegistrationRequest): Observable<AuthResponse> {
+    this.setLoading(true);
+    this.clearError();
+
+    return this.http
+      .post<AuthResponse>(`${this.baseUrl}/auth/verify-registration`, verificationData)
+      .pipe(
+        tap((response) => {
+          this.handleAuthSuccess(response);
+          this.router.navigate(['/dashboard']);
+          this.toastService.show(
+            'success',
+            'Inscription validée',
+            'Votre compte a été créé avec succès !',
+            {
+              duration: 4000,
+              dismissible: true,
+            },
+          );
+        }),
+        catchError((error) => {
+          this.handleAuthError(error);
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  resendVerificationCode(email: string): Observable<{ message: string }> {
+    this.setLoading(true);
+    this.clearError();
+
+    return this.http
+      .post<{ message: string }>(`${this.baseUrl}/auth/resend-verification`, { email })
+      .pipe(
+        tap((response) => {
+          this.setLoading(false);
+          this.toastService.show('success', 'Code renvoyé', response.message, {
+            duration: 4000,
+            dismissible: true,
+          });
+        }),
+        catchError((error) => {
+          this.handleAuthError(error);
+          return throwError(() => error);
+        }),
+      );
   }
 
   signout(): Observable<void> {

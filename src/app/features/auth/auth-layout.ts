@@ -27,7 +27,7 @@ import { SignupComponent } from './components/signup';
           </p>
         </div>
 
-        <div class="w-full">
+        <div class="w-full xl:w-200">
           @if (isSigninRoute()) {
             <app-signin></app-signin>
           } @else if (isSignupRoute()) {

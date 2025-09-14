@@ -11,6 +11,7 @@ import { ButtonComponent } from '@shared/ui/button/button';
 import { AuthService } from '@core/services/auth';
 import { RegisterRequest } from '@features/auth/models/auth-model';
 import { NgOptimizedImage } from '@angular/common';
+import { VerificationModalService } from '@shared/ui/verification-modal/verification-modal';
 
 @Component({
   selector: 'app-signup',
@@ -216,6 +217,7 @@ export class SignupComponent {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   readonly authService = inject(AuthService);
+  private readonly verificationModalService = inject(VerificationModalService);
 
   readonly showPassword = signal(false);
   readonly showConfirmPassword = signal(false);
@@ -240,10 +242,47 @@ export class SignupComponent {
 
       this.authService.signup(userData).subscribe({
         next: () => {
-          this.router.navigate(['/']);
+          this.showVerificationModal(userData.email);
         },
         error: () => {},
       });
+    }
+  }
+
+  private async showVerificationModal(email: string): Promise<void> {
+    const result = await this.verificationModalService.showVerificationModal({ email });
+
+    if (result.verificationCode) {
+      // Vérifier le code de validation
+      this.authService
+        .verifyRegistration({
+          email,
+          verificationCode: result.verificationCode,
+        })
+        .subscribe({
+          next: () => {
+            // La navigation est gérée dans le service AuthService
+          },
+          error: () => {
+            // En cas d'erreur, réouvrir le modal
+            this.showVerificationModal(email);
+          },
+        });
+    } else if (result.resend) {
+      // Renvoyer le code
+      this.authService.resendVerificationCode(email).subscribe({
+        next: () => {
+          // Réouvrir le modal après avoir renvoyé le code
+          this.showVerificationModal(email);
+        },
+        error: () => {
+          // En cas d'erreur, réouvrir le modal
+          this.showVerificationModal(email);
+        },
+      });
+    } else if (result.cancelled) {
+      // L'utilisateur a annulé, on peut rediriger vers signin ou rester sur signup
+      // Pour l'instant, on ne fait rien (reste sur la page signup)
     }
   }
 

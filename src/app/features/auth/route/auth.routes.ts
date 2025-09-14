@@ -10,6 +10,10 @@ export const authRoutes: Routes = [
     loadComponent: () => import('../auth-layout').then((m) => m.AuthLayout),
   },
   {
+    path: 'verification',
+    loadComponent: () => import('../components/verification').then((m) => m.VerificationComponent),
+  },
+  {
     path: '',
     redirectTo: 'signin',
     pathMatch: 'full',

@@ -371,8 +371,15 @@ export class ProfileService {
   private handleError(error: HttpErrorResponse, defaultMessage: string): void {
     let errorMessage = defaultMessage;
 
-    if (error.error?.message) {
-      errorMessage = error.error.message;
+    const backendMessage = error?.error?.message as string | string[] | { message: string } | undefined;
+    if (backendMessage) {
+      if (Array.isArray(backendMessage)) {
+        errorMessage = backendMessage.join('\n');
+      } else if (typeof backendMessage === 'string') {
+        errorMessage = backendMessage;
+      } else if (typeof backendMessage === 'object' && backendMessage.message) {
+        errorMessage = String(backendMessage.message);
+      }
     } else if (error.status === 400) {
       errorMessage = 'Données invalides';
     } else if (error.status === 401) {

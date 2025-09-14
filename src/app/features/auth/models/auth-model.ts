@@ -39,3 +39,17 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
 }
+
+export interface RegistrationResponse {
+  message: string;
+  email: string;
+}
+
+export interface VerifyRegistrationRequest {
+  email: string;
+  verificationCode: string;
+}
+
+export interface ResendCodeRequest {
+  email: string;
+}

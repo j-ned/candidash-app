@@ -194,7 +194,7 @@ export class ProfileInfoComponent implements OnInit {
       next: () => {
         this.showConfirm.set(false);
         this.authService.signout();
-        this.router.navigate(['/auth', 'login']);
+        this.router.navigate(['/']);
       },
       error: () => {
         // nothing more to do; toast handled in service

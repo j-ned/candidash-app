@@ -64,7 +64,7 @@ import { ToastData } from '@shared/ui/toast/model/toast-model';
         <button
           type="button"
           (click)="onDismiss()"
-          class="ml-3 flex-shrink-0 p-1 rounded-full hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors"
+          class="ml-3 flex-shrink-0 p-1 rounded-full hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors icon-invert"
           [class]="dismissButtonClasses()"
           aria-label="Fermer la notification"
         >

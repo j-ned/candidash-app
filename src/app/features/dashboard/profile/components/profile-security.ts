@@ -104,7 +104,7 @@ import { ChangePasswordRequest } from '@features/dashboard/profile/models/profil
               @if (passwordForm.get('newPassword')?.errors?.['required']) {
                 Nouveau mot de passe requis
               } @else if (passwordForm.get('newPassword')?.errors?.['minlength']) {
-                Le mot de passe doit contenir au moins 6 caractères
+                Le mot de passe doit contenir au moins 8 caractères
               }
             </p>
           }
@@ -190,7 +190,7 @@ export class ProfileSecurityComponent {
 
   readonly passwordForm: FormGroup = this.fb.group({
     currentPassword: ['', [Validators.required]],
-    newPassword: ['', [Validators.required, Validators.minLength(6)]],
+    newPassword: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', [Validators.required]],
   });
 
@@ -199,7 +199,6 @@ export class ProfileSecurityComponent {
       const passwordData: ChangePasswordRequest = {
         currentPassword: this.passwordForm.get('currentPassword')?.value,
         newPassword: this.passwordForm.get('newPassword')?.value,
-        confirmPassword: this.passwordForm.get('confirmPassword')?.value,
       };
 
       this.profileService.changePassword(passwordData).subscribe({
