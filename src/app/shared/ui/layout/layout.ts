@@ -7,19 +7,20 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
-import { AvatarMenuComponent } from '@features/dashboard/profile/components/avatar-menu/avatar-menu';
 import { AuthService } from '@core/services/auth';
+import { SimpleAvatarMenuComponent } from '../simple-avatar-menu/simple-avatar-menu';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-layout',
-  imports: [ThemeToggle, AvatarMenuComponent],
+  imports: [ThemeToggle, SimpleAvatarMenuComponent, RouterLink],
   template: `
     <main
       class="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden"
     >
       <div class="absolute top-6 right-6 z-20 flex items-center space-x-3">
         @if (authService.isAuthenticated()) {
-          <app-avatar-menu></app-avatar-menu>
+          <app-simple-avatar-menu />
         }
         <app-theme-toggle></app-theme-toggle>
       </div>
@@ -29,6 +30,16 @@ import { AuthService } from '@core/services/auth';
       <div class="max-w-4xl mx-auto text-center space-y-8 relative z-10">
         <ng-content></ng-content>
       </div>
+
+      <!-- Footer légal -->
+      <footer class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+        <a
+          routerLink="/terms-of-service"
+          class="text-xs text-muted hover:text-text transition-colors duration-300 hover:underline"
+        >
+          Conditions d'utilisation
+        </a>
+      </footer>
     </main>
   `,
   styles: `

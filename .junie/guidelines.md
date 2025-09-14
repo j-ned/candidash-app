@@ -7,7 +7,7 @@ Fournir une référence moderne, claire et générique pour structurer, coder, t
 ## Outils et commandes (à adapter selon votre gestionnaire de paquets)
 
 ### Démarrer le serveur de dev
-- **Vite**: `pnpm dev` / `npm run dev`
+- **Vite**: `pnpm dev`
 - **CLI Angular**: `ng serve`
 
 ### Build
@@ -169,7 +169,7 @@ export const routes: Routes = [
 Fournir `HttpClient` lors du bootstrap (ex. `main.ts`):
 
 ```typescript
-provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor]))
+provideHttpClient(withFetch(), withInterceptors([auth, errorInterceptor]))
 ```
 
 Typage strict des réponses; gestion d'erreurs centralisée (401, 403, 5xx) via interceptors.

@@ -5,8 +5,6 @@ import {
   ProfileHeaderComponent,
   ProfileInfoComponent,
   ProfileSecurityComponent,
-  ProfileUploadsComponent,
-  ProfileAccountInfoComponent,
 } from './components';
 
 @Component({
@@ -16,30 +14,22 @@ import {
     ProfileHeaderComponent,
     ProfileInfoComponent,
     ProfileSecurityComponent,
-    ProfileUploadsComponent,
-    ProfileAccountInfoComponent,
   ],
   template: `
     <app-layout>
-      <div class="max-w-8xl mx-auto space-y-8">
+      <div
+        class="w-full max-w-6xl mx-auto px-3 py-4 space-y-3 sm:px-4 sm:py-6 sm:space-y-4 md:px-6 md:space-y-6 lg:max-w-7xl lg:px-8 lg:py-8 lg:space-y-8"
+      >
         <app-profile-header />
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="space-y-6">
-            <app-profile-info />
+        <div class="space-y-3 sm:space-y-4 md:space-y-6 xl:space-y-8">
+          <div class="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 md:grid-cols-2">
+            <div class="order-1">
+              <app-profile-info />
+            </div>
+            <div class="order-2">
+              <app-profile-security />
+            </div>
           </div>
-
-          <div class="space-y-6">
-            <app-profile-security />
-          </div>
-        </div>
-
-        <!-- Card Informations du compte sur une ligne -->
-        <div class="mt-6">
-          <app-profile-account-info />
-        </div>
-
-        <div class="mt-6">
-          <app-profile-uploads />
         </div>
       </div>
     </app-layout>

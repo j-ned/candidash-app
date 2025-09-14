@@ -9,118 +9,61 @@ import { PageButton } from '@features/home/model/home-model';
   imports: [RouterLink, ButtonComponent, LayoutComponent],
   template: `
     <app-layout>
-      <div class="relative flex items-center justify-center">
-        <h1 class="font-bold text-9xl custom-stroke">
-          {{ title }}
-        </h1>
-      </div>
+      <div
+        class="w-full max-w-sm mx-auto px-4 py-8 space-y-6 text-center sm:max-w-md sm:py-12 sm:space-y-8 md:max-w-2xl md:py-16 md:space-y-10 lg:max-w-4xl lg:py-20 lg:space-y-12 xl:max-w-6xl"
+      >
+        <div class="relative">
+          <h1
+            class="font-bold text-text transition-all duration-500 hover:scale-105 hover:text-primary cursor-default select-none text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+          >
+            {{ title }}
+          </h1>
+          <div
+            class="absolute inset-0 font-bold text-primary/20 -z-10 blur-sm text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+          >
+            {{ title }}
+          </div>
+        </div>
 
-      <p class="text-xl text-text/80 max-w-2xl mx-auto">
-        {{ subtitle }}
-      </p>
+        <!-- Sous-titre responsive -->
+        <p
+          class="text-muted leading-relaxed transition-all duration-300 hover:text-text hover:-translate-y-1 cursor-default text-sm max-w-xs mx-auto sm:text-base sm:max-w-sm md:text-lg md:max-w-md lg:text-xl lg:max-w-lg xl:text-2xl xl:max-w-2xl"
+        >
+          {{ subtitle }}
+        </p>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-        @for (button of buttons; track button.label) {
-          @if (button.routerLink) {
-            <a
-              [routerLink]="button.routerLink"
-              class="inline-block transition-transform duration-300 ease-in-out hover:translate-y-[-3px]"
-            >
-              <app-button
-                [color]="button.color"
-                [customClass]="
-                  button.customClass ||
-                  'px-8 py-4 shadow-lg shadow-accent border-2 border-text hover:text-background'
-                "
+        <div
+          class="flex flex-col gap-3 items-center sm:gap-4 md:flex-row md:justify-center md:gap-6 lg:gap-8"
+        >
+          @for (button of buttons; track button.label) {
+            @if (button.routerLink) {
+              <a
+                [routerLink]="button.routerLink"
+                class="inline-block w-full transition-all duration-300 hover:-translate-y-1 hover:scale-105 sm:w-auto"
               >
-                {{ button.label }}
-              </app-button>
-            </a>
-          } @else {
-            <app-button
-              [color]="button.color"
-              [customClass]="
-                button.customClass ||
-                'px-8 py-4 shadow-lg shadow-accent border-2 border-text hover:text-background'
-              "
-              (buttonClick)="handleButtonClick(button)"
-            >
-              {{ button.label }}
-            </app-button>
+                <app-button [color]="button.color" [customClass]="getButtonClasses(button.color)">
+                  {{ button.label }}
+                </app-button>
+              </a>
+            } @else {
+              <div class="w-full sm:w-auto">
+                <app-button
+                  [color]="button.color"
+                  [customClass]="getButtonClasses(button.color)"
+                  (buttonClick)="handleButtonClick(button)"
+                >
+                  {{ button.label }}
+                </app-button>
+              </div>
+            }
           }
-        }
+        </div>
+
+        <div class="flex justify-center pt-4 sm:pt-6 md:pt-8">
+          <div class="w-12 h-1 bg-primary/20 rounded-full sm:w-16 md:w-20 lg:w-24"></div>
+        </div>
       </div>
     </app-layout>
-  `,
-  styles: `
-    h1 {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: default;
-      position: relative;
-    }
-
-    h1:hover {
-      transform: scale(1.05);
-      text-shadow:
-        0 0 20px var(--color-accent-500),
-        0 0 40px var(--color-accent-400),
-        0 0 60px var(--color-accent-300);
-      filter: brightness(1.1);
-    }
-
-    p {
-      transition: all 0.3s ease-in-out;
-      cursor: default;
-    }
-
-    p:hover {
-      color: var(--color-accent-500);
-      transform: translateY(-2px);
-      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    app-button {
-      display: inline-block;
-      transition: transform 0.3s ease-in-out;
-    }
-
-    app-button:hover {
-      transform: translateY(-3px);
-    }
-
-    app-button button {
-      position: relative;
-      overflow: hidden;
-    }
-
-    app-button button::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      background: radial-gradient(circle, var(--color-accent-300) 0%, transparent 70%);
-      transition: all 0.6s ease-out;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      z-index: 0;
-    }
-
-    app-button button:hover::before {
-      width: 300px;
-      height: 300px;
-    }
-
-    app-button button > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    .custom-stroke {
-      -webkit-text-stroke: 2px #10b981;
-      -webkit-text-fill-color: var(--color-background);
-    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -132,16 +75,20 @@ export class HomeComponent {
 
   readonly buttons: PageButton[] = [
     {
-      label: 'Créer ton espace',
+      label: 'Démo',
       color: 'primary',
-      routerLink: '/auth/signup',
+      routerLink: '/features',
     },
     {
-      label: 'Se connecter',
+      label: 'Commencer gratuitement',
       color: 'secondary',
-      routerLink: '/auth/signin',
+      routerLink: '/auth/signup',
     },
   ];
+
+  getButtonClasses(_color: 'primary' | 'secondary' | 'accent' | 'red'): string {
+    return 'w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 sm:w-auto sm:px-6 sm:py-3 sm:text-base sm:rounded-xl md:px-8 md:py-3.5 md:text-lg lg:px-10 lg:py-4';
+  }
 
   handleButtonClick(button: PageButton): void {
     if (button.action) {

@@ -27,7 +27,6 @@ import { NgOptimizedImage } from '@angular/common';
         </h2>
 
         <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-6">
-          <!-- Email Field -->
           <div class="space-y-1 sm:space-y-2">
             <label for="email" class="block text-sm font-medium text-text sm:text-base">
               Email <span class="text-error">*</span>

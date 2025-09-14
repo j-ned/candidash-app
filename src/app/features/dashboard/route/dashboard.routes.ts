@@ -10,7 +10,22 @@ export const dashboardRoutes: Routes = [
     loadComponent: () => import('../profile/profile-layout').then((m) => m.ProfileLayoutComponent),
   },
   {
-    path: 'settings',
-    loadComponent: () => import('../settings/settings.page').then((m) => m.SettingsPageComponent),
+    path: 'jobtrack',
+    redirectTo: '',
+    pathMatch: 'full',
+  },
+  {
+    path: 'jobtrack/new',
+    loadComponent: () =>
+      import('../../jobs/components/jobtrack-form.component').then(
+        (m) => m.JobTrackFormPageComponent,
+      ),
+  },
+  {
+    path: 'jobtrack/:id/edit',
+    loadComponent: () =>
+      import('../../jobs/components/jobtrack-form.component').then(
+        (m) => m.JobTrackFormPageComponent,
+      ),
   },
 ];

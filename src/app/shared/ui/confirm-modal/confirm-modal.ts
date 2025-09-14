@@ -40,28 +40,37 @@ export class ConfirmModalService {
   private readonly injector = inject(EnvironmentInjector);
 
   async confirm(data: ConfirmModalData): Promise<boolean> {
+    console.log('ConfirmModalService.confirm called with:', data);
     return new Promise<boolean>((resolve) => {
-      const modalRef = createComponent(ConfirmModalView as unknown as Type<ConfirmModalComponent>, {
-        environmentInjector: this.injector,
-      });
+      const modalRef = createComponent(
+        ConfirmModalView as unknown as Type<ConfirmModalComponent>,
+        {
+          environmentInjector: this.injector,
+        }
+      );
 
+      console.log('Modal component created:', modalRef);
       modalRef.setInput('data', data);
 
       const instance = modalRef.instance as ConfirmModalComponent;
+      console.log('Modal instance:', instance);
 
       const subscription = instance.confirmed.subscribe((confirmed: boolean) => {
+        console.log('Modal confirmed:', confirmed);
         subscription.unsubscribe();
         this.closeModal(modalRef);
         resolve(confirmed);
       });
 
       const cancelSubscription = instance.cancelled.subscribe(() => {
+        console.log('Modal cancelled');
         cancelSubscription.unsubscribe();
         this.closeModal(modalRef);
         resolve(false);
       });
 
       this.showModal(modalRef);
+      console.log('Modal shown');
 
       this.modalComponentRef = modalRef;
     });

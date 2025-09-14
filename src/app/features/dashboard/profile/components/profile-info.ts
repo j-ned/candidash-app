@@ -11,24 +11,26 @@ import { Router } from '@angular/router';
   selector: 'app-profile-info',
   imports: [ReactiveFormsModule, ButtonComponent, NgOptimizedImage],
   template: `
-    <div class="space-y-6">
-      <div class="bg-card border border-border rounded-lg p-6">
-        <div class="mb-6 mt-4 flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-text flex items-center">
+    <div class="space-y-4 sm:space-y-6">
+      <div class="bg-card border border-border rounded-md p-4 sm:rounded-lg sm:p-6">
+        <div
+          class="mb-4 mt-2 flex flex-col gap-3 pb-3 sm:mb-6 sm:mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:pb-0"
+        >
+          <h2 class="text-lg font-semibold text-text flex items-center sm:text-xl">
             <img
               [ngSrc]="'/icons/about.svg'"
               alt="User Icon"
-              class="w-6 h-6 mr-2 icon-invert"
-              width="20"
-              height="20"
+              class="w-5 h-5 mr-2 icon-invert sm:w-6 sm:h-6"
+              width="18"
+              height="18"
             />
-            Informations personnelles
+            Profil
           </h2>
 
           <button
             type="button"
             (click)="showConfirm.set(true)"
-            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-accent hover:bg-red-600 text-text text-sm font-medium border border-error/50 shadow-sm"
+            class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded bg-error/10 hover:bg-error/20 text-error text-xs font-medium border border-error/30 transition-all duration-200 self-start sm:gap-2 sm:px-3 sm:py-2 sm:rounded-md sm:text-sm"
             [disabled]="profileService.isLoading()"
             aria-label="Supprimer mon compte"
             title="Supprimer mon compte"
@@ -36,43 +38,53 @@ import { Router } from '@angular/router';
             <img
               [ngSrc]="'/icons/warning.svg'"
               alt="Danger"
-              class="w-6 h-6"
-              width="16"
-              height="16"
+              class="w-4 h-4 sm:w-5 sm:h-5"
+              width="14"
+              height="14"
             />
+            <span class="hidden sm:inline">Supprimer</span>
           </button>
         </div>
 
-        <div class="flex justify-start items-center py-1">
-          <div class="text-text/70 font-base ">
-            <span class="text-text font-bold pl-2">Rôle :</span>
-            {{ authService.user()?.role === 'ADMIN' ? 'Administrateur' : 'Utilisateur' }}
-          </div>
-        </div>
-
-        <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()" class="space-y-6">
-          <div class="space-y-2">
+        <form
+          [formGroup]="profileForm"
+          (ngSubmit)="onUpdateProfile()"
+          class="space-y-4 pt-2 sm:space-y-4 sm:pt-2"
+        >
+          <div class="space-y-1 sm:space-y-2">
             <input
               id="email"
               type="email"
               formControlName="email"
-              class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-background text-text placeholder:text-muted-foreground"
+              placeholder="Votre adresse email"
+              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
               [class.border-error]="isFieldInvalid('email')"
-              [class.border-input]="!isFieldInvalid('email')"
+              [class.border-border]="!isFieldInvalid('email')"
             />
             @if (isFieldInvalid('email')) {
-              <p class="text-error text-sm mt-1">Email invalide</p>
+              <p class="text-error text-xs mt-1 sm:text-sm">Email invalide</p>
             }
           </div>
 
-          <div class="space-y-2">
+          <div class="space-y-1 sm:space-y-2">
             <input
               id="username"
               type="text"
               formControlName="username"
-              class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-background text-text placeholder:text-muted-foreground border-input"
+              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted border-border text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
               placeholder="Votre nom d'affichage"
             />
+          </div>
+
+          <div
+            class="flex flex-col gap-1 py-2 sm:flex-row sm:justify-between sm:items-center sm:py-2"
+          >
+            <span class="text-muted font-medium text-sm sm:text-base"
+              >Dernière mise à jour le :</span
+            >
+            <span class="text-text font-semibold text-sm sm:text-base">
+              {{ formatDate(authService.user()?.updatedAt) }}
+            </span>
           </div>
 
           <div class="pt-2">
@@ -81,12 +93,13 @@ import { Router } from '@angular/router';
               color="primary"
               [disabled]="profileForm.invalid || profileService.isLoading()"
               [isLoading]="profileService.isLoading()"
-              customClass="w-full sm:w-auto px-6 py-3"
+              customClass="w-full px-4 py-2 text-sm sm:w-auto sm:px-6 sm:py-3 sm:text-base"
             >
               @if (profileService.isLoading()) {
                 Sauvegarde...
               } @else {
-                Sauvegarder les modifications
+                <span class="sm:hidden">Sauvegarder</span>
+                <span class="hidden sm:inline">Sauvegarder les modifications</span>
               }
             </app-button>
           </div>
@@ -94,36 +107,38 @@ import { Router } from '@angular/router';
       </div>
 
       @if (showConfirm()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center">
-          <div class="absolute inset-0 bg-background/70 backdrop-blur-sm"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
           <div
-            class="relative z-10 w-full max-w-md mx-4 rounded-lg border border-border bg-card shadow-xl"
+            class="relative z-10 w-full max-w-sm mx-auto rounded-md border border-border bg-card shadow-xl sm:max-w-md sm:rounded-lg"
           >
-            <div class="px-5 py-4 border-b border-border flex items-center gap-2">
+            <div class="px-4 py-3 border-b border-border flex items-center gap-2 sm:px-5 sm:py-4">
               <img
                 [ngSrc]="'/icons/warning.svg'"
                 alt="Avertissement"
-                class="w-10 h-10"
-                width="20"
-                height="20"
+                class="w-6 h-6 text-error sm:w-8 sm:h-8"
+                width="18"
+                height="18"
               />
-              <h3 class="text-2xl font-semibold text-red-600">Confirmer la suppression</h3>
+              <h3 class="text-lg font-semibold text-error sm:text-xl">Confirmer la suppression</h3>
             </div>
-            <div class="px-5 py-4 text-text/90 pl-4">
+            <div class="px-4 py-3 text-text text-sm leading-relaxed sm:px-5 sm:py-4 sm:text-base">
               Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est
               irréversible.
             </div>
-            <div class="px-5 py-4 flex justify-end gap-3 border-t border-border">
+            <div
+              class="px-4 py-3 flex flex-col gap-2 border-t border-border sm:px-5 sm:py-4 sm:flex-row sm:justify-end sm:gap-3"
+            >
               <button
                 type="button"
-                class="px-4 py-2 rounded-md border border-border bg-background text-text hover:bg-background/80"
+                class="px-3 py-2 rounded border border-border bg-surface text-text hover:bg-surface/80 transition-colors duration-200 text-sm sm:px-4 sm:rounded-md"
                 (click)="showConfirm.set(false)"
               >
                 Annuler
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded-md bg-error text-text hover:bg-error/80 border border-error/50"
+                class="px-3 py-2 rounded bg-error text-background hover:bg-error/90 transition-colors duration-200 text-sm sm:px-4 sm:rounded-md"
                 [disabled]="profileService.isLoading()"
                 (click)="confirmDelete()"
               >
@@ -190,5 +205,14 @@ export class ProfileInfoComponent implements OnInit {
   isFieldInvalid(fieldName: string): boolean {
     const field = this.profileForm.get(fieldName);
     return !!(field && field.invalid && field.touched);
+  }
+
+  formatDate(date: Date | undefined): string {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   }
 }
