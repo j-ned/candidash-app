@@ -13,10 +13,11 @@ import type {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '@core/services/auth';
 import { ToastService } from '@shared/ui/toast/service/toast';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-jobtrack-form-page',
-  imports: [LayoutComponent, ReactiveFormsModule, ButtonComponent],
+  imports: [LayoutComponent, ReactiveFormsModule, ButtonComponent, NgOptimizedImage],
   template: `
     <app-layout>
       <div class="max-w-3xl mx-auto p-4 sm:p-6">
@@ -47,7 +48,7 @@ import { ToastService } from '@shared/ui/toast/service/toast';
                     >Titre du poste recherché *</label
                   >
                   <input
-                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
+                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text/50 text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
                     formControlName="title"
                     placeholder="Ex: Développeur Full-Stack React/Node.js"
                   />
@@ -63,7 +64,7 @@ import { ToastService } from '@shared/ui/toast/service/toast';
                     >Nom de l'entreprise</label
                   >
                   <input
-                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
+                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text/50 text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
                     formControlName="company"
                     placeholder="Ex: Google, Airbnb, startup locale... (optionnel)"
                   />
@@ -77,7 +78,7 @@ import { ToastService } from '@shared/ui/toast/service/toast';
                     >Lien vers l'offre d'emploi</label
                   >
                   <input
-                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
+                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text/50 text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
                     formControlName="jobUrl"
                     placeholder="https://linkedin.com/jobs/... (optionnel)"
                   />
@@ -121,7 +122,7 @@ import { ToastService } from '@shared/ui/toast/service/toast';
                     >Où en est ma candidature ?</label
                   >
                   <select
-                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
+                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text/50 text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
                     formControlName="status"
                   >
                     <option value="APPLIED">📤 Candidature envoyée - J'ai postulé</option>
@@ -136,11 +137,20 @@ import { ToastService } from '@shared/ui/toast/service/toast';
                   <label class="block text-xs font-medium text-text sm:text-sm"
                     >Date de ma candidature</label
                   >
-                  <input
-                    type="date"
-                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
-                    formControlName="appliedAt"
-                  />
+                  <div class="relative">
+                    <input
+                      type="date"
+                      class="w-full pr-10 px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
+                      formControlName="appliedAt"
+                    />
+                    <img
+                      [ngSrc]="'/icons/calendar.svg'"
+                      alt="calendrier"
+                      class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 icon-invert"
+                      width="24"
+                      height="24"
+                    />
+                  </div>
                   <p class="text-xs text-muted">📅 Pour calculer les rappels automatiques</p>
                 </div>
               </div>
@@ -194,7 +204,7 @@ import { ToastService } from '@shared/ui/toast/service/toast';
                 >
                 <textarea
                   rows="4"
-                  class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text text-sm sm:rows-5 sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
+                  class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-primary focus:border-primary transition-all border-border bg-background text-text/50 text-sm sm:rows-5 sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
                   formControlName="notes"
                   placeholder="Ex: Salaire discuté 45-50k, contact RH sympathique, télétravail possible 2j/semaine, équipe de 8 développeurs..."
                 ></textarea>
@@ -229,6 +239,14 @@ import { ToastService } from '@shared/ui/toast/service/toast';
       </div>
     </app-layout>
   `,
+  styles: [
+    `
+      /* Hide default calendar icon for Chromium-based browsers while keeping functionality */
+      input[type='date']::-webkit-calendar-picker-indicator {
+        opacity: 0;
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JobTrackFormPageComponent {
@@ -295,8 +313,6 @@ export class JobTrackFormPageComponent {
     if (this.form.invalid) return;
 
     const value = this.form.getRawValue();
-    const userId = this.authService.user()?.id;
-
     const baseDate = value.appliedAt ? new Date(value.appliedAt) : new Date();
     const nextReminderAt = new Date(baseDate.getTime() + value.frequency * 24 * 60 * 60 * 1000);
 
@@ -307,17 +323,17 @@ export class JobTrackFormPageComponent {
     if (isEdit) {
       const updatePayload: UpdateJobTrackWithReminderDto = {
         title: value.title,
-        company: value.company || undefined,
-        jobUrl: value.jobUrl || undefined,
         status: value.status,
-        contractType: value.contractType ?? undefined,
-        appliedAt: value.appliedAt || undefined,
-        notes: value.notes || undefined,
-        attachments: userId ? { cvUserPath: `/users/cv/${userId}` } : undefined,
         frequency: value.frequency,
         nextReminderAt: nextReminderAt.toISOString(),
         isActive: true,
       };
+
+      if (value.company) updatePayload.company = value.company;
+      if (value.jobUrl) updatePayload.jobUrl = value.jobUrl;
+      if (value.contractType) updatePayload.contractType = value.contractType;
+      if (value.appliedAt) updatePayload.appliedAt = value.appliedAt;
+      if (value.notes) updatePayload.notes = value.notes;
 
       this.service.updateWithReminder(this.jobId!, updatePayload, false).subscribe({
         next: () => {
@@ -336,17 +352,17 @@ export class JobTrackFormPageComponent {
     } else {
       const createPayload: CreateJobTrackWithReminderDto = {
         title: value.title,
-        company: value.company || undefined,
-        jobUrl: value.jobUrl || undefined,
         status: value.status,
-        contractType: value.contractType ?? undefined,
-        appliedAt: value.appliedAt || undefined,
-        notes: value.notes || undefined,
-        attachments: userId ? { cvUserPath: `/users/cv/${userId}` } : undefined,
         frequency: value.frequency,
         nextReminderAt: nextReminderAt.toISOString(),
         isActive: true,
       };
+
+      if (value.company) createPayload.company = value.company;
+      if (value.jobUrl) createPayload.jobUrl = value.jobUrl;
+      if (value.contractType) createPayload.contractType = value.contractType;
+      if (value.appliedAt) createPayload.appliedAt = value.appliedAt;
+      if (value.notes) createPayload.notes = value.notes;
 
       this.service.createWithReminder(createPayload).subscribe({
         next: () => {

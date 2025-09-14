@@ -39,7 +39,6 @@ export interface CreateJobTrackDto {
   status?: JobStatus;
   contractType?: ContractType;
   notes?: string;
-  attachments?: Record<string, JsonValue>;
 }
 
 export type UpdateJobTrackDto = Partial<CreateJobTrackDto>;
@@ -60,7 +59,6 @@ export interface CreateJobTrackWithReminderDto {
   status?: JobStatus;
   contractType?: ContractType;
   notes?: string;
-  attachments?: Record<string, JsonValue>;
   frequency: number;
   nextReminderAt: string;
   isActive?: boolean;
@@ -74,7 +72,6 @@ export interface UpdateJobTrackWithReminderDto {
   status?: JobStatus;
   contractType?: ContractType;
   notes?: string;
-  attachments?: Record<string, JsonValue>;
   frequency?: number;
   nextReminderAt?: string;
   isActive?: boolean;
