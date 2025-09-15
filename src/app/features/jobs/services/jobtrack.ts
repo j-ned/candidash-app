@@ -6,11 +6,11 @@ import type {
   JobTrack,
   UpdateJobTrackWithReminderDto,
   JobStatus,
-} from '../models/jobtrack.types';
+} from '../models/jobtrack';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class JobTrackService {
+export class Jobtrack {
   private readonly http = inject(HttpClient);
   private readonly apiBase = `${environment.apiUrl.replace(/\/$/, '')}/jobtrack`;
 
