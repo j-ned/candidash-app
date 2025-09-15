@@ -17,14 +17,14 @@ export const dashboardRoutes: Routes = [
   {
     path: 'jobtrack/new',
     loadComponent: () =>
-      import('../../jobs/components/jobtrack-form.component').then(
+      import('../../jobs/components/jobtrack-form/jobtrack-form').then(
         (m) => m.JobTrackFormPageComponent,
       ),
   },
   {
     path: 'jobtrack/:id/edit',
     loadComponent: () =>
-      import('../../jobs/components/jobtrack-form.component').then(
+      import('../../jobs/components/jobtrack-form/jobtrack-form').then(
         (m) => m.JobTrackFormPageComponent,
       ),
   },

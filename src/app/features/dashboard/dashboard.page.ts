@@ -2,15 +2,15 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { Router } from '@angular/router';
 import { LayoutComponent } from '@shared/ui/layout/layout';
 import { ButtonComponent } from '@shared/ui/button/button';
-import { JobTrackService } from '../jobs/services/jobtrack.service';
-import type { JobTrack } from '../jobs/models/jobtrack.types';
-import { JobTrackListComponent } from '../jobs/components/jobtrack-list.component';
-import { type DashboardStats } from './components/dashboard-stats.component';
+import { Jobtrack } from '../jobs/services/jobtrack';
+import type { JobTrack } from '../jobs/models/jobtrack';
+import { JobtrackList } from '../jobs/components/jobtrack-list/jobtrack-list';
+import type { DashboardStats } from '@features/dashboard/components/dashboard-stats/model/dashboard-stats';
 import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [LayoutComponent, ButtonComponent, JobTrackListComponent, NgOptimizedImage],
+  imports: [LayoutComponent, ButtonComponent, JobtrackList, NgOptimizedImage],
   template: `
     <app-layout>
       <div class="relative overflow-hidden">
@@ -65,8 +65,6 @@ import { NgOptimizedImage } from '@angular/common';
           </div>
         </div>
       </div>
-
-      <!-- Main Content Area -->
       <div class="container mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
         <app-jobtrack-list />
       </div>
@@ -75,7 +73,7 @@ import { NgOptimizedImage } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPageComponent {
-  private readonly service = inject(JobTrackService);
+  private readonly service = inject(Jobtrack);
   private readonly router = inject(Router);
 
   readonly stats = signal<DashboardStats>({
@@ -113,10 +111,5 @@ export class DashboardPageComponent {
 
   goToCreate(): void {
     this.router.navigate(['/dashboard/jobtrack/new']);
-  }
-
-  goToAnalytics(): void {
-    // Pour l'instant, on reste sur le dashboard
-    // Plus tard : this.router.navigate(['/dashboard/analytics']);
   }
 }
