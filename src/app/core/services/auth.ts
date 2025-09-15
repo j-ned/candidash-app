@@ -11,6 +11,10 @@ import {
   User,
   RegistrationResponse,
   VerifyRegistrationRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordResponse,
 } from '@features/auth/models/auth-model';
 import { ToastService } from '@shared/ui/toast/service/toast';
 import { TokenService } from './token';
@@ -130,6 +134,58 @@ export class AuthService {
             duration: 4000,
             dismissible: true,
           });
+        }),
+        catchError((error) => {
+          this.handleAuthError(error);
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  forgotPassword(request: ForgotPasswordRequest): Observable<ForgotPasswordResponse> {
+    this.setLoading(true);
+    this.clearError();
+
+    return this.http
+      .post<ForgotPasswordResponse>(`${this.baseUrl}/accounts/forgot-password`, request)
+      .pipe(
+        tap((_response) => {
+          this.setLoading(false);
+          this.toastService.show(
+            'success',
+            'Email envoyé',
+            'Si un compte existe avec cette adresse, vous recevrez un lien de réinitialisation',
+            {
+              duration: 6000,
+              dismissible: true,
+            },
+          );
+        }),
+        catchError((error) => {
+          this.handleAuthError(error);
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<ResetPasswordResponse> {
+    this.setLoading(true);
+    this.clearError();
+
+    return this.http
+      .post<ResetPasswordResponse>(`${this.baseUrl}/accounts/reset-password`, request)
+      .pipe(
+        tap((_response) => {
+          this.setLoading(false);
+          this.toastService.show(
+            'success',
+            'Mot de passe réinitialisé',
+            'Votre mot de passe a été mis à jour avec succès',
+            {
+              duration: 4000,
+              dismissible: true,
+            },
+          );
         }),
         catchError((error) => {
           this.handleAuthError(error);

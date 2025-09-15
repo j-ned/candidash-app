@@ -32,7 +32,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si erreur 401 et pas sur un endpoint d'auth, tenter un refresh
+      // Si erreur 401 n'est pas sur un endpoint auth = refresh
       if (
         error.status === 401 &&
         !isAuthEndpoint &&

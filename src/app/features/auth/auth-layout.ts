@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { NavigationEnd, Router } from '@angular/router';
 import { LayoutComponent } from '@shared/ui/layout/layout';
 import { filter } from 'rxjs/operators';
-import { SigninComponent } from './components/signin';
-import { SignupComponent } from './components/signup';
+import { Signin } from './components/signin/signin';
+import { Signup } from './components/signup/signup';
 
 @Component({
   selector: 'app-auth-layout',
-  imports: [LayoutComponent, SigninComponent, SignupComponent],
+  imports: [LayoutComponent, Signin, Signup],
   template: `
     <app-layout>
       <div
