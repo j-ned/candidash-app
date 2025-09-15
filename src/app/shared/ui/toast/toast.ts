@@ -13,7 +13,6 @@ import { ToastData } from '@shared/ui/toast/model/toast-model';
       role="alert"
       [attr.aria-live]="toast().type === 'danger' ? 'assertive' : 'polite'"
     >
-      <!-- Icône -->
       <div class="flex-shrink-0 mr-3">
         @switch (toast().type) {
           @case ('success') {

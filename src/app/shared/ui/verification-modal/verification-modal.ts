@@ -14,7 +14,6 @@ export interface VerificationModalData {
   email: string;
 }
 
-// Minimal typings to avoid `any`
 type SubscriptionLike = { unsubscribe: () => void };
 interface Subscribable<T> {
   subscribe: (cb: (value: T) => void) => SubscriptionLike;
@@ -41,41 +40,42 @@ export class VerificationModalService {
     resend?: boolean;
     cancelled?: boolean;
   }> {
-    return new Promise<{ verificationCode?: string; resend?: boolean; cancelled?: boolean }>((resolve) => {
-      const modalRef = createComponent(
-        VerificationModalView as unknown as Type<VerificationModalComponent>,
-        {
-          environmentInjector: this.injector,
-        }
-      );
+    return new Promise<{ verificationCode?: string; resend?: boolean; cancelled?: boolean }>(
+      (resolve) => {
+        const modalRef = createComponent(
+          VerificationModalView as unknown as Type<VerificationModalComponent>,
+          {
+            environmentInjector: this.injector,
+          },
+        );
 
-      modalRef.setInput('data', data);
-      const instance = modalRef.instance as VerificationModalComponent;
+        modalRef.setInput('data', data);
+        const instance = modalRef.instance as VerificationModalComponent;
 
-      // Handle verification submission
-      const verificationSubscription = instance.verificationSubmitted.subscribe((code: string) => {
-        verificationSubscription.unsubscribe();
-        this.closeModal(modalRef);
-        resolve({ verificationCode: code });
-      });
+        const verificationSubscription = instance.verificationSubmitted.subscribe(
+          (code: string) => {
+            verificationSubscription.unsubscribe();
+            this.closeModal(modalRef);
+            resolve({ verificationCode: code });
+          },
+        );
 
-      // Handle resend request
-      const resendSubscription = instance.resendRequested.subscribe(() => {
-        resendSubscription.unsubscribe();
-        this.closeModal(modalRef);
-        resolve({ resend: true });
-      });
+        const resendSubscription = instance.resendRequested.subscribe(() => {
+          resendSubscription.unsubscribe();
+          this.closeModal(modalRef);
+          resolve({ resend: true });
+        });
 
-      // Handle cancellation
-      const cancelSubscription = instance.cancelled.subscribe(() => {
-        cancelSubscription.unsubscribe();
-        this.closeModal(modalRef);
-        resolve({ cancelled: true });
-      });
+        const cancelSubscription = instance.cancelled.subscribe(() => {
+          cancelSubscription.unsubscribe();
+          this.closeModal(modalRef);
+          resolve({ cancelled: true });
+        });
 
-      this.showModal(modalRef);
-      this.modalComponentRef = modalRef;
-    });
+        this.showModal(modalRef);
+        this.modalComponentRef = modalRef;
+      },
+    );
   }
 
   private showModal(modalRef: ComponentRef<VerificationModalComponent>): void {

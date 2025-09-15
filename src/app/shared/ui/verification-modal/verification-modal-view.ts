@@ -18,10 +18,8 @@ import { NgOptimizedImage } from '@angular/common';
   selector: 'app-verification-modal-view',
   imports: [ReactiveFormsModule, ButtonComponent, NgOptimizedImage],
   template: `
-    <!-- Backdrop -->
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" (click)="onCancel()"></div>
 
-    <!-- Modal -->
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
@@ -31,7 +29,6 @@ import { NgOptimizedImage } from '@angular/common';
       <div
         class="relative bg-background border border-border rounded-xl shadow-2xl max-w-md w-full mx-auto overflow-hidden"
       >
-        <!-- Header -->
         <header class="flex items-center justify-between p-6 pb-0">
           <h2 class="text-xl font-bold text-text">Validation de l'inscription</h2>
           <button
@@ -100,7 +97,6 @@ import { NgOptimizedImage } from '@angular/common';
             </app-button>
           </form>
 
-          <!-- Actions -->
           <div class="text-center pt-4 border-t border-border">
             <p class="text-muted text-sm mb-3">Vous n'avez pas reçu le code ?</p>
 

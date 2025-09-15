@@ -1,142 +1,102 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import type { ConfirmModalData } from './confirm-modal';
 
 @Component({
   selector: 'app-confirm-modal-view',
+  imports: [NgOptimizedImage],
   template: `
-    <div class="cd-modal-backdrop" (click)="onCancel()"></div>
-    <div class="cd-modal" role="dialog" aria-modal="true" [attr.aria-label]="data().title">
-      <header class="cd-modal__header">
-        <h2 class="cd-modal__title">{{ data().title }}</h2>
-      </header>
-      <section class="cd-modal__body">
-        <p>{{ data().message }}</p>
-      </section>
-      <footer class="cd-modal__footer">
-        <button type="button" class="cd-btn cd-btn--secondary" (click)="onCancel()">
-          {{ data().cancelText ?? 'Annuler' }}
-        </button>
-        <button type="button" class="cd-btn" [class.cd-btn--danger]="data().type === 'danger'" [class.cd-btn--warning]="data().type === 'warning'" (click)="onConfirm()">
-          {{ data().confirmText ?? 'Confirmer' }}
-        </button>
-      </footer>
+    <div
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] animate-in fade-in duration-200"
+      (click)="onCancel()"
+      aria-hidden="true"
+    ></div>
+    <div
+      class="fixed inset-0 z-[1000] flex items-center justify-center p-4 animate-in zoom-in-95 fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-description"
+    >
+      <div
+        class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-card border border-border shadow-2xl transition-all sm:w-full"
+      >
+        <div class="px-6 pt-6 pb-4">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+              @if (data().type === 'danger') {
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-error/10">
+                  <img
+                    [ngSrc]="'/icons/alert-triangle.svg'"
+                    alt="Attention"
+                    class="h-6 w-6 text-error icon-error"
+                    width="24"
+                    height="24"
+                  />
+                </div>
+              } @else if (data().type === 'warning') {
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
+                  <img
+                    [ngSrc]="'/icons/alert-circle.svg'"
+                    alt="Avertissement"
+                    class="h-6 w-6 text-warning icon-warning"
+                    width="24"
+                    height="24"
+                  />
+                </div>
+              } @else {
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <img
+                    [ngSrc]="'/icons/help-circle.svg'"
+                    alt="Question"
+                    class="h-6 w-6 text-primary icon-primary"
+                    width="24"
+                    height="24"
+                  />
+                </div>
+              }
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <h2 class="text-lg font-semibold text-text leading-6 mb-2" id="modal-title">
+                {{ data().title }}
+              </h2>
+              <p class="text-sm text-muted leading-relaxed" id="modal-description">
+                {{ data().message }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 pb-6 pt-2">
+          <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              (click)="onCancel()"
+              class="inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium text-text bg-background border border-border rounded-lg hover:bg-surface hover:border-border-hover focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ease-in-out active:scale-95 sm:w-auto w-full"
+            >
+              {{ data().cancelText ?? 'Annuler' }}
+            </button>
+
+            <button
+              type="button"
+              (click)="onConfirm()"
+              [class]="getConfirmButtonClasses()"
+              class="inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ease-in-out active:scale-95 sm:w-auto w-full"
+            >
+              {{ data().confirmText ?? 'Confirmer' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `,
-  styles: [`
-    .cd-modal-host {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .cd-modal-backdrop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-    }
-
-    .cd-modal {
-      position: relative;
-      background: var(--color-card);
-      border: 1px solid var(--color-border);
-      border-radius: 12px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      max-width: 500px;
-      width: 90vw;
-      margin: 1rem;
-      overflow: hidden;
-    }
-
-    .cd-modal__header {
-      padding: 1.5rem 1.5rem 0 1.5rem;
-    }
-
-    .cd-modal__title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--color-text);
-      margin: 0;
-    }
-
-    .cd-modal__body {
-      padding: 1rem 1.5rem;
-    }
-
-    .cd-modal__body p {
-      color: var(--color-muted-foreground);
-      margin: 0;
-      line-height: 1.5;
-    }
-
-    .cd-modal__footer {
-      padding: 1rem 1.5rem 1.5rem 1.5rem;
-      display: flex;
-      gap: 0.75rem;
-      justify-content: flex-end;
-    }
-
-    .cd-btn {
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      border: 1px solid var(--color-border);
-      background: var(--color-primary);
-      color: white;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .cd-btn:hover {
-      background: var(--color-primary-600);
-    }
-
-    .cd-btn--secondary {
-      background: var(--color-background);
-      color: var(--color-text);
-      border-color: var(--color-border);
-    }
-
-    .cd-btn--secondary:hover {
-      background: var(--color-surface-100);
-    }
-
-    .cd-btn--danger {
-      background: var(--color-error);
-      border-color: var(--color-error);
-    }
-
-    .cd-btn--danger:hover {
-      background: var(--color-error-600);
-    }
-
-    .cd-btn--warning {
-      background: var(--color-warning);
-      border-color: var(--color-warning);
-      color: var(--color-text);
-    }
-
-    .cd-btn--warning:hover {
-      background: var(--color-warning-600);
-    }
-  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'cd-modal-host',
+    class: 'fixed inset-0 z-[1000]',
   },
 })
 export class ConfirmModalView {
-  // Inputs/Outputs modern API
   data = input.required<ConfirmModalData>();
   confirmed = output<boolean>();
   cancelled = output<void>();
@@ -147,5 +107,18 @@ export class ConfirmModalView {
 
   onCancel(): void {
     this.cancelled.emit();
+  }
+
+  getConfirmButtonClasses(): string {
+    const baseClasses = 'text-white border';
+
+    switch (this.data().type) {
+      case 'danger':
+        return `${baseClasses} bg-error border-error hover:bg-error-600 hover:border-error-600 focus:ring-error/50`;
+      case 'warning':
+        return `${baseClasses} bg-warning border-warning hover:bg-warning-600 hover:border-warning-600 focus:ring-warning/50 text-text`;
+      default:
+        return `${baseClasses} bg-primary border-primary hover:bg-primary-600 hover:border-primary-600 focus:ring-primary/50`;
+    }
   }
 }

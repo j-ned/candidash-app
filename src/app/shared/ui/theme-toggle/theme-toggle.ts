@@ -13,7 +13,6 @@ import { ThemeService } from '@shared/ui/theme-toggle/service/theme';
       [attr.aria-label]="ariaLabel()"
       [title]="tooltipText()"
     >
-      <!-- Icône soleil pour le mode light -->
       @if (!themeService.isDark()) {
         <img
           [ngSrc]="'icons/sun.svg'"
@@ -24,7 +23,6 @@ import { ThemeService } from '@shared/ui/theme-toggle/service/theme';
         />
       }
 
-      <!-- Icône lune pour le mode dark -->
       @if (themeService.isDark()) {
         <img
           [ngSrc]="'icons/moon.svg'"

@@ -1,4 +1,4 @@
-export { ProfileHeaderComponent } from './profile-header';
-export { ProfileInfoComponent } from './profile-info';
-export { ProfileSecurityComponent } from './profile-security';
-export { SimpleAvatarComponent } from './simple-avatar';
+export { ProfileHeader } from './profile-header/profile-header';
+export { ProfileInfo } from './profile-info/profile-info';
+export { ProfileSecurity } from './profile-security/profile-security';
+export { SimpleAvatar } from './simple-avatar/simple-avatar';

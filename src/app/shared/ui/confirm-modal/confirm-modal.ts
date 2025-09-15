@@ -18,7 +18,6 @@ export interface ConfirmModalData {
   type?: 'warning' | 'danger' | 'info';
 }
 
-// Minimal typings to avoid `any` while the actual component exists elsewhere
 type SubscriptionLike = { unsubscribe: () => void };
 interface Subscribable<T> {
   subscribe: (cb: (value: T) => void) => SubscriptionLike;
@@ -42,12 +41,9 @@ export class ConfirmModalService {
   async confirm(data: ConfirmModalData): Promise<boolean> {
     console.log('ConfirmModalService.confirm called with:', data);
     return new Promise<boolean>((resolve) => {
-      const modalRef = createComponent(
-        ConfirmModalView as unknown as Type<ConfirmModalComponent>,
-        {
-          environmentInjector: this.injector,
-        }
-      );
+      const modalRef = createComponent(ConfirmModalView as unknown as Type<ConfirmModalComponent>, {
+        environmentInjector: this.injector,
+      });
 
       console.log('Modal component created:', modalRef);
       modalRef.setInput('data', data);

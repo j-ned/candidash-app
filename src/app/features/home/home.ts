@@ -24,8 +24,6 @@ import { PageButton } from '@features/home/model/home-model';
             {{ title }}
           </div>
         </div>
-
-        <!-- Sous-titre responsive -->
         <p
           class="text-muted leading-relaxed transition-all duration-300 hover:text-text hover:-translate-y-1 cursor-default text-sm max-w-xs mx-auto sm:text-base sm:max-w-sm md:text-lg md:max-w-md lg:text-xl lg:max-w-lg xl:text-2xl xl:max-w-2xl"
         >
