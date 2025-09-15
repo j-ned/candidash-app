@@ -4,10 +4,6 @@ import { environment } from '@environments/environment';
 import {
   ProfileData,
   UpdateProfileRequest,
-  UploadAvatarResponse,
-  UploadCvResponse,
-  DeleteAvatarResponse,
-  DeleteCvResponse,
   ChangePasswordRequest,
   ProfileStats,
 } from '@features/dashboard/profile/models/profile-model';
@@ -32,7 +28,6 @@ export class ProfileService {
   private readonly authService = inject(AuthService);
   private readonly baseUrl = environment.apiUrl;
 
-  // Profile state using signals
   private readonly profileState = signal<ProfileState>({
     profile: null,
     stats: null,
@@ -40,21 +35,18 @@ export class ProfileService {
     error: null,
   });
 
-  // Computed selectors
   readonly profile = computed(() => this.profileState().profile);
   readonly stats = computed(() => this.profileState().stats);
   readonly isLoading = computed(() => this.profileState().isLoading);
   readonly error = computed(() => this.profileState().error);
 
   constructor() {
-    // Watch for authentication state changes and load profile data when user becomes available
     effect(() => {
       const user = this.authService.user();
       const isAuthenticated = this.authService.isAuthenticated();
       const token = this.authService.token();
 
       if (user && isAuthenticated && token) {
-        // Initialize basic profile data from auth service
         this.profileState.update((state) => ({
           ...state,
           profile: {
@@ -69,7 +61,6 @@ export class ProfileService {
           },
         }));
 
-        // Load full profile data including avatar and CV paths
         this.getProfile().subscribe({
           error: (error) => {
             console.warn('Failed to load profile data on initialization:', error);
@@ -79,9 +70,6 @@ export class ProfileService {
     });
   }
 
-  /**
-   * Get user profile
-   */
   getProfile(): Observable<ProfileData> {
     const userId = this.authService.user()?.id;
     if (!userId) {
@@ -107,9 +95,6 @@ export class ProfileService {
     );
   }
 
-  /**
-   * Update user profile
-   */
   updateProfile(updateData: UpdateProfileRequest): Observable<ProfileData> {
     const userId = this.authService.user()?.id;
     if (!userId) {
@@ -130,7 +115,6 @@ export class ProfileService {
             error: null,
           }));
 
-          // Update auth service user data
           this.authService.updateUserData({
             ...profile,
           });
@@ -152,9 +136,6 @@ export class ProfileService {
       );
   }
 
-  /**
-   * Change password
-   */
   changePassword(passwordData: ChangePasswordRequest): Observable<{ message: string }> {
     this.setLoading(true);
     this.clearError();
@@ -181,179 +162,6 @@ export class ProfileService {
       );
   }
 
-  /**
-   * Upload avatar
-   */
-  uploadAvatar(file: File): Observable<UploadAvatarResponse> {
-    const userId = this.authService.user()?.id;
-    if (!userId) {
-      return throwError(() => new Error('Utilisateur non connecté'));
-    }
-
-    this.setLoading(true);
-    this.clearError();
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.http
-      .post<UploadAvatarResponse>(`${this.baseUrl}/accounts/upload-avatar/${userId}`, formData)
-      .pipe(
-        tap((response) => {
-          this.profileState.update((state) => ({
-            ...state,
-            profile: state.profile ? { ...state.profile, avatarPath: response.avatarPath } : null,
-            isLoading: false,
-            error: null,
-          }));
-
-          this.toastService.show('success', 'Avatar mis à jour', 'Avatar téléchargé avec succès', {
-            duration: 4000,
-            dismissible: true,
-          });
-        }),
-        catchError((error) => {
-          this.handleError(error, "Erreur lors du téléchargement de l'avatar");
-          return throwError(() => error);
-        }),
-      );
-  }
-
-  /**
-   * Delete avatar
-   */
-  deleteAvatar(): Observable<DeleteAvatarResponse> {
-    const userId = this.authService.user()?.id;
-    if (!userId) {
-      return throwError(() => new Error('Utilisateur non connecté'));
-    }
-
-    this.setLoading(true);
-    this.clearError();
-
-    return this.http
-      .delete<DeleteAvatarResponse>(`${this.baseUrl}/accounts/avatar/${userId}`)
-      .pipe(
-        tap((response) => {
-          this.profileState.update((state) => ({
-            ...state,
-            profile: state.profile ? { ...state.profile, avatarPath: undefined } : null,
-            isLoading: false,
-            error: null,
-          }));
-
-          this.toastService.show('success', 'Avatar supprimé', response.message, {
-            duration: 4000,
-            dismissible: true,
-          });
-        }),
-        catchError((error) => {
-          this.handleError(error, "Erreur lors de la suppression de l'avatar");
-          return throwError(() => error);
-        }),
-      );
-  }
-
-  /**
-   * Upload CV
-   */
-  uploadCv(file: File): Observable<UploadCvResponse> {
-    const userId = this.authService.user()?.id;
-    if (!userId) {
-      return throwError(() => new Error('Utilisateur non connecté'));
-    }
-
-    this.setLoading(true);
-    this.clearError();
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.http
-      .post<UploadCvResponse>(`${this.baseUrl}/accounts/upload-cv/${userId}`, formData)
-      .pipe(
-        tap((response) => {
-          this.profileState.update((state) => ({
-            ...state,
-            profile: state.profile ? { ...state.profile, cvPath: response.cvPath } : null,
-            isLoading: false,
-            error: null,
-          }));
-
-          this.toastService.show('success', 'CV mis à jour', 'CV téléchargé avec succès', {
-            duration: 4000,
-            dismissible: true,
-          });
-        }),
-        catchError((error) => {
-          this.handleError(error, 'Erreur lors du téléchargement du CV');
-          return throwError(() => error);
-        }),
-      );
-  }
-
-  /**
-   * Delete CV
-   */
-  deleteCv(): Observable<DeleteCvResponse> {
-    const userId = this.authService.user()?.id;
-    if (!userId) {
-      return throwError(() => new Error('Utilisateur non connecté'));
-    }
-
-    this.setLoading(true);
-    this.clearError();
-
-    return this.http
-      .delete<DeleteCvResponse>(`${this.baseUrl}/accounts/cv/${userId}`)
-      .pipe(
-        tap((response) => {
-          this.profileState.update((state) => ({
-            ...state,
-            profile: state.profile ? { ...state.profile, cvPath: undefined } : null,
-            isLoading: false,
-            error: null,
-          }));
-
-          this.toastService.show('success', 'CV supprimé', response.message, {
-            duration: 4000,
-            dismissible: true,
-          });
-        }),
-        catchError((error) => {
-          this.handleError(error, 'Erreur lors de la suppression du CV');
-          return throwError(() => error);
-        }),
-      );
-  }
-
-  /**
-   * Get profile statistics
-   * Note: This functionality is not implemented in the backend yet
-   */
-  getProfileStats(): Observable<ProfileStats> {
-    // Mock data for now since the endpoint doesn't exist
-    const mockStats: ProfileStats = {
-      totalApplications: 0,
-      totalRemindersSent: 0,
-      responseRate: 0,
-      avgResponseTime: 0,
-      memberSince: this.authService.user()?.createdAt ?? new Date(),
-    };
-
-    this.profileState.update((state) => ({
-      ...state,
-      stats: mockStats,
-      isLoading: false,
-      error: null,
-    }));
-
-    return new Observable((observer) => {
-      observer.next(mockStats);
-      observer.complete();
-    });
-  }
-
   private setLoading(loading: boolean): void {
     this.profileState.update((state) => ({
       ...state,
@@ -371,7 +179,11 @@ export class ProfileService {
   private handleError(error: HttpErrorResponse, defaultMessage: string): void {
     let errorMessage = defaultMessage;
 
-    const backendMessage = error?.error?.message as string | string[] | { message: string } | undefined;
+    const backendMessage = error?.error?.message as
+      | string
+      | string[]
+      | { message: string }
+      | undefined;
     if (backendMessage) {
       if (Array.isArray(backendMessage)) {
         errorMessage = backendMessage.join('\n');
@@ -402,9 +214,6 @@ export class ProfileService {
     });
   }
 
-  /**
-   * Delete current user account (self-deactivation)
-   */
   deleteAccount(): Observable<{ message: string } | void> {
     const userId = this.authService.user()?.id;
     if (!userId) {
@@ -428,13 +237,13 @@ export class ProfileService {
           this.toastService.show(
             'success',
             'Compte supprimé',
-            response?.message ?? 'Votre compte a été supprimé avec succès.'
+            response?.message ?? 'Votre compte a été supprimé avec succès.',
           );
         }),
         catchError((error) => {
           this.handleError(error, 'Erreur lors de la suppression du compte');
           return throwError(() => error);
-        })
+        }),
       );
   }
 }

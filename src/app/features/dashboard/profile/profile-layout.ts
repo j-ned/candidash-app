@@ -1,20 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { LayoutComponent } from '@shared/ui/layout/layout';
 import { ProfileService } from '@features/dashboard/profile/services/profile';
-import {
-  ProfileHeaderComponent,
-  ProfileInfoComponent,
-  ProfileSecurityComponent,
-} from './components';
+import { ProfileHeader, ProfileInfo, ProfileSecurity } from './components';
 
 @Component({
   selector: 'app-profile-layout',
-  imports: [
-    LayoutComponent,
-    ProfileHeaderComponent,
-    ProfileInfoComponent,
-    ProfileSecurityComponent,
-  ],
+  imports: [LayoutComponent, ProfileHeader, ProfileInfo, ProfileSecurity],
   template: `
     <app-layout>
       <div

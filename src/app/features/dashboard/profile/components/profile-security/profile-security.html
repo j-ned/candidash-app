@@ -1,0 +1,106 @@
+<div class="bg-card border border-border rounded-md p-4 sm:rounded-lg sm:p-6">
+  <h2 class="text-lg font-semibold text-text mb-4 flex items-center mt-3 sm:text-xl sm:mb-6 sm:mt-5">
+    <img
+      [ngSrc]="'/icons/password.svg'"
+      alt="Lock Icon"
+      class="w-5 h-5 mr-2 icon-invert sm:w-6 sm:h-6"
+      width="18"
+      height="18"
+    />
+    Sécurité du compte
+  </h2>
+
+  <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="space-y-3 sm:space-y-4">
+    <div class="space-y-1 sm:space-y-2">
+      <div class="relative">
+        <input
+          id="currentPassword"
+          [type]="showCurrentPassword() ? 'text' : 'password'"
+          formControlName="currentPassword"
+          class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
+          [class.border-error]="isPasswordFieldInvalid('currentPassword')"
+          [class.border-border]="!isPasswordFieldInvalid('currentPassword')"
+          placeholder="Mot de passe actuel"
+        />
+        <button
+          type="button"
+          (click)="toggleCurrentPasswordVisibility()"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 sm:right-3"
+          tabindex="-1"
+        >
+          <img [ngSrc]="showCurrentPassword() ? '/icons/eye.svg' : '/icons/eye-off.svg'" [attr.alt]="showCurrentPassword() ? 'Icône oeil ouvert' : 'Icône oeil fermé'" class="w-4 h-4 icon-invert sm:w-5 sm:h-5" width="16" height="16" />
+        </button>
+      </div>
+      @if (currentPasswordError()) {
+        <p class="text-error text-xs mt-1 sm:text-sm">{{ currentPasswordError() }}</p>
+      }
+    </div>
+
+    <div class="space-y-1 sm:space-y-2">
+      <div class="relative">
+        <input
+          id="newPassword"
+          [type]="showNewPassword() ? 'text' : 'password'"
+          formControlName="newPassword"
+          class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
+          [class.border-error]="isPasswordFieldInvalid('newPassword')"
+          [class.border-border]="!isPasswordFieldInvalid('newPassword')"
+          placeholder="Nouveau mot de passe"
+        />
+        <button
+          type="button"
+          (click)="toggleNewPasswordVisibility()"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 sm:right-3"
+          tabindex="-1"
+        >
+          <img [ngSrc]="showNewPassword() ? '/icons/eye.svg' : '/icons/eye-off.svg'" [attr.alt]="showNewPassword() ? 'Icône oeil ouvert' : 'Icône oeil fermé'" class="w-4 h-4 icon-invert sm:w-5 sm:h-5" width="16" height="16" />
+        </button>
+      </div>
+      @if (newPasswordError()) {
+        <p class="text-error text-xs mt-1 sm:text-sm">{{ newPasswordError() }}</p>
+      }
+    </div>
+
+    <div class="space-y-1 sm:space-y-2">
+      <div class="relative">
+        <input
+          id="confirmPassword"
+          [type]="showConfirmPassword() ? 'text' : 'password'"
+          formControlName="confirmPassword"
+          class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
+          [class.border-error]="
+            isPasswordFieldInvalid('confirmPassword') || hasPasswordMismatch()
+          "
+          [class.border-border]="
+            !isPasswordFieldInvalid('confirmPassword') && !hasPasswordMismatch()
+          "
+          placeholder="Confirmer le nouveau mot de passe"
+        />
+        <button
+          type="button"
+          (click)="toggleConfirmPasswordVisibility()"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 sm:right-3"
+          tabindex="-1"
+        >
+          <img [ngSrc]="showConfirmPassword() ? '/icons/eye.svg' : '/icons/eye-off.svg'" [attr.alt]="showConfirmPassword() ? 'Icône oeil ouvert' : 'Icône oeil fermé'" class="w-4 h-4 icon-invert sm:w-5 sm:h-5" width="16" height="16" />
+        </button>
+      </div>
+      @if (confirmPasswordError()) {
+        <p class="text-error text-xs mt-1 sm:text-sm">{{ confirmPasswordError() }}</p>
+      }
+    </div>
+
+    <div class="pt-2 sm:pt-3">
+      <app-button
+        type="submit"
+        color="red"
+        [disabled]="passwordForm.invalid || profileService.isLoading()"
+        [isLoading]="profileService.isLoading()"
+        customClass="w-full px-4 py-2 text-sm sm:w-auto sm:px-6 sm:py-3 sm:text-base"
+      >
+        <span class="sm:hidden">{{ submitLabel() }}</span>
+        <span class="hidden sm:inline">{{ submitLabel() }}</span>
+      </app-button>
+    </div>
+  </form>
+</div>
