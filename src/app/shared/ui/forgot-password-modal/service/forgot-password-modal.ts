@@ -11,7 +11,6 @@ import {
 import { ForgotPasswordModalView } from '../forgot-password-modal-view';
 import type { ForgotPasswordModalData } from '../forgot-password-modal';
 
-// Minimal typings to avoid `any`
 type SubscriptionLike = { unsubscribe: () => void };
 interface Subscribable<T> {
   subscribe: (cb: (value: T) => void) => SubscriptionLike;
@@ -41,20 +40,18 @@ export class ForgotPasswordModalService {
         ForgotPasswordModalView as unknown as Type<ForgotPasswordModalComponent>,
         {
           environmentInjector: this.injector,
-        }
+        },
       );
 
       modalRef.setInput('data', data);
       const instance = modalRef.instance as ForgotPasswordModalComponent;
 
-      // Handle email submission
       const emailSubscription = instance.emailSubmitted.subscribe((email: string) => {
         emailSubscription.unsubscribe();
         this.closeModal(modalRef);
         resolve({ email });
       });
 
-      // Handle cancellation
       const cancelSubscription = instance.cancelled.subscribe(() => {
         cancelSubscription.unsubscribe();
         this.closeModal(modalRef);

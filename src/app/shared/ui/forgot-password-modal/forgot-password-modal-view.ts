@@ -41,7 +41,6 @@ import { NgOptimizedImage } from '@angular/common';
           </button>
         </header>
 
-        <!-- Body -->
         <section class="p-6">
           @if (!emailSent()) {
             <p class="text-center text-muted mb-6 leading-relaxed">
@@ -49,7 +48,6 @@ import { NgOptimizedImage } from '@angular/common';
               de passe.
             </p>
 
-            <!-- Form -->
             <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()" class="space-y-4">
               <div class="space-y-1">
                 <label for="email" class="block text-sm font-medium text-text">
@@ -90,7 +88,6 @@ import { NgOptimizedImage } from '@angular/common';
               </app-button>
             </form>
           } @else {
-            <!-- Success state -->
             <div class="text-center space-y-4">
               <div class="flex justify-center mb-4">
                 <div class="bg-success/10 p-3 rounded-full">
@@ -128,7 +125,6 @@ import { NgOptimizedImage } from '@angular/common';
           }
         </section>
 
-        <!-- Footer -->
         @if (!emailSent()) {
           <div class="p-6 pt-0 border-t border-border text-center">
             <button
@@ -152,7 +148,6 @@ export class ForgotPasswordModalView implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   readonly authService = inject(AuthService);
 
-  // Inputs/Outputs
   readonly data = input<ForgotPasswordModalData>({});
   readonly emailSubmitted = output<string>();
   readonly cancelled = output<void>();
@@ -166,7 +161,6 @@ export class ForgotPasswordModalView implements OnDestroy {
   });
 
   constructor() {
-    // Utiliser effect pour réagir aux changements de data
     effect(() => {
       const modalData = this.data();
       if (modalData?.email) {
@@ -190,9 +184,6 @@ export class ForgotPasswordModalView implements OnDestroy {
           this.startCooldown();
         },
         error: () => {
-          // Le service gère déjà l'affichage des erreurs via toast
-          // Mais on peut définir emailSent à true pour des raisons de sécurité
-          // (ne pas révéler si l'email existe ou non)
           this.emailSent.set(true);
           this.emailSubmitted.emit(email);
           this.startCooldown();
@@ -207,7 +198,6 @@ export class ForgotPasswordModalView implements OnDestroy {
     this.emailSent.set(false);
     this.forgotPasswordForm.markAsUntouched();
 
-    // Renvoyer l'email
     if (this.forgotPasswordForm.valid) {
       this.onSubmit();
     }
