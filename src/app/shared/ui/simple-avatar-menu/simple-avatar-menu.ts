@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/services/auth';
-import { SimpleAvatarComponent } from '@features/dashboard/profile/components';
+import { SimpleAvatar } from '@features/dashboard/profile/components';
 import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-simple-avatar-menu',
-  imports: [SimpleAvatarComponent, NgOptimizedImage],
+  imports: [SimpleAvatar, NgOptimizedImage],
   template: `
     <div class="relative">
       <button
@@ -83,7 +83,6 @@ import { NgOptimizedImage } from '@angular/common';
         </div>
       }
 
-      <!-- Overlay pour fermer le menu -->
       @if (isMenuOpen()) {
         <div class="fixed inset-0 z-40" (click)="closeMenu()" aria-hidden="true"></div>
       }
@@ -118,13 +117,9 @@ export class SimpleAvatarMenuComponent {
   logout(): void {
     this.closeMenu();
     this.authService.signout().subscribe({
-      next: () => {
-        // La redirection est déjà gérée par AuthService.clearAuthData()
-        // Pas besoin de naviguer manuellement
-      },
+      next: () => {},
       error: () => {
         console.error();
-        // En cas d'erreur, forcer la redirection
         this.router.navigate(['/auth/signin']);
       },
     });
