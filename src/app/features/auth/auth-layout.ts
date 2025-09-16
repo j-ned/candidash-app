@@ -26,13 +26,14 @@ import { Signup } from './components/signup/signup';
             Gérez vos candidatures efficacement
           </p>
         </div>
-
-        <div class="w-full xl:w-200">
-          @if (isSigninRoute()) {
-            <app-signin></app-signin>
-          } @else if (isSignupRoute()) {
-            <app-signup></app-signup>
-          }
+        <div class="flex justify-center w-full">
+          <div class="w-full max-w-2xl">
+            @if (isSigninRoute()) {
+              <app-signin></app-signin>
+            } @else if (isSignupRoute()) {
+              <app-signup></app-signup>
+            }
+          </div>
         </div>
       </div>
     </app-layout>
