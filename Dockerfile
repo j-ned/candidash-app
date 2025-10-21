@@ -17,18 +17,15 @@ RUN pnpm install --frozen-lockfile
 # Copie tout le code source
 COPY . .
 
-# Créer le fichier d'environnement de production pour la liaison backend
+# Configuration de l'API URL via build argument (utiliser secrets en production)
 ARG API_URL=https://api-candidash.nedellec-julien.fr/api/v1
 ENV API_URL=${API_URL}
 
-RUN mkdir -p src/environments && \
-    echo "export const environment = {" > src/environments/environment.ts && \
-    echo "  production: true," >> src/environments/environment.ts && \
-    echo "  apiUrl: '${API_URL}'," >> src/environments/environment.ts && \
-    echo "};" >> src/environments/environment.ts
-
 # Build l'application Angular en mode production
 RUN pnpm run build --configuration production
+
+# Générer le fichier config.json avec l'API URL depuis les secrets
+RUN echo "{\"apiUrl\":\"${API_URL}\"}" > dist/ng-candidash-app/browser/config.json
 
 # ---- Étape de production ----
 # Utilise Nginx Alpine comme image finale légère

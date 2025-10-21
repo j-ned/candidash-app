@@ -1,7 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { environment } from '@environments/environment';
 import {
   AuthResponse,
   AuthState,
@@ -18,6 +17,7 @@ import {
 } from '@features/auth/models/auth-model';
 import { ToastService } from '@shared/ui/toast/service/toast';
 import { TokenService } from './token';
+import { Config } from './config';
 import { Observable, BehaviorSubject, throwError, EMPTY } from 'rxjs';
 import { catchError, tap, switchMap } from 'rxjs/operators';
 
@@ -29,7 +29,10 @@ export class AuthService {
   private readonly toastService = inject(ToastService);
   private readonly tokenService = inject(TokenService);
   private readonly router = inject(Router);
-  private readonly baseUrl = `${environment.apiUrl}`;
+  private readonly configService = inject(Config);
+  private get baseUrl(): string {
+    return this.configService.apiUrl;
+  }
 
   private readonly authState = signal<AuthState>({
     isAuthenticated: false,
