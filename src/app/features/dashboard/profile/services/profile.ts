@@ -1,6 +1,5 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
-import { environment } from '@environments/environment';
 import {
   ProfileData,
   UpdateProfileRequest,
@@ -9,6 +8,7 @@ import {
 } from '@features/dashboard/profile/models/profile-model';
 import { ToastService } from '@shared/ui/toast/service/toast';
 import { AuthService } from '@core/services/auth';
+import { Config } from '@core/services/config';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
@@ -26,7 +26,10 @@ export class ProfileService {
   private readonly http = inject(HttpClient);
   private readonly toastService = inject(ToastService);
   private readonly authService = inject(AuthService);
-  private readonly baseUrl = environment.apiUrl;
+  private readonly configService = inject(Config);
+  private get baseUrl(): string {
+    return this.configService.apiUrl;
+  }
 
   private readonly profileState = signal<ProfileState>({
     profile: null,
