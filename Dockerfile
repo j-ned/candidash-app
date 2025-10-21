@@ -18,8 +18,8 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Créer le fichier d'environnement de production pour la liaison backend
-ARG API_URL
-ENV API_URL=${API_URL:-http://localhost:3000}
+ARG API_URL=https://api-candidash.nedellec-julien.fr
+ENV API_URL=${API_URL}
 
 RUN mkdir -p src/environments && \
     echo "export const environment = {" > src/environments/environment.ts && \
