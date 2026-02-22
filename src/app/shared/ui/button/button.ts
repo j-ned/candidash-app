@@ -1,10 +1,10 @@
-import { CommonModule } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { IconComponent } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-button',
-  imports: [CommonModule, IconComponent],
+  imports: [IconComponent],
   template: `
     <button
       [type]="type()"

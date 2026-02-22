@@ -12,7 +12,7 @@ import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
 import { AuthStateService } from '@features/auth/application/auth-state.service';
-import { CommonModule } from '@angular/common';
+
 import { passwordMatchValidator } from '@shared/validators/password-match.validator';
 import { IconComponent } from '@shared/ui/icon/icon';
 
@@ -23,7 +23,7 @@ type ResetPasswordForm = {
 
 @Component({
   selector: 'app-reset-password',
-  imports: [ReactiveFormsModule, ButtonComponent, CommonModule, IconComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
   templateUrl: './reset-password.html',
   host: {
     class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
