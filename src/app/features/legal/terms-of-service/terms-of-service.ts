@@ -4,17 +4,17 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-terms-of-service',
   imports: [],
+  host: { class: 'min-h-screen bg-background block' },
   template: `
-    <div class="min-h-screen bg-background">
       <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Header -->
-        <div class="mb-8">
+        <header class="mb-8">
           <button
             type="button"
             (click)="goBack()"
             class="mb-4 flex items-center text-muted hover:text-text transition-colors"
           >
-            <svg class="w-5 h-5 mr-2" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 mr-2" aria-hidden="true" focusable="false" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 fill="none"
                 stroke-linecap="round"
@@ -28,11 +28,11 @@ import { Router } from '@angular/router';
 
           <h1 class="text-3xl font-bold text-text mb-2">Conditions d'Utilisation</h1>
           <p class="text-muted">Dernière mise à jour : {{ lastUpdated }}</p>
-        </div>
+        </header>
 
         <!-- Content -->
-        <div class="prose prose-gray dark:prose-invert max-w-none">
-          <div class="bg-card border border-border rounded-lg p-6 space-y-6">
+        <main class="prose prose-gray dark:prose-invert max-w-none">
+          <article class="bg-card border border-border rounded-lg p-6 space-y-6">
             <section>
               <h2 class="text-xl font-semibold text-text mb-3">1. Objet et Champ d'Application</h2>
               <p class="text-text/80 leading-relaxed">
@@ -156,19 +156,18 @@ import { Router } from '@angular/router';
               <h2 class="text-xl font-semibold text-text mb-3">10. Contact</h2>
               <div class="space-y-2 text-text/80">
                 <p>Pour toute question concernant ces conditions d'utilisation :</p>
-                <p><strong>Email :</strong> contact&#64;djoudj.dev</p>
-                <p><strong>Développeur :</strong> Djoudj Dev</p>
+                <p><strong>Email :</strong> contact&#64;nedellec-julien.fr</p>
+                <p><strong>Développeur :</strong> djoudj</p>
               </div>
             </section>
-          </div>
-        </div>
+          </article>
+        </main>
       </div>
-    </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TermsOfServiceComponent {
-  readonly lastUpdated = new Date().toLocaleDateString('fr-FR', {
+  readonly lastUpdated = new Date('2026-02-22').toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

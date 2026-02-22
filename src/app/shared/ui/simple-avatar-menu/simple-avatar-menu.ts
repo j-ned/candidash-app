@@ -1,14 +1,14 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '@core/services/auth';
-import { SimpleAvatar } from '@features/dashboard/profile/components';
-import { NgOptimizedImage } from '@angular/common';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { SimpleAvatar } from '@features/profile/application/components';
+import { IconComponent } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-simple-avatar-menu',
-  imports: [SimpleAvatar, NgOptimizedImage],
+  imports: [SimpleAvatar, IconComponent],
+  host: { class: 'relative block' },
   template: `
-    <div class="relative">
       <button
         type="button"
         (click)="toggleMenu()"
@@ -20,7 +20,8 @@ import { NgOptimizedImage } from '@angular/common';
       </button>
 
       @if (isMenuOpen()) {
-        <div
+        <nav
+          aria-label="Menu utilisateur"
           class="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden"
         >
           <div class="px-4 py-3 border-b border-border bg-surface/50">
@@ -32,67 +33,54 @@ import { NgOptimizedImage } from '@angular/common';
             </p>
           </div>
 
-          <div class="py-1">
-            <button
-              type="button"
-              (click)="goToProfile()"
-              class="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface/80 transition-colors"
-            >
-              <img
-                [ngSrc]="'/icons/about.svg'"
-                alt="Profil"
-                class="w-4 h-4 mr-3 icon-invert"
-                width="16"
-                height="16"
-              />
-              Mon profil
-            </button>
+          <ul class="py-1 list-none m-0 p-0">
+            <li>
+              <button
+                type="button"
+                (click)="goToProfile()"
+                class="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface/80 transition-colors"
+              >
+                <app-icon name="lucide-user" cssClass="w-4 h-4 mr-3" />
+                Mon profil
+              </button>
+            </li>
 
-            <button
-              type="button"
-              (click)="goToDashboard()"
-              class="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface/80 transition-colors"
-            >
-              <img
-                [ngSrc]="'/icons/dashboard.svg'"
-                alt="Dashboard"
-                class="w-4 h-4 mr-3 icon-invert"
-                width="16"
-                height="16"
-              />
-              Dashboard
-            </button>
+            <li>
+              <button
+                type="button"
+                (click)="goToDashboard()"
+                class="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface/80 transition-colors"
+              >
+                <app-icon name="lucide-layout-grid" cssClass="w-4 h-4 mr-3" />
+                Dashboard
+              </button>
+            </li>
 
-            <div class="border-t border-border my-1"></div>
+            <li aria-hidden="true"><hr class="border-t border-border my-1" /></li>
 
-            <button
-              type="button"
-              (click)="logout()"
-              class="w-full flex items-center px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors"
-            >
-              <img
-                [ngSrc]="'/icons/logout.svg'"
-                alt="Déconnexion"
-                class="w-4 h-4 mr-3 icon-invert"
-                width="16"
-                height="16"
-              />
-              Se déconnecter
-            </button>
-          </div>
-        </div>
+            <li>
+              <button
+                type="button"
+                (click)="logout()"
+                class="w-full flex items-center px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors"
+              >
+                <app-icon name="lucide-log-out" cssClass="w-4 h-4 mr-3" />
+                Se déconnecter
+              </button>
+            </li>
+          </ul>
+        </nav>
       }
 
       @if (isMenuOpen()) {
         <div class="fixed inset-0 z-40" (click)="closeMenu()" aria-hidden="true"></div>
       }
-    </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SimpleAvatarMenuComponent {
   private readonly router = inject(Router);
-  readonly authService = inject(AuthService);
+  readonly authService = inject(AuthStateService);
 
   readonly isMenuOpen = signal(false);
 

@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
 import { ToastContainer } from '@shared/ui/toast/toast-container';
-import { AuthService } from '@core/services/auth';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
 
 @Component({
   selector: 'app-root',
@@ -10,15 +11,12 @@ import { AuthService } from '@core/services/auth';
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App implements OnInit {
-  private readonly authService = inject(AuthService);
+export class App {
+  private readonly authService = inject(AuthStateService);
 
-  ngOnInit(): void {
+  constructor() {
     if (this.authService.checkAuthStatus() && !this.authService.isAuthenticated()) {
-      this.authService.autoLogin().subscribe({
-        next: () => {},
-        error: () => {},
-      });
+      this.authService.autoLogin().pipe(takeUntilDestroyed()).subscribe();
     }
   }
 }

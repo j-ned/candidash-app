@@ -7,7 +7,10 @@ export const dashboardRoutes: Routes = [
   },
   {
     path: 'profile',
-    loadComponent: () => import('../profile/profile-layout').then((m) => m.ProfileLayoutComponent),
+    loadComponent: () =>
+      import('@features/profile/application/profile-layout').then(
+        (m) => m.ProfileLayoutComponent,
+      ),
   },
   {
     path: 'jobtrack',
@@ -17,15 +20,22 @@ export const dashboardRoutes: Routes = [
   {
     path: 'jobtrack/new',
     loadComponent: () =>
-      import('../../jobs/components/jobtrack-form/jobtrack-form').then(
-        (m) => m.JobTrackFormPageComponent,
-      ),
+      import(
+        '@features/jobtrack/application/components/jobtrack-form/jobtrack-form'
+      ).then((m) => m.JobTrackFormPageComponent),
+  },
+  {
+    path: 'jobtrack/:id',
+    loadComponent: () =>
+      import(
+        '@features/jobtrack/application/components/jobtrack-detail/jobtrack-detail'
+      ).then((m) => m.JobtrackDetailComponent),
   },
   {
     path: 'jobtrack/:id/edit',
     loadComponent: () =>
-      import('../../jobs/components/jobtrack-form/jobtrack-form').then(
-        (m) => m.JobTrackFormPageComponent,
-      ),
+      import(
+        '@features/jobtrack/application/components/jobtrack-form/jobtrack-form'
+      ).then((m) => m.JobTrackFormPageComponent),
   },
 ];

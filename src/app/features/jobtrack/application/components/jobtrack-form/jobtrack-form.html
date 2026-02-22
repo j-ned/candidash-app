@@ -1,0 +1,628 @@
+<app-layout>
+  <div class="max-w-3xl mx-auto p-4 sm:p-6">
+    <!-- Header with back navigation -->
+    <div class="flex items-center justify-between mb-6 sm:mb-8">
+      <button
+        type="button"
+        (click)="cancel()"
+        class="inline-flex items-center gap-2 text-muted hover:text-text transition-colors group"
+      >
+        <app-icon
+          name="lucide-arrow-left"
+          cssClass="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"
+        />
+        <span class="text-sm font-medium">Retour</span>
+      </button>
+      <div class="px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium sm:text-sm">
+        {{ isEdit() ? 'Modification' : 'Nouvelle candidature' }}
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div class="flex items-center gap-3 mb-6 sm:mb-8">
+      <div class="p-2.5 bg-primary/10 rounded-xl">
+        <app-icon name="lucide-file-check" cssClass="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-text sm:text-2xl lg:text-3xl">
+          {{ isEdit() ? 'Modifier la candidature' : 'Nouvelle candidature' }}
+        </h1>
+        <p class="text-xs text-muted mt-0.5 sm:text-sm">
+          Remplissez les informations de votre candidature
+        </p>
+      </div>
+    </div>
+
+    <form class="space-y-6 sm:space-y-8" [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Section 1: Informations générales -->
+      <fieldset
+        class="bg-card/60 border border-border/40 rounded-2xl p-5 space-y-5 sm:p-6 sm:space-y-6"
+      >
+        <legend class="sr-only">Informations générales</legend>
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-primary/10 rounded-lg">
+            <app-icon name="lucide-file-text" cssClass="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h2 class="text-base font-semibold text-text sm:text-lg">
+              Informations générales
+            </h2>
+            <p class="text-xs text-muted sm:text-sm">
+              Détails de l'offre d'emploi et de l'entreprise
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+          <!-- Titre du poste -->
+          <div class="space-y-1.5">
+            <label for="title" class="block text-xs font-medium text-text sm:text-sm">
+              Titre du poste recherché
+              <span class="text-error">*</span>
+            </label>
+            <input
+              id="title"
+              class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
+              formControlName="title"
+              required
+              aria-required="true"
+              placeholder="Ex: Développeur Full-Stack React/Node.js"
+            />
+            @if (form.get('title')?.errors && form.get('title')?.touched) {
+              <p class="text-xs text-error mt-1 flex items-center gap-1" role="alert">
+                <app-icon name="lucide-circle-alert" cssClass="w-3.5 h-3.5" />
+                Le titre du poste est requis (minimum 2 caractères)
+              </p>
+            }
+          </div>
+
+          <!-- Nom de l'entreprise -->
+          <div class="space-y-1.5">
+            <label for="company" class="block text-xs font-medium text-text sm:text-sm">
+              Nom de l'entreprise
+            </label>
+            <input
+              id="company"
+              class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
+              formControlName="company"
+              placeholder="Ex: Google, Airbnb, startup locale..."
+            />
+            <p class="text-xs text-muted flex items-center gap-1">
+              <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
+              Aide à organiser vos candidatures par entreprise
+            </p>
+          </div>
+
+          <!-- Lien vers l'offre -->
+          <div class="space-y-1.5">
+            <label for="jobUrl" class="block text-xs font-medium text-text sm:text-sm">
+              Lien vers l'offre d'emploi
+            </label>
+            <div class="relative">
+              <input
+                id="jobUrl"
+                class="w-full pl-10 pr-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:pl-11 sm:pr-4 sm:py-3 sm:text-base"
+                formControlName="jobUrl"
+                placeholder="https://linkedin.com/jobs/..."
+              />
+              <app-icon
+                name="lucide-external-link"
+                cssClass="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted sm:left-3.5"
+              />
+            </div>
+          </div>
+
+          <!-- Type de contrat -->
+          <div class="space-y-1.5">
+            <label for="contractType" class="block text-xs font-medium text-text sm:text-sm">
+              Type de contrat
+            </label>
+            <select
+              id="contractType"
+              class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
+              formControlName="contractType"
+            >
+              <option value="">Non précisé</option>
+              <option value="CDI">CDI - Contrat à Durée Indéterminée</option>
+              <option value="CDD">CDD - Contrat à Durée Déterminée</option>
+              <option value="INTERIM">Intérim - Mission temporaire</option>
+              <option value="STAGE">Stage - Formation professionnelle</option>
+              <option value="ALTERNANCE">Alternance - Formation en alternance</option>
+              <option value="FREELANCE">Freelance - Mission indépendante</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Section 2: Suivi de candidature -->
+      <fieldset
+        class="bg-card/60 border border-border/40 rounded-2xl p-5 space-y-5 sm:p-6 sm:space-y-6"
+      >
+        <legend class="sr-only">Suivi de candidature</legend>
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-accent/10 rounded-lg">
+            <app-icon name="lucide-bar-chart-3" cssClass="w-5 h-5 text-accent" />
+          </div>
+          <div>
+            <h2 class="text-base font-semibold text-text sm:text-lg">
+              Suivi de ma candidature
+            </h2>
+            <p class="text-xs text-muted sm:text-sm">
+              Statut actuel et planification des relances
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+          <!-- Statut -->
+          <div class="space-y-1.5 md:col-span-2">
+            <span class="block text-xs font-medium text-text sm:text-sm">
+              Où en est ma candidature ?
+            </span>
+            <div class="flex flex-wrap gap-2">
+              @for (s of allStatuses; track s) {
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                  [class]="form.get('status')!.value === s
+                    ? statusConfig[s].badgeClass + ' cursor-default'
+                    : 'bg-transparent text-muted border-border/40 hover:text-text hover:bg-card cursor-pointer'"
+                  (click)="form.get('status')!.setValue(s)"
+                >
+                  <span aria-hidden="true">{{ statusConfig[s].emoji }}</span>
+                  <span class="hidden sm:inline">{{ statusConfig[s].label }}</span>
+                  <span class="sm:hidden">{{ statusConfig[s].labelShort }}</span>
+                </button>
+              }
+            </div>
+
+            <!-- Terminal status warning -->
+            @if (isTerminalStatus()) {
+              <p class="text-xs text-muted flex items-center gap-1 mt-1">
+                <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
+                Les rappels seront désactivés automatiquement pour ce statut
+              </p>
+            }
+          </div>
+
+          <!-- Date de candidature -->
+          <div class="space-y-1.5">
+            <label for="appliedAt" class="block text-xs font-medium text-text sm:text-sm">
+              Date de ma candidature
+            </label>
+            <input
+              id="appliedAt"
+              type="date"
+              class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
+              formControlName="appliedAt"
+            />
+            <p class="text-xs text-muted flex items-center gap-1">
+              <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
+              Sert de base au calcul du prochain rappel
+            </p>
+          </div>
+        </div>
+
+        <!-- Rappels automatiques -->
+        <div
+          class="border rounded-xl p-4 space-y-4 sm:p-5 transition-all"
+          [class]="isTerminalStatus() ? 'bg-muted/20 border-border/20 opacity-60' : 'bg-background/60 border-border/40'"
+        >
+          <!-- Header with toggle -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <app-icon name="lucide-timer" cssClass="w-4.5 h-4.5 text-accent" />
+              <h3 class="text-sm font-semibold text-text">Rappels automatiques</h3>
+            </div>
+
+            @if (!isTerminalStatus()) {
+              <label class="relative inline-flex items-center cursor-pointer gap-2">
+                <span class="text-xs font-medium text-muted">
+                  {{ form.get('isReminderActive')?.value ? 'Actif' : 'Désactivé' }}
+                </span>
+                <div class="relative">
+                  <input
+                    type="checkbox"
+                    formControlName="isReminderActive"
+                    class="sr-only peer"
+                  />
+                  <div
+                    class="w-9 h-5 bg-border rounded-full peer-checked:bg-primary transition-colors"
+                  ></div>
+                  <div
+                    class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"
+                  ></div>
+                </div>
+              </label>
+            } @else {
+              <span
+                class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-muted/30 text-muted"
+              >
+                <app-icon name="lucide-circle-x" cssClass="w-3.5 h-3.5" />
+                Désactivé
+              </span>
+            }
+          </div>
+
+          <!-- Edit mode: Show existing reminder info -->
+          @if (isEdit() && existingNextReminderFormatted() && !isTerminalStatus()) {
+            <div
+              class="flex items-start gap-2 p-3 rounded-lg border text-xs"
+              [class]="isExistingReminderOverdue() ? 'bg-error/5 border-error/20' : 'bg-blue-500/5 border-blue-500/20'"
+            >
+              @if (isExistingReminderOverdue()) {
+                <app-icon
+                  name="lucide-triangle-alert"
+                  cssClass="w-4 h-4 flex-shrink-0 mt-0.5 text-error"
+                />
+                <div>
+                  <span class="font-semibold text-error">Rappel en retard</span>
+                  <span class="text-error/80">
+                    &mdash; Prévu le {{ existingNextReminderFormatted() }}.
+                    En enregistrant, le prochain rappel sera recalculé.
+                  </span>
+                </div>
+              } @else {
+                <app-icon
+                  name="lucide-clock"
+                  cssClass="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-500"
+                />
+                <span class="text-text/70">
+                  Prochain rappel actuel : <strong class="text-text">{{ existingNextReminderFormatted() }}</strong>
+                </span>
+              }
+            </div>
+          }
+
+          <!-- Frequency options (hidden when terminal or disabled) -->
+          @if (!isTerminalStatus() && form.get('isReminderActive')?.value) {
+            <p class="text-xs text-muted">
+              Choisissez la fréquence de vos rappels de suivi :
+            </p>
+
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+              @for (option of reminderOptions; track option.value) {
+                <label
+                  class="relative flex items-start gap-2.5 p-3 border rounded-xl cursor-pointer hover:bg-card/80 transition-all"
+                  [class]="form.get('frequency')?.value === option.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50'"
+                >
+                  <input
+                    type="radio"
+                    [value]="option.value"
+                    formControlName="frequency"
+                    class="mt-0.5 accent-primary"
+                  />
+                  <div>
+                    <div class="text-xs font-semibold text-text leading-tight">
+                      {{ option.label }}
+                    </div>
+                    <div class="text-xs text-muted mt-0.5 leading-tight">
+                      {{ option.description }}
+                    </div>
+                  </div>
+                </label>
+              }
+            </div>
+
+            <!-- Next reminder preview -->
+            @if (nextReminderFormatted()) {
+              <div
+                class="flex items-center gap-2 p-3 rounded-lg border text-xs"
+                [class]="isReminderInPast() ? 'bg-error/5 border-error/20' : 'bg-green-500/5 border-green-500/20'"
+              >
+                @if (isReminderInPast()) {
+                  <app-icon
+                    name="lucide-triangle-alert"
+                    cssClass="w-4 h-4 flex-shrink-0 text-error"
+                  />
+                  <span class="text-error">
+                    La date calculée ({{ nextReminderFormatted() }}) serait dans le passé
+                    &mdash; le rappel sera recalculé à partir d'aujourd'hui.
+                  </span>
+                } @else {
+                  <app-icon
+                    name="lucide-calendar"
+                    cssClass="w-4 h-4 flex-shrink-0 text-green-600"
+                  />
+                  <span class="text-text/70">
+                    Prochain rappel prévu :
+                    <strong class="text-text">{{ nextReminderFormatted() }}</strong>
+                    @if (daysUntilReminder() !== null) {
+                      <span class="text-muted">
+                        (dans {{ daysUntilReminder() }} jour{{ daysUntilReminder()! > 1 ? 's' : '' }})
+                      </span>
+                    }
+                  </span>
+                }
+              </div>
+            }
+
+            <div
+              class="flex items-start gap-2 text-xs text-muted bg-card/60 border border-border/30 rounded-lg p-3"
+            >
+              <app-icon name="lucide-info" cssClass="w-4 h-4 flex-shrink-0 mt-0.5 text-primary" />
+              <span>
+                <strong>Conseil :</strong> Un suivi régulier augmente vos chances de réponse.
+                Nous vous enverrons un rappel par email.
+              </span>
+            </div>
+          }
+
+          <!-- Disabled state message -->
+          @if (!isTerminalStatus() && !form.get('isReminderActive')?.value) {
+            <p class="text-xs text-muted flex items-center gap-1.5">
+              <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
+              Activez les rappels pour recevoir des notifications de suivi par email.
+            </p>
+          }
+        </div>
+      </fieldset>
+
+      <!-- Section 3: Notes personnelles -->
+      <fieldset
+        class="bg-card/60 border border-border/40 rounded-2xl p-5 space-y-5 sm:p-6 sm:space-y-6"
+      >
+        <legend class="sr-only">Notes personnelles</legend>
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-secondary/10 rounded-lg">
+            <app-icon name="lucide-pencil" cssClass="w-5 h-5 text-secondary" />
+          </div>
+          <div>
+            <h2 class="text-base font-semibold text-text sm:text-lg">
+              Mes notes personnelles
+            </h2>
+            <p class="text-xs text-muted sm:text-sm">
+              Informations importantes à retenir
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label for="notes" class="block text-xs font-medium text-text sm:text-sm">
+            Notes et remarques
+          </label>
+          <textarea
+            id="notes"
+            rows="4"
+            class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:rows-5 sm:px-4 sm:py-3 sm:text-base resize-y"
+            formControlName="notes"
+            placeholder="Ex: Salaire discuté 45-50k, contact RH sympathique, télétravail possible 2j/semaine, équipe de 8 développeurs..."
+          ></textarea>
+          <p class="text-xs text-muted flex items-center gap-1">
+            <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
+            Notez tout ce qui vous semble important : impressions, détails du poste,
+            échanges avec le recruteur...
+          </p>
+        </div>
+      </fieldset>
+
+      <!-- Section 4: Documents -->
+      <fieldset
+        class="bg-card/60 border border-border/40 rounded-2xl p-5 space-y-5 sm:p-6 sm:space-y-6"
+      >
+        <legend class="sr-only">Documents</legend>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-primary/10 rounded-lg">
+              <app-icon name="lucide-paperclip" cssClass="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 class="text-base font-semibold text-text sm:text-lg">
+                Documents
+              </h2>
+              <p class="text-xs text-muted sm:text-sm">
+                CV et lettre de motivation (PDF, max 5 Mo)
+              </p>
+            </div>
+          </div>
+
+          <label class="relative inline-flex items-center cursor-pointer gap-2">
+            <span class="text-xs font-medium text-muted">
+              {{ showDocuments() ? 'Actif' : 'Désactivé' }}
+            </span>
+            <div class="relative">
+              <input
+                type="checkbox"
+                [checked]="showDocuments()"
+                (change)="toggleDocuments()"
+                class="sr-only peer"
+              />
+              <div
+                class="w-9 h-5 bg-border rounded-full peer-checked:bg-primary transition-colors"
+              ></div>
+              <div
+                class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"
+              ></div>
+            </div>
+          </label>
+        </div>
+
+        @if (showDocuments()) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <!-- CV -->
+            <div>
+              <h3 class="text-sm font-medium text-text mb-2">CV</h3>
+              @if (isEdit() && existingCvFileName()) {
+                <!-- Edit mode: existing file -->
+                <div class="border border-border rounded-lg p-4 bg-background/60">
+                  <div class="flex items-center gap-2 mb-3">
+                    <app-icon name="lucide-file-text" cssClass="w-5 h-5 text-primary" />
+                    <span class="text-sm text-text truncate" [title]="existingCvFileName()!">{{ existingCvFileName() }}</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      (click)="viewDocument('cv')"
+                    >
+                      <app-icon name="lucide-eye" cssClass="w-3.5 h-3.5" />
+                      Visualiser
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-error/10 text-error hover:bg-error/20 transition-colors"
+                      (click)="deleteDocument('cv')"
+                    >
+                      <app-icon name="lucide-trash-2" cssClass="w-3.5 h-3.5" />
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              } @else if (!isEdit() && pendingCvFile()) {
+                <!-- Create mode: pending file -->
+                <div class="border border-border rounded-lg p-4 bg-background/60">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <app-icon name="lucide-file-text" cssClass="w-5 h-5 text-primary" />
+                      <span class="text-sm text-text truncate" [title]="pendingCvFile()!.name">{{ pendingCvFile()!.name }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="p-1 text-muted hover:text-error transition-colors"
+                      (click)="removePendingFile('cv')"
+                    >
+                      <app-icon name="lucide-x" cssClass="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <!-- Drop zone -->
+                <div
+                  class="border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer"
+                  [class]="cvDragOver() ? 'border-primary bg-primary/5' : 'border-border'"
+                  (dragover)="onDragOver($event, 'cv')"
+                  (dragleave)="onDragLeave($event, 'cv')"
+                  (drop)="onDrop($event, 'cv')"
+                  (click)="cvInput.click()"
+                >
+                  @if (cvUploading()) {
+                    <div class="flex flex-col items-center gap-2">
+                      <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span class="text-sm text-muted">Upload en cours...</span>
+                    </div>
+                  } @else {
+                    <app-icon name="lucide-upload" cssClass="w-8 h-8 text-muted mx-auto mb-2" />
+                    <p class="text-sm text-muted">Glissez votre CV ici</p>
+                    <p class="text-xs text-muted mt-1">ou cliquez pour sélectionner</p>
+                  }
+                  <input
+                    #cvInput
+                    type="file"
+                    accept="application/pdf"
+                    class="hidden"
+                    (change)="onFileSelected($event, 'cv')"
+                  />
+                </div>
+              }
+            </div>
+
+            <!-- LM -->
+            <div>
+              <h3 class="text-sm font-medium text-text mb-2">Lettre de motivation</h3>
+              @if (isEdit() && existingLmFileName()) {
+                <!-- Edit mode: existing file -->
+                <div class="border border-border rounded-lg p-4 bg-background/60">
+                  <div class="flex items-center gap-2 mb-3">
+                    <app-icon name="lucide-file-text" cssClass="w-5 h-5 text-primary" />
+                    <span class="text-sm text-text truncate" [title]="existingLmFileName()!">{{ existingLmFileName() }}</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      (click)="viewDocument('lm')"
+                    >
+                      <app-icon name="lucide-eye" cssClass="w-3.5 h-3.5" />
+                      Visualiser
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-error/10 text-error hover:bg-error/20 transition-colors"
+                      (click)="deleteDocument('lm')"
+                    >
+                      <app-icon name="lucide-trash-2" cssClass="w-3.5 h-3.5" />
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              } @else if (!isEdit() && pendingLmFile()) {
+                <!-- Create mode: pending file -->
+                <div class="border border-border rounded-lg p-4 bg-background/60">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <app-icon name="lucide-file-text" cssClass="w-5 h-5 text-primary" />
+                      <span class="text-sm text-text truncate" [title]="pendingLmFile()!.name">{{ pendingLmFile()!.name }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="p-1 text-muted hover:text-error transition-colors"
+                      (click)="removePendingFile('lm')"
+                    >
+                      <app-icon name="lucide-x" cssClass="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <!-- Drop zone -->
+                <div
+                  class="border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer"
+                  [class]="lmDragOver() ? 'border-primary bg-primary/5' : 'border-border'"
+                  (dragover)="onDragOver($event, 'lm')"
+                  (dragleave)="onDragLeave($event, 'lm')"
+                  (drop)="onDrop($event, 'lm')"
+                  (click)="lmInput.click()"
+                >
+                  @if (lmUploading()) {
+                    <div class="flex flex-col items-center gap-2">
+                      <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span class="text-sm text-muted">Upload en cours...</span>
+                    </div>
+                  } @else {
+                    <app-icon name="lucide-upload" cssClass="w-8 h-8 text-muted mx-auto mb-2" />
+                    <p class="text-sm text-muted">Glissez votre lettre ici</p>
+                    <p class="text-xs text-muted mt-1">ou cliquez pour sélectionner</p>
+                  }
+                  <input
+                    #lmInput
+                    type="file"
+                    accept="application/pdf"
+                    class="hidden"
+                    (change)="onFileSelected($event, 'lm')"
+                  />
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+      </fieldset>
+
+      <!-- Action buttons -->
+      <div
+        class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between sm:pt-0"
+      >
+        <div class="flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <app-button
+            [customClass]="'w-full sm:w-auto px-6 py-2.5 text-sm font-semibold sm:px-8 sm:py-3 sm:text-base'"
+            type="submit"
+            color="primary"
+            [isLoading]="submitting()"
+            [disabled]="form.invalid || submitting()"
+          >
+            <app-icon name="lucide-check" cssClass="w-4 h-4 mr-1.5 sm:w-5 sm:h-5" />
+            {{ isEdit() ? 'Mettre à jour' : 'Enregistrer' }}
+          </app-button>
+          <app-button
+            [customClass]="'w-full sm:w-auto px-6 py-2.5 text-sm sm:px-8 sm:py-3 sm:text-base'"
+            type="button"
+            color="secondary"
+            (buttonClick)="cancel()"
+          >
+            Annuler
+          </app-button>
+        </div>
+      </div>
+    </form>
+  </div>
+</app-layout>

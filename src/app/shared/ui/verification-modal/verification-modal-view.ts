@@ -7,43 +7,42 @@ import {
   signal,
   OnDestroy,
 } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthService } from '@core/services/auth';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
 import { startCooldownTimer, clearCooldownTimer } from '@shared/utils/cooldown';
 import type { VerificationModalData } from './verification-modal';
-import { NgOptimizedImage } from '@angular/common';
+import { IconComponent } from '@shared/ui/icon/icon';
+import { verificationCodeValidator } from '@shared/validators/verification-code.validator';
+
+type VerificationModalForm = {
+  verificationCode: FormControl<string>;
+};
 
 @Component({
   selector: 'app-verification-modal-view',
-  imports: [ReactiveFormsModule, ButtonComponent, NgOptimizedImage],
+  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
   template: `
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" (click)="onCancel()"></div>
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" (click)="onCancel()" aria-hidden="true"></div>
 
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Validation de l'inscription"
+      aria-labelledby="verification-modal-title"
     >
       <div
         class="relative bg-background border border-border rounded-xl shadow-2xl max-w-md w-full mx-auto overflow-hidden"
       >
         <header class="flex items-center justify-between p-6 pb-0">
-          <h2 class="text-xl font-bold text-text">Validation de l'inscription</h2>
+          <h2 id="verification-modal-title" class="text-xl font-bold text-text">Validation de l'inscription</h2>
           <button
             type="button"
             class="p-2 text-muted hover:text-text hover:bg-surface rounded-md transition-colors duration-200"
             (click)="onCancel()"
             aria-label="Fermer"
           >
-            <img
-              [ngSrc]="'/icons/close.svg'"
-              alt="Fermer"
-              class="w-5 h-5 icon-invert"
-              width="24"
-              height="24"
-            />
+            <app-icon name="lucide-x" cssClass="w-5 h-5" />
           </button>
         </header>
 
@@ -72,10 +71,12 @@ import { NgOptimizedImage } from '@angular/common';
                 autocomplete="one-time-code"
               />
               @if (isFieldInvalid('verificationCode')) {
-                <p class="text-error text-xs mt-1">
-                  @if (verificationForm.get('verificationCode')?.errors?.['required']) {
+                <p class="text-error text-xs mt-1" role="alert">
+                  @if (verificationForm.controls.verificationCode.errors?.['required']) {
                     Le code de validation est requis
-                  } @else if (verificationForm.get('verificationCode')?.errors?.['pattern']) {
+                  } @else if (
+                    verificationForm.controls.verificationCode.errors?.['invalidCode']
+                  ) {
                     Le code doit être composé de 6 chiffres
                   }
                 </p>
@@ -125,8 +126,7 @@ import { NgOptimizedImage } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerificationModalView implements OnDestroy {
-  private readonly fb = inject(FormBuilder);
-  readonly authService = inject(AuthService);
+  readonly authService = inject(AuthStateService);
 
   readonly data = input.required<VerificationModalData>();
   readonly verificationSubmitted = output<string>();
@@ -136,8 +136,11 @@ export class VerificationModalView implements OnDestroy {
   readonly resendCooldown = signal<number>(0);
   private cooldownInterval: ReturnType<typeof setInterval> | null = null;
 
-  readonly verificationForm: FormGroup = this.fb.group({
-    verificationCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  readonly verificationForm = new FormGroup<VerificationModalForm>({
+    verificationCode: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, verificationCodeValidator],
+    }),
   });
 
   ngOnDestroy(): void {
@@ -146,7 +149,7 @@ export class VerificationModalView implements OnDestroy {
 
   onSubmit(): void {
     if (this.verificationForm.valid) {
-      const verificationCode = this.verificationForm.value.verificationCode;
+      const { verificationCode } = this.verificationForm.getRawValue();
       this.verificationSubmitted.emit(verificationCode);
     }
   }
@@ -164,8 +167,8 @@ export class VerificationModalView implements OnDestroy {
     this.cooldownInterval = startCooldownTimer(this.resendCooldown, 60);
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.verificationForm.get(fieldName);
-    return !!(field && field.invalid && field.touched);
+  isFieldInvalid(fieldName: keyof VerificationModalForm): boolean {
+    const field = this.verificationForm.controls[fieldName];
+    return field.invalid && field.touched;
   }
 }

@@ -7,7 +7,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
-import { AuthService } from '@core/services/auth';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
 import { SimpleAvatarMenuComponent } from '../simple-avatar-menu/simple-avatar-menu';
 import { RouterLink } from '@angular/router';
 
@@ -15,10 +15,10 @@ import { RouterLink } from '@angular/router';
   selector: 'app-layout',
   imports: [ThemeToggle, SimpleAvatarMenuComponent, RouterLink],
   template: `
-    <main
-      class="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-surface"
+    <div
+      class="relative min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-surface"
     >
-      <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 z-0" aria-hidden="true">
         <div class="absolute inset-0 opacity-30 dark:opacity-20">
           <div
             class="absolute inset-0 bg-[linear-gradient(90deg,transparent_93%,theme(colors.accent.950)_94%,theme(colors.accent.900)_95%,theme(colors.accent.950)_96%,transparent_97%),linear-gradient(0deg,transparent_93%,theme(colors.accent.950)_94%,theme(colors.accent.900)_95%,theme(colors.accent.950)_96%,transparent_97%)] bg-[length:60px_60px] animate-pulse"
@@ -59,13 +59,14 @@ import { RouterLink } from '@angular/router';
         </div>
       </header>
 
-      <div class="relative z-10 flex min-h-screen items-center justify-center p-4 sm:p-6 lg:p-8">
+      <main class="relative z-10 flex min-h-screen items-start justify-center p-4 pt-20 sm:p-6 sm:pt-24 lg:p-8 lg:pt-28">
         <div class="w-full max-w-6xl mx-auto">
           <div
             class="relative backdrop-blur-sm bg-card/50 border border-border/30 rounded-3xl shadow-2xl shadow-primary/5 overflow-hidden"
           >
             <div
               class="absolute inset-0 rounded-3xl border border-accent/20 pointer-events-none"
+              aria-hidden="true"
             ></div>
 
             <div class="relative p-6 sm:p-8 lg:p-12">
@@ -75,7 +76,7 @@ import { RouterLink } from '@angular/router';
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <footer class="absolute bottom-0 left-0 right-0 z-10 p-4 sm:p-6">
         <div class="flex items-center justify-center">
@@ -94,8 +95,9 @@ import { RouterLink } from '@angular/router';
 
       <div
         class="pointer-events-none fixed inset-0 z-50 transition-opacity duration-300 opacity-0 cursor-halo"
+        aria-hidden="true"
       ></div>
-    </main>
+    </div>
   `,
   styles: `
     @keyframes shimmer {
@@ -200,9 +202,11 @@ import { RouterLink } from '@angular/router';
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   private readonly renderer = inject(Renderer2);
-  readonly authService = inject(AuthService);
+  readonly authService = inject(AuthStateService);
   private haloElement?: HTMLElement;
   private mouseMoveListener?: (event: MouseEvent) => void;
+  private rafId: number | null = null;
+  private pendingEvent: MouseEvent | null = null;
   private lastMoveTime = 0;
   private readonly cleanupListeners: (() => void)[] = [];
 
@@ -214,6 +218,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.mouseMoveListener) {
       document.removeEventListener('mousemove', this.mouseMoveListener);
+    }
+
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
     }
 
     this.cleanupListeners.forEach((cleanup) => cleanup());
@@ -237,30 +245,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   private setupMouseTracking(): void {
     this.mouseMoveListener = (event: MouseEvent) => {
-      if (this.haloElement) {
-        this.renderer.removeClass(this.haloElement, 'opacity-0');
-        this.renderer.addClass(this.haloElement, 'opacity-100');
-
-        this.renderer.setStyle(this.haloElement, 'left', `${event.clientX}px`);
-        this.renderer.setStyle(this.haloElement, 'top', `${event.clientY}px`);
-
-        const now = Date.now();
-        const timeDiff = now - (this.lastMoveTime || now);
-        const speed = Math.min(
-          (Math.sqrt(Math.pow(event.movementX || 0, 2) + Math.pow(event.movementY || 0, 2)) /
-            Math.max(timeDiff, 1)) *
-            10,
-          2,
-        );
-
-        this.renderer.setStyle(
-          this.haloElement,
-          'transform',
-          `translate(-50%, -50%) scale(${1 + speed * 0.2})`,
-        );
-
-        this.lastMoveTime = now;
-      }
+      this.pendingEvent = event;
+      this.rafId ??= requestAnimationFrame(() => this.updateHaloPosition());
     };
 
     const mouseLeaveListener = () => {
@@ -270,11 +256,35 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }
     };
 
-    document.addEventListener('mousemove', this.mouseMoveListener);
+    document.addEventListener('mousemove', this.mouseMoveListener, { passive: true });
     document.addEventListener('mouseleave', mouseLeaveListener);
 
     this.cleanupListeners.push(() =>
       document.removeEventListener('mouseleave', mouseLeaveListener),
     );
+  }
+
+  private updateHaloPosition(): void {
+    this.rafId = null;
+    const event = this.pendingEvent;
+    if (!event || !this.haloElement) return;
+
+    this.renderer.removeClass(this.haloElement, 'opacity-0');
+    this.renderer.addClass(this.haloElement, 'opacity-100');
+
+    this.haloElement.style.left = `${event.clientX}px`;
+    this.haloElement.style.top = `${event.clientY}px`;
+
+    const now = Date.now();
+    const timeDiff = now - (this.lastMoveTime || now);
+    const speed = Math.min(
+      (Math.sqrt((event.movementX || 0) ** 2 + (event.movementY || 0) ** 2) /
+        Math.max(timeDiff, 1)) *
+        10,
+      2,
+    );
+
+    this.haloElement.style.transform = `translate(-50%, -50%) scale(${1 + speed * 0.2})`;
+    this.lastMoveTime = now;
   }
 }

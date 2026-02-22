@@ -1,11 +1,11 @@
 import { Component, ChangeDetectionStrategy, input, output, computed, inject } from '@angular/core';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ToastService } from '@shared/ui/toast/service/toast';
 import { ToastData } from '@shared/ui/toast/model/toast-model';
+import { IconComponent } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-toast',
-  imports: [CommonModule, NgOptimizedImage],
+  imports: [IconComponent],
   template: `
     <div
       [class]="toastClasses()"
@@ -16,34 +16,13 @@ import { ToastData } from '@shared/ui/toast/model/toast-model';
       <div class="flex-shrink-0 mr-3">
         @switch (toast().type) {
           @case ('success') {
-            <img
-              [ngSrc]="'/icons/success.svg'"
-              alt="Success"
-              class="w-5 h-5"
-              [class]="iconClasses()"
-              height="24"
-              width="24"
-            />
+            <app-icon name="lucide-circle-check" [cssClass]="'w-5 h-5 ' + iconClasses()" />
           }
           @case ('warning') {
-            <img
-              [ngSrc]="'/icons/warning.svg'"
-              alt="Warning"
-              class="w-5 h-5"
-              [class]="iconClasses()"
-              height="24"
-              width="24"
-            />
+            <app-icon name="lucide-triangle-alert" [cssClass]="'w-5 h-5 ' + iconClasses()" />
           }
           @case ('danger') {
-            <img
-              [ngSrc]="'/icons/error.svg'"
-              alt="Error"
-              class="w-5 h-5"
-              [class]="iconClasses()"
-              height="24"
-              width="24"
-            />
+            <app-icon name="lucide-circle-alert" [cssClass]="'w-5 h-5 ' + iconClasses()" />
           }
         }
       </div>
@@ -63,11 +42,11 @@ import { ToastData } from '@shared/ui/toast/model/toast-model';
         <button
           type="button"
           (click)="onDismiss()"
-          class="ml-3 flex-shrink-0 p-1 rounded-full hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors icon-invert"
+          class="ml-3 flex-shrink-0 p-1 rounded-full hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors"
           [class]="dismissButtonClasses()"
           aria-label="Fermer la notification"
         >
-          <img [ngSrc]="'icons/close.svg'" alt="Fermer" class="w-4 h-4" height="16" width="16" />
+          <app-icon name="lucide-x" cssClass="w-4 h-4" />
         </button>
       }
     </div>

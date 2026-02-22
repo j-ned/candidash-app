@@ -1,9 +1,10 @@
-import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { IconComponent } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-button',
-  imports: [CommonModule, NgOptimizedImage],
+  imports: [CommonModule, IconComponent],
   template: `
     <button
       [type]="type()"
@@ -13,13 +14,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
     >
       @if (isLoading()) {
         <span class="mr-2 inline-block">
-          <img
-            [ngSrc]="iconSpinner()"
-            class="h-4 w-4 text-text icon-invert animate-spin"
-            alt="Loading"
-            height="24"
-            width="24"
-          />
+          <app-icon name="lucide-loader-2" cssClass="h-4 w-4 text-text animate-spin" />
         </span>
       }
       <ng-content />
@@ -36,8 +31,6 @@ export class ButtonComponent {
   readonly rounded = input<boolean>(true);
   readonly customClass = input<string>('');
   readonly isLoading = input<boolean>(false);
-
-  readonly iconSpinner = signal('icons/spinner.svg');
 
   readonly buttonClasses = computed(() => {
     const classes = [
