@@ -1,11 +1,11 @@
 import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ToastComponent } from '@shared/ui/toast/toast';
 import { ToastService } from '@shared/ui/toast/service/toast';
 
 @Component({
   selector: 'app-toast-container',
-  imports: [CommonModule, ToastComponent],
+  imports: [ToastComponent],
   template: `
     @if (toastService.hasToasts()) {
       <div
