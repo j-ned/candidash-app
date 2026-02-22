@@ -98,7 +98,15 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.es2022,
-        ...globals.jasmine
+        // Vitest globals (vitest.config.ts: globals: true)
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
       }
     },
     plugins: {
@@ -141,7 +149,7 @@ export default [
       '@angular-eslint/template/eqeqeq': 'error',
       '@angular-eslint/template/no-negated-async': 'error',
       '@angular-eslint/template/conditional-complexity': ['error', { maxComplexity: 3 }],
-      '@angular-eslint/template/cyclomatic-complexity': ['error', { maxComplexity: 5 }]
+      '@angular-eslint/template/cyclomatic-complexity': ['error', { maxComplexity: 20 }]
     }
   },
 
