@@ -1,58 +1,67 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from '@core/services/auth';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
 import { TokenService } from '@core/services/token';
-import { environment } from '@environments/environment';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { Config } from '@core/services/config';
+import { Observable, catchError, switchMap, throwError, share } from 'rxjs';
+import type { RefreshResponse } from '@features/auth/domain/models/auth.model';
+
+let refreshInFlight$: Observable<RefreshResponse> | null = null;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
+  const authService = inject(AuthStateService);
   const tokenService = inject(TokenService);
+  const config = inject(Config);
 
-  // Vérifier si c'est un appel vers mon API
-  const isApiCall = req.url.startsWith(environment.apiUrl);
+  const isApiCall = req.url.startsWith(config.apiUrl);
 
-  // Exclu les endpoints d'authentification du refresh automatique
   const isAuthEndpoint =
     req.url.includes('/auth/login') ||
     req.url.includes('/auth/refresh') ||
     req.url.includes('/auth/logout') ||
     req.url.includes('/accounts/registration');
 
-  const token = tokenService.getAccessToken();
   let authReq = req;
 
-  // Pour tous les appels API, inclure withCredentials et le token si disponible
   if (isApiCall) {
     authReq = req.clone({
-      setHeaders: token ? { Authorization: `Bearer ${token}` } : {},
-      withCredentials: true, // Important pour les cookies HttpOnly
+      withCredentials: true,
     });
   }
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si erreur 401 n'est pas sur un endpoint auth = refresh
       if (
         error.status === 401 &&
         !isAuthEndpoint &&
         isApiCall &&
         tokenService.hasValidRefreshToken()
       ) {
-        return authService.refreshToken().pipe(
+        // Share a single refresh Observable across concurrent 401s
+        if (!refreshInFlight$) {
+          refreshInFlight$ = authService.refreshToken().pipe(
+            share({
+              resetOnComplete: true,
+              resetOnError: true,
+              resetOnRefCountZero: true,
+            }),
+          );
+
+          // Clear the shared observable after it completes or errors
+          refreshInFlight$.subscribe({
+            complete: () => (refreshInFlight$ = null),
+            error: () => (refreshInFlight$ = null),
+          });
+        }
+
+        return refreshInFlight$.pipe(
           switchMap(() => {
-            // Réessayer la requête originale avec le nouveau token
-            const newToken = tokenService.getAccessToken();
             const retryReq = req.clone({
-              setHeaders: {
-                Authorization: `Bearer ${newToken}`,
-              },
               withCredentials: true,
             });
             return next(retryReq);
           }),
           catchError((refreshError) => {
-            // Si le refresh échoue, propager l'erreur
             return throwError(() => refreshError);
           }),
         );

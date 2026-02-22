@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
 import { LayoutComponent } from '@shared/ui/layout/layout';
 import { PageButton } from '@features/home/model/home-model';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
 
 @Component({
   selector: 'app-home',
@@ -66,6 +67,15 @@ import { PageButton } from '@features/home/model/home-model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
+  private readonly authState = inject(AuthStateService);
+  private readonly router = inject(Router);
+
+  constructor() {
+    if (this.authState.isAuthenticated()) {
+      this.router.navigate(['/dashboard']);
+    }
+  }
+
   readonly title = 'Candidash';
   readonly subtitle =
     "Centralise tes candidatures, gagne du temps et reste toujours organisé dans ta recherche d'emploi.";

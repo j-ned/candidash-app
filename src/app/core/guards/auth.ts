@@ -1,12 +1,12 @@
-import { CanActivateFn, CanMatchFn } from '@angular/router';
+import { CanMatchFn } from '@angular/router';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '@core/services/auth';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
 import { map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
-export const authGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
+export const authGuard: CanMatchFn = () => {
+  const authService = inject(AuthStateService);
   const router = inject(Router);
 
   if (authService.isAuthenticated()) {
@@ -31,25 +31,8 @@ export const authGuard: CanActivateFn = () => {
   return router.createUrlTree(['/auth/signin']);
 };
 
-export const authMatchGuard: CanMatchFn = () => {
-  const authService = inject(AuthService);
-
-  if (authService.isAuthenticated()) {
-    return true;
-  }
-
-  if (authService.checkAuthStatus()) {
-    return authService.autoLogin().pipe(
-      map((success) => success),
-      catchError(() => of(false)),
-    );
-  }
-
-  return false;
-};
-
-export const guestGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
+export const guestGuard: CanMatchFn = () => {
+  const authService = inject(AuthStateService);
   const router = inject(Router);
 
   if (authService.isAuthenticated()) {
@@ -71,3 +54,4 @@ export const guestGuard: CanActivateFn = () => {
 
   return true;
 };
+

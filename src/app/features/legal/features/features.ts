@@ -1,34 +1,28 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { NgOptimizedImage } from '@angular/common';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
+import { IconComponent } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-features',
-  imports: [NgOptimizedImage, ThemeToggle],
+  imports: [IconComponent, ThemeToggle],
+  host: { class: 'min-h-screen bg-background flex flex-col' },
   template: `
-    <div class="min-h-screen bg-background flex flex-col">
       <!-- Header simple -->
-      <div class="p-6 flex items-center justify-between">
+      <header class="p-6 flex items-center justify-between">
         <button
           type="button"
           (click)="goBack()"
           class="inline-flex items-center text-muted hover:text-text transition-colors"
         >
-          <img
-            [ngSrc]="'/icons/arrow-left.svg'"
-            alt="Retour"
-            class="w-5 h-5 mr-2"
-            width="16"
-            height="16"
-          />
+          <app-icon name="lucide-arrow-left" cssClass="w-5 h-5 mr-2" />
           Retour à l'accueil
         </button>
         <app-theme-toggle></app-theme-toggle>
-      </div>
+      </header>
 
       <!-- Contenu principal centré -->
-      <div class="flex-1 flex items-center justify-center px-6">
+      <main class="flex-1 flex items-center justify-center px-6">
         <div class="w-full max-w-4xl mx-auto text-center space-y-8">
           <!-- Titre -->
           <div class="space-y-4">
@@ -43,7 +37,7 @@ import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
             <div
               class="aspect-video bg-card border border-border rounded-xl overflow-hidden shadow-xl"
             >
-              <video class="w-full h-full object-cover" controls preload="metadata" poster="">
+              <video class="w-full h-full object-cover" controls preload="metadata" poster="" aria-label="Démonstration de Candidash">
                 <source src="/video/video_feature.webm" type="video/webm" />
                 <p class="text-center text-muted p-8">
                   Votre navigateur ne supporte pas la lecture de vidéos HTML5.
@@ -56,15 +50,15 @@ import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <!-- CTA en bas -->
-      <div class="p-6 text-center">
+      <footer class="p-6 text-center">
         <button
           (click)="goToSignup()"
           class="inline-flex items-center px-8 py-4 bg-primary text-white rounded-lg font-semibold text-lg hover:bg-primary/90 transition-colors shadow-lg"
         >
-          <svg class="w-6 h-6 mr-2" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 mr-2" aria-hidden="true" focusable="false" stroke="currentColor" viewBox="0 0 24 24">
             <path
               fill="none"
               stroke-linecap="round"
@@ -76,8 +70,7 @@ import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
           Créer mon compte gratuitement
         </button>
         <p class="text-sm text-muted mt-3">Aucune carte de crédit requise</p>
-      </div>
-    </div>
+      </footer>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

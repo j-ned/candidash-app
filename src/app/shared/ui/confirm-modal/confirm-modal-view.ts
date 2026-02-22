@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import type { ConfirmModalData } from './confirm-modal';
+import { IconComponent } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-confirm-modal-view',
-  imports: [NgOptimizedImage],
+  imports: [IconComponent],
   template: `
     <div
       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] animate-in fade-in duration-200"
@@ -26,33 +26,15 @@ import type { ConfirmModalData } from './confirm-modal';
             <div class="flex-shrink-0">
               @if (data().type === 'danger') {
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-error/10">
-                  <img
-                    [ngSrc]="'/icons/alert-triangle.svg'"
-                    alt="Attention"
-                    class="h-6 w-6 text-error icon-error"
-                    width="24"
-                    height="24"
-                  />
+                  <app-icon name="lucide-triangle-alert" cssClass="h-6 w-6 text-error" ariaLabel="Attention" />
                 </div>
               } @else if (data().type === 'warning') {
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
-                  <img
-                    [ngSrc]="'/icons/alert-circle.svg'"
-                    alt="Avertissement"
-                    class="h-6 w-6 text-warning icon-warning"
-                    width="24"
-                    height="24"
-                  />
+                  <app-icon name="lucide-circle-alert" cssClass="h-6 w-6 text-warning" ariaLabel="Avertissement" />
                 </div>
               } @else {
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <img
-                    [ngSrc]="'/icons/help-circle.svg'"
-                    alt="Question"
-                    class="h-6 w-6 text-primary icon-primary"
-                    width="24"
-                    height="24"
-                  />
+                  <app-icon name="lucide-circle-help" cssClass="h-6 w-6 text-primary" ariaLabel="Question" />
                 </div>
               }
             </div>

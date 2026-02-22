@@ -1,10 +1,10 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ThemeService } from '@shared/ui/theme-toggle/service/theme';
+import { IconComponent } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-theme-toggle',
-  imports: [CommonModule, NgOptimizedImage],
+  imports: [IconComponent],
   template: `
     <button
       type="button"
@@ -14,23 +14,11 @@ import { ThemeService } from '@shared/ui/theme-toggle/service/theme';
       [title]="tooltipText()"
     >
       @if (!themeService.isDark()) {
-        <img
-          [ngSrc]="'icons/sun.svg'"
-          alt="Sun"
-          class="w-5 h-5 transition-transform duration-300 icon-invert"
-          height="24"
-          width="24"
-        />
+        <app-icon name="lucide-sun" cssClass="w-5 h-5 transition-transform duration-300" />
       }
 
       @if (themeService.isDark()) {
-        <img
-          [ngSrc]="'icons/moon.svg'"
-          alt="Moon"
-          class="w-5 h-5 transition-transform duration-300 icon-invert"
-          height="24"
-          width="24"
-        />
+        <app-icon name="lucide-moon" cssClass="w-5 h-5 transition-transform duration-300" />
       }
     </button>
   `,

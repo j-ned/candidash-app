@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { LayoutComponent } from '@shared/ui/layout/layout';
-import { filter } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
 import { Signin } from './components/signin/signin';
 import { Signup } from './components/signup/signup';
 
@@ -40,20 +41,16 @@ import { Signup } from './components/signup/signup';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AuthLayout implements OnInit {
+export class AuthLayout {
   private readonly router = inject(Router);
 
-  private readonly currentRoute = signal('');
-
-  ngOnInit(): void {
-    this.currentRoute.set(this.router.url);
-
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        this.currentRoute.set(event.url);
-      });
-  }
+  private readonly currentRoute = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => event.url),
+    ),
+    { initialValue: this.router.url },
+  );
 
   isSigninRoute(): boolean {
     return /^\/auth\/signin(\/?|\?.*)?$/.test(this.currentRoute());

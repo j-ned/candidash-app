@@ -1,101 +1,97 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-  AbstractControl,
-} from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  input,
+  OnInit,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthService } from '@core/services/auth';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { CommonModule } from '@angular/common';
+import { passwordMatchValidator } from '@shared/validators/password-match.validator';
+import { IconComponent } from '@shared/ui/icon/icon';
+
+type ResetPasswordForm = {
+  newPassword: FormControl<string>;
+  confirmPassword: FormControl<string>;
+};
 
 @Component({
   selector: 'app-reset-password',
-  imports: [ReactiveFormsModule, ButtonComponent, CommonModule, NgOptimizedImage],
+  imports: [ReactiveFormsModule, ButtonComponent, CommonModule, IconComponent],
   templateUrl: './reset-password.html',
+  host: {
+    class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
+    role: 'region',
+    '[attr.aria-labelledby]': '"reset-password-title"',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResetPassword implements OnInit {
-  private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-  readonly authService = inject(AuthService);
+  readonly authService = inject(AuthStateService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly token = input<string>('');
 
   readonly showPassword = signal(false);
   readonly showConfirmPassword = signal(false);
   readonly passwordReset = signal(false);
   readonly currentPassword = signal('');
-  private resetToken = '';
 
-  readonly resetPasswordForm: FormGroup = this.fb.group(
+  readonly resetPasswordForm = new FormGroup<ResetPasswordForm>(
     {
-      newPassword: [
-        '',
-        [
+      newPassword: new FormControl('', {
+        nonNullable: true,
+        validators: [
           Validators.required,
           Validators.minLength(8),
-          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/),
+          Validators.pattern(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+          ),
         ],
-      ],
-      confirmPassword: ['', [Validators.required]],
+      }),
+      confirmPassword: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required],
+      }),
     },
-    { validators: this.passwordMatchValidator },
+    { validators: passwordMatchValidator('newPassword', 'confirmPassword') },
   );
 
   ngOnInit(): void {
-    // Récupérer le token depuis les query params
-    const token = this.route.snapshot.queryParams['token'];
-    if (!token) {
-      // Rediriger vers forgot-password si pas de token
+    if (!this.token()) {
       void this.router.navigate(['/auth/forgot-password']);
-      return;
     }
-    this.resetToken = token;
-  }
-
-  passwordMatchValidator(control: AbstractControl) {
-    const newPassword = control.get('newPassword');
-    const confirmPassword = control.get('confirmPassword');
-
-    if (newPassword && confirmPassword && newPassword.value !== confirmPassword.value) {
-      confirmPassword.setErrors({ mismatch: true });
-    } else {
-      const errors = confirmPassword?.errors;
-      if (errors) {
-        delete errors['mismatch'];
-        if (Object.keys(errors).length === 0) {
-          confirmPassword.setErrors(null);
-        }
-      }
-    }
-    return null;
   }
 
   onSubmit(): void {
-    if (this.resetPasswordForm.valid && this.resetToken) {
-      const newPassword = this.resetPasswordForm.value.newPassword;
+    const resetToken = this.token();
+    if (this.resetPasswordForm.valid && resetToken) {
+      const { newPassword } = this.resetPasswordForm.getRawValue();
 
       this.authService
         .resetPassword({
-          token: this.resetToken,
+          token: resetToken,
           newPassword,
         })
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
             this.passwordReset.set(true);
-          },
-          error: () => {
-            // Le service gère déjà l'affichage des erreurs via toast
           },
         });
     }
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.resetPasswordForm.get(fieldName);
-    return !!(field && field.invalid && field.touched);
+  isFieldInvalid(fieldName: keyof ResetPasswordForm): boolean {
+    const field = this.resetPasswordForm.controls[fieldName];
+    return field.invalid && field.touched;
   }
 
   togglePasswordVisibility(): void {
@@ -111,14 +107,12 @@ export class ResetPassword implements OnInit {
   }
 
   updateCurrentPassword(): void {
-    const password = this.resetPasswordForm.get('newPassword')?.value ?? '';
-    this.currentPassword.set(password);
+    this.currentPassword.set(this.resetPasswordForm.controls.newPassword.value);
   }
 
-  // Helpers to reduce template cyclomatic complexity
   newPasswordError(): string | null {
-    const ctrl = this.resetPasswordForm.get('newPassword');
-    if (!ctrl || !(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
+    const ctrl = this.resetPasswordForm.controls.newPassword;
+    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le mot de passe est requis';
     if (ctrl.errors['minlength']) return 'Le mot de passe doit contenir au moins 8 caractères';
     if (ctrl.errors['pattern'])
@@ -127,41 +121,38 @@ export class ResetPassword implements OnInit {
   }
 
   confirmPasswordError(): string | null {
-    const ctrl = this.resetPasswordForm.get('confirmPassword');
-    const touched = ctrl ? (ctrl.touched || ctrl.dirty) : false;
-    if (!touched || !ctrl) return null;
+    const ctrl = this.resetPasswordForm.controls.confirmPassword;
+    const touched = ctrl.touched || ctrl.dirty;
+    if (!touched) return null;
     if (ctrl.errors?.['required']) return 'La confirmation du mot de passe est requise';
-    if (ctrl.errors?.['mismatch']) return 'Les mots de passe ne correspondent pas';
+    if (this.resetPasswordForm.errors?.['passwordMismatch'])
+      return 'Les mots de passe ne correspondent pas';
     return null;
   }
 
   submitLabel(): string {
-    return this.authService.isLoading() ? 'Réinitialisation en cours...' : 'Réinitialiser le mot de passe';
+    return this.authService.isLoading()
+      ? 'Réinitialisation en cours...'
+      : 'Réinitialiser le mot de passe';
   }
 
-  // Méthodes pour les indicateurs de sécurité
   hasMinLength(): boolean {
-    const password = this.currentPassword();
-    return password.length >= 8;
+    return this.currentPassword().length >= 8;
   }
 
   hasUppercase(): boolean {
-    const password = this.currentPassword();
-    return /[A-Z]/.test(password);
+    return /[A-Z]/.test(this.currentPassword());
   }
 
   hasLowercase(): boolean {
-    const password = this.currentPassword();
-    return /[a-z]/.test(password);
+    return /[a-z]/.test(this.currentPassword());
   }
 
   hasNumber(): boolean {
-    const password = this.currentPassword();
-    return /\d/.test(password);
+    return /\d/.test(this.currentPassword());
   }
 
   hasSpecialChar(): boolean {
-    const password = this.currentPassword();
-    return /[@$!%*?&]/.test(password);
+    return /[@$!%*?&]/.test(this.currentPassword());
   }
 }

@@ -1,0 +1,292 @@
+<app-layout>
+  <div class="max-w-3xl mx-auto">
+    @if (loading()) {
+      <div class="flex items-center justify-center py-12">
+        <p class="text-muted">Chargement de la candidature...</p>
+      </div>
+    } @else if (error()) {
+      <div class="text-center py-12">
+        <p class="text-error mb-4">{{ error() }}</p>
+        <app-button color="secondary" (buttonClick)="goBack()">Retour au tableau de bord</app-button>
+      </div>
+    } @else if (job(); as job) {
+      <!-- Header: Back + Edit -->
+      <div class="flex items-center justify-between mb-6">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text transition-colors"
+          (click)="goBack()"
+        >
+          <app-icon name="lucide-arrow-left" cssClass="w-4 h-4" />
+          Retour
+        </button>
+        <app-button
+          color="primary"
+          [customClass]="'inline-flex items-center px-4 py-2 text-sm font-medium'"
+          (buttonClick)="goToEdit()"
+        >
+          <app-icon name="lucide-pencil" cssClass="w-4 h-4 mr-1.5" />
+          Modifier
+        </app-button>
+      </div>
+
+      <!-- Title + Status labels -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-text sm:text-3xl mb-4">{{ job.title }}</h1>
+        <div class="flex flex-wrap gap-2">
+          @for (s of allStatuses; track s) {
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+              [class]="job.status === s
+                ? statusConfig[s].badgeClass + ' cursor-default'
+                : 'bg-transparent text-muted border-border/40 hover:text-text hover:bg-card cursor-pointer'"
+              [disabled]="job.status === s || statusUpdating()"
+              (click)="changeStatus(s)"
+            >
+              @if (statusUpdating() && job.status !== s) {
+                <!-- keep label visible, spinner only on the clicked one is handled by UX -->
+              }
+              <span aria-hidden="true">{{ statusConfig[s].emoji }}</span>
+              <span class="hidden sm:inline">{{ statusConfig[s].label }}</span>
+              <span class="sm:hidden">{{ statusConfig[s].labelShort }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- General information -->
+      <section class="bg-card border border-border rounded-xl p-5 sm:p-6 mb-6">
+        <h2 class="text-lg font-semibold text-text mb-4">Informations générales</h2>
+        <dl class="space-y-3">
+          @if (job.company) {
+            <div class="flex items-start gap-3">
+              <dt class="flex items-center gap-2 text-sm text-muted min-w-[180px]">
+                <span aria-hidden="true">🏢</span> Entreprise
+              </dt>
+              <dd class="text-sm text-text">{{ job.company }}</dd>
+            </div>
+          }
+          @if (job.contractType) {
+            <div class="flex items-start gap-3">
+              <dt class="flex items-center gap-2 text-sm text-muted min-w-[180px]">
+                <span aria-hidden="true">📄</span> Type de contrat
+              </dt>
+              <dd class="text-sm text-text">{{ job.contractType }}</dd>
+            </div>
+          }
+          @if (job.appliedAt) {
+            <div class="flex items-start gap-3">
+              <dt class="flex items-center gap-2 text-sm text-muted min-w-[180px]">
+                <span aria-hidden="true">📅</span> Date de candidature
+              </dt>
+              <dd class="text-sm text-text">{{ formatDate(job.appliedAt) }}</dd>
+            </div>
+          }
+          @if (job.jobUrl) {
+            <div class="flex items-start gap-3">
+              <dt class="flex items-center gap-2 text-sm text-muted min-w-[180px]">
+                <span aria-hidden="true">🔗</span> Lien de l'annonce
+              </dt>
+              <dd class="text-sm">
+                <a
+                  [href]="job.jobUrl"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="text-primary hover:text-primary/80 hover:underline transition-colors inline-flex items-center gap-1"
+                >
+                  Voir l'annonce
+                  <app-icon name="lucide-external-link" cssClass="w-3.5 h-3.5" />
+                </a>
+              </dd>
+            </div>
+          }
+          @if (job.reminder) {
+            <div class="flex items-start gap-3">
+              <dt class="flex items-center gap-2 text-sm text-muted min-w-[180px]">
+                <span aria-hidden="true">🔔</span> Prochain rappel
+              </dt>
+              <dd class="text-sm">
+                @if (job.reminder.isActive) {
+                  <span [class.text-error]="isReminderOverdue(job)" [class.text-text]="!isReminderOverdue(job)">
+                    {{ formatDate(job.reminder.nextReminderAt) }}
+                  </span>
+                  <span class="text-muted font-normal">({{ getReminderStatusLabel(job) }})</span>
+                } @else {
+                  <span class="text-muted">Désactivé</span>
+                }
+              </dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <!-- Reminder section -->
+      @if (job.reminder) {
+        <section class="bg-card border border-border rounded-xl p-5 sm:p-6 mb-6">
+          <h2 class="text-lg font-semibold text-text mb-4">Suivi / Rappel</h2>
+          <div class="space-y-2 text-sm">
+            <p class="text-muted">
+              <span class="font-medium text-text">Fréquence :</span>
+              {{ getReminderLabel(job.reminder.frequency) }}
+            </p>
+            <p class="text-muted">
+              <span class="font-medium text-text">Prochain rappel :</span>
+              {{ formatDate(job.reminder.nextReminderAt) }}
+            </p>
+            <p
+              [class.text-error]="isReminderOverdue(job)"
+              [class.text-muted]="!isReminderOverdue(job) && !isReminderInactive(job)"
+            >
+              <span class="font-medium text-text">Statut :</span>
+              @if (isReminderInactive(job)) {
+                <span class="text-muted">Désactivé</span>
+              } @else if (isReminderOverdue(job)) {
+                <span class="text-error font-medium">⚠ En retard</span>
+              } @else {
+                {{ getReminderStatusLabel(job) }}
+              }
+            </p>
+          </div>
+        </section>
+      }
+
+      <!-- Notes section -->
+      @if (job.notes) {
+        <section class="bg-card border border-border rounded-xl p-5 sm:p-6 mb-6">
+          <h2 class="text-lg font-semibold text-text mb-4">Notes</h2>
+          <p class="text-sm text-text whitespace-pre-line">{{ job.notes }}</p>
+        </section>
+      }
+
+      <!-- Documents section -->
+      <section class="bg-card border border-border rounded-xl p-5 sm:p-6 mb-8">
+        <h2 class="text-lg font-semibold text-text mb-4">Documents</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <!-- CV -->
+          <div>
+            <h3 class="text-sm font-medium text-text mb-2">CV</h3>
+            @if (job.cvFileName) {
+              <div class="border border-border rounded-lg p-4 bg-surface">
+                <div class="flex items-center gap-2 mb-3">
+                  <app-icon name="lucide-file-text" cssClass="w-5 h-5 text-primary" />
+                  <span class="text-sm text-text truncate" [title]="job.cvFileName">{{ job.cvFileName }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    (click)="viewDocument('cv')"
+                  >
+                    <app-icon name="lucide-eye" cssClass="w-3.5 h-3.5" />
+                    Visualiser
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-error/10 text-error hover:bg-error/20 transition-colors"
+                    (click)="deleteDocument('cv')"
+                  >
+                    <app-icon name="lucide-trash-2" cssClass="w-3.5 h-3.5" />
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div
+                class="border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer"
+                [class]="cvDragOver() ? 'border-primary bg-primary/5' : 'border-border'"
+                (dragover)="onDragOver($event, 'cv')"
+                (dragleave)="onDragLeave($event, 'cv')"
+                (drop)="onDrop($event, 'cv')"
+                (click)="cvInput.click()"
+              >
+                @if (cvUploading()) {
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-sm text-muted">Upload en cours...</span>
+                  </div>
+                } @else {
+                  <app-icon name="lucide-upload" cssClass="w-8 h-8 text-muted mx-auto mb-2" />
+                  <p class="text-sm text-muted">Glissez votre CV ici</p>
+                  <p class="text-xs text-muted mt-1">ou cliquez pour sélectionner (PDF, max 5 Mo)</p>
+                }
+                <input
+                  #cvInput
+                  type="file"
+                  accept="application/pdf"
+                  class="hidden"
+                  (change)="onFileSelected($event, 'cv')"
+                />
+              </div>
+            }
+          </div>
+
+          <!-- LM -->
+          <div>
+            <h3 class="text-sm font-medium text-text mb-2">Lettre de motivation</h3>
+            @if (job.lmFileName) {
+              <div class="border border-border rounded-lg p-4 bg-surface">
+                <div class="flex items-center gap-2 mb-3">
+                  <app-icon name="lucide-file-text" cssClass="w-5 h-5 text-primary" />
+                  <span class="text-sm text-text truncate" [title]="job.lmFileName">{{ job.lmFileName }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    (click)="viewDocument('lm')"
+                  >
+                    <app-icon name="lucide-eye" cssClass="w-3.5 h-3.5" />
+                    Visualiser
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-error/10 text-error hover:bg-error/20 transition-colors"
+                    (click)="deleteDocument('lm')"
+                  >
+                    <app-icon name="lucide-trash-2" cssClass="w-3.5 h-3.5" />
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div
+                class="border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer"
+                [class]="lmDragOver() ? 'border-primary bg-primary/5' : 'border-border'"
+                (dragover)="onDragOver($event, 'lm')"
+                (dragleave)="onDragLeave($event, 'lm')"
+                (drop)="onDrop($event, 'lm')"
+                (click)="lmInput.click()"
+              >
+                @if (lmUploading()) {
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-sm text-muted">Upload en cours...</span>
+                  </div>
+                } @else {
+                  <app-icon name="lucide-upload" cssClass="w-8 h-8 text-muted mx-auto mb-2" />
+                  <p class="text-sm text-muted">Glissez votre lettre ici</p>
+                  <p class="text-xs text-muted mt-1">ou cliquez pour sélectionner (PDF, max 5 Mo)</p>
+                }
+                <input
+                  #lmInput
+                  type="file"
+                  accept="application/pdf"
+                  class="hidden"
+                  (change)="onFileSelected($event, 'lm')"
+                />
+              </div>
+            }
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Timestamps -->
+      <p class="text-xs text-muted text-center">
+        Créé le {{ formatDate(job.createdAt) }} · Mis à jour le {{ formatDate(job.updatedAt) }}
+      </p>
+    }
+  </div>
+</app-layout>

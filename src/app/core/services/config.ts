@@ -1,41 +1,31 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable, InjectionToken } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-export interface AppConfig {
+export type AppConfig = {
   apiUrl: string;
-}
+};
+
+export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 @Injectable({
   providedIn: 'root',
 })
 export class Config {
-  private config?: AppConfig;
+  private readonly http = inject(HttpClient);
+  private readonly defaultApiUrl = inject(API_BASE_URL);
 
-  constructor(private http: HttpClient) {}
+  private config?: AppConfig;
 
   async loadConfig(): Promise<void> {
     try {
-      this.config = await firstValueFrom(
-        this.http.get<AppConfig>('/config.json')
-      );
-    } catch (error) {
-      console.error('Failed to load config.json, using defaults', error);
-      // Fallback to default config in case of error
-      this.config = {
-        apiUrl: 'http://localhost:3000/api/v1',
-      };
+      this.config = await firstValueFrom(this.http.get<AppConfig>('/config.json'));
+    } catch {
+      this.config = { apiUrl: this.defaultApiUrl };
     }
-  }
-
-  getConfig(): AppConfig {
-    if (!this.config) {
-      throw new Error('Config not loaded. Call loadConfig() first.');
-    }
-    return this.config;
   }
 
   get apiUrl(): string {
-    return this.getConfig().apiUrl;
+    return this.config?.apiUrl ?? this.defaultApiUrl;
   }
 }

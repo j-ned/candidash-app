@@ -3,77 +3,81 @@ import {
   ChangeDetectionStrategy,
   inject,
   signal,
+  input,
   OnInit,
   OnDestroy,
+  DestroyRef,
 } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthService } from '@core/services/auth';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
 import { startCooldownTimer, clearCooldownTimer } from '@shared/utils/cooldown';
+import { verificationCodeValidator } from '@shared/validators/verification-code.validator';
+
+type VerificationForm = {
+  verificationCode: FormControl<string>;
+};
 
 @Component({
   selector: 'app-verification',
-  imports: [ReactiveFormsModule, ButtonComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, RouterLink],
   templateUrl: './verification.html',
+  host: {
+    class: 'block w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
+    role: 'region',
+    '[attr.aria-labelledby]': '"verification-title"',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Verification implements OnInit, OnDestroy {
-  private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-  readonly authService = inject(AuthService);
+  readonly authService = inject(AuthStateService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  readonly email = signal<string>('');
+  readonly email = input<string>('');
   readonly resendCooldown = signal<number>(0);
 
-  readonly verificationForm: FormGroup = this.fb.group({
-    verificationCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  readonly verificationForm = new FormGroup<VerificationForm>({
+    verificationCode: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, verificationCodeValidator],
+    }),
   });
 
   private cooldownInterval: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
-    // Récupérer l'email depuis les query params
-    const emailParam = this.route.snapshot.queryParams['email'];
-    if (emailParam) {
-      this.email.set(emailParam);
-    } else {
-      // Rediriger vers la page d'inscription si pas d'email
+    if (!this.email()) {
       this.router.navigate(['/auth/signup']);
     }
   }
 
   onSubmit(): void {
     if (this.verificationForm.valid && this.email()) {
-      const verificationCode = this.verificationForm.value.verificationCode;
+      const { verificationCode } = this.verificationForm.getRawValue();
 
       this.authService
         .verifyRegistration({
           email: this.email(),
           verificationCode,
         })
-        .subscribe({
-          next: () => {
-            // La navigation est gérée dans le service
-          },
-          error: () => {
-            // La gestion d'erreur est gérée dans le service
-          },
-        });
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe();
     }
   }
 
   resendCode(): void {
     if (this.email()) {
-      this.authService.resendVerificationCode(this.email()).subscribe({
-        next: () => {
-          this.startCooldown();
-        },
-        error: () => {
-          // La gestion d'erreur est gérée dans le service
-        },
-      });
+      this.authService
+        .resendVerificationCode(this.email())
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.startCooldown();
+          },
+        });
     }
   }
 
@@ -85,9 +89,9 @@ export class Verification implements OnInit, OnDestroy {
     this.router.navigate(['/auth/signup']);
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.verificationForm.get(fieldName);
-    return !!(field && field.invalid && field.touched);
+  isFieldInvalid(fieldName: keyof VerificationForm): boolean {
+    const field = this.verificationForm.controls[fieldName];
+    return field.invalid && field.touched;
   }
 
   ngOnDestroy(): void {

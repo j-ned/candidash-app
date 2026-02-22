@@ -1,0 +1,232 @@
+<div class="mb-8 sm:mb-12">
+  <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between sm:mb-8">
+    <div class="space-y-2">
+      <h2 class="text-xl font-bold text-text sm:text-2xl lg:text-3xl">Mes candidatures</h2>
+      <p class="text-sm text-muted sm:text-base">
+        Gérez et suivez l'évolution de vos candidatures
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium">
+        {{ jobs().length }} candidature{{ jobs().length > 1 ? 's' : '' }}
+      </div>
+    </div>
+  </div>
+
+  <nav aria-label="Filtres par statut" class="flex flex-wrap gap-2">
+    @for (status of statusFilters; track status.value) {
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+        [class]="
+          selectedStatus() === status.value
+            ? 'bg-primary text-background'
+            : 'bg-card border border-border text-muted hover:text-text hover:border-text/20'
+        "
+        (click)="filterByStatus(status.value)"
+      >
+        {{ getShortLabel(status.value) }}
+        @if (getCountForStatus(status.value) > 0) {
+          <span
+            class="inline-flex items-center justify-center min-w-[18px] h-[18px] text-xs font-bold rounded-full"
+            [class]="
+              selectedStatus() === status.value
+                ? 'bg-background/20 text-background'
+                : 'bg-muted/15 text-muted'
+            "
+          >
+            {{ getCountForStatus(status.value) }}
+          </span>
+        }
+      </button>
+    }
+  </nav>
+</div>
+
+@if (loading()) {
+  <div class="flex items-center justify-center py-8 sm:py-12">
+    <div class="text-muted text-sm sm:text-base">Chargement des candidatures...</div>
+  </div>
+} @else {
+  @if (filteredJobs().length === 0) {
+    <div
+      class="text-center py-8 bg-card border border-border rounded-lg sm:py-12 sm:rounded-xl"
+    >
+      <div class="text-4xl mb-3 sm:text-5xl sm:mb-4" aria-hidden="true">
+        {{ getEmptyStateEmoji() }}
+      </div>
+      <p class="text-xs text-muted mb-4 max-w-md mx-auto sm:text-sm sm:mb-6">
+        {{ getEmptyStateMessage() }}
+      </p>
+      @if (selectedStatus() === 'all') {
+        <app-button
+          color="primary"
+          [customClass]="
+                '!w-auto inline-flex items-center px-3 py-2 text-sm font-medium sm:px-4 sm:py-2.5'
+              "
+          (buttonClick)="goToCreate()"
+        >
+          <app-icon name="lucide-plus" cssClass="w-4 h-4 mr-1.5 sm:w-5 sm:h-5 sm:mr-2" />
+          Ajouter ma première candidature
+        </app-button>
+      } @else {
+        <div class="flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-3">
+          <app-button
+            color="primary"
+            [customClass]="'px-4 py-2 text-sm sm:px-6 sm:py-3'"
+            (buttonClick)="goToCreate()"
+          >
+            Ajouter une candidature
+          </app-button>
+          <app-button
+            color="secondary"
+            [customClass]="'px-4 py-2 text-sm sm:px-6 sm:py-3'"
+            (buttonClick)="filterByStatus('all')"
+          >
+            Voir toutes les candidatures
+          </app-button>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="border border-border rounded-xl overflow-hidden divide-y divide-border">
+      @for (job of filteredJobs(); track job.id) {
+        <article
+          class="px-4 py-2.5 sm:px-5 sm:py-3 hover:bg-muted/5 transition-colors cursor-pointer"
+          [routerLink]="['/dashboard/jobtrack', job.id]"
+        >
+          @if (jobToDelete() === job.id) {
+            <div role="alertdialog" class="flex items-center gap-3 py-1">
+              <app-icon
+                name="lucide-trash-2"
+                cssClass="w-4 h-4 text-error flex-shrink-0"
+              />
+              <p class="text-sm text-error flex-1 min-w-0">
+                Supprimer « {{ job.title }} »{{ job.company ? ' chez ' + job.company : '' }} ?
+              </p>
+              <div class="flex gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  class="px-3 py-1 text-xs font-medium bg-error text-background rounded-md hover:bg-error/90 transition-colors"
+                  (click)="confirmDelete(job); $event.stopPropagation()"
+                >
+                  Supprimer
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1 text-xs font-medium text-muted hover:text-text rounded-md hover:bg-muted/10 transition-colors"
+                  (click)="cancelDelete(); $event.stopPropagation()"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- Line 1: Title + Badge + Actions -->
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-sm font-semibold text-text sm:text-base min-w-0 truncate">
+                {{ job.title }}
+              </h3>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <span
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                  [class]="getStatusBadgeClass(job.status)"
+                >
+                  <span aria-hidden="true">{{ getStatusEmoji(job.status) }}</span>
+                  <span class="hidden sm:inline">{{ getStatusLabelLong(job.status) }}</span>
+                  <span class="sm:hidden">{{ getStatusLabel(job.status) }}</span>
+                </span>
+                <button
+                  type="button"
+                  class="p-1 text-muted hover:text-text rounded hover:bg-muted/10 transition-colors"
+                  title="Modifier"
+                  (click)="edit(job); $event.stopPropagation()"
+                >
+                  <app-icon name="lucide-pencil" cssClass="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  class="p-1 text-muted hover:text-error rounded hover:bg-error/10 transition-colors"
+                  title="Supprimer"
+                  (click)="showDeleteConfirmation(job); $event.stopPropagation()"
+                >
+                  <app-icon name="lucide-trash-2" cssClass="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Line 2: Metadata inline -->
+            <div
+              class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-muted mt-0.5"
+            >
+              @if (job.company) {
+                <span class="inline-flex items-center gap-1">
+                  <app-icon name="lucide-building-2" cssClass="w-3 h-3" />
+                  {{ job.company }}
+                </span>
+              }
+              @if (job.company && (job.contractType || job.appliedAt || job.reminder)) {
+                <span aria-hidden="true" class="text-border">·</span>
+              }
+              @if (job.contractType) {
+                <span class="inline-flex items-center gap-1">
+                  <app-icon name="lucide-file-text" cssClass="w-3 h-3" />
+                  {{ job.contractType }}
+                </span>
+              }
+              @if (job.contractType && (job.appliedAt || job.reminder)) {
+                <span aria-hidden="true" class="text-border">·</span>
+              }
+              @if (job.appliedAt) {
+                <span class="inline-flex items-center gap-1">
+                  <app-icon name="lucide-calendar" cssClass="w-3 h-3" />
+                  {{ formatDate(job.appliedAt) }}
+                </span>
+              }
+              @if (job.appliedAt && job.reminder) {
+                <span aria-hidden="true" class="text-border">·</span>
+              }
+              @if (job.reminder) {
+                <span
+                  class="inline-flex items-center gap-1"
+                  [class.text-error]="isReminderOverdue(job)"
+                  [class.text-muted]="isReminderInactive(job)"
+                >
+                  <app-icon
+                    [name]="
+                      isReminderInactive(job)
+                        ? 'lucide-circle-x'
+                        : isReminderOverdue(job)
+                          ? 'lucide-triangle-alert'
+                          : 'lucide-timer'
+                    "
+                    cssClass="w-3 h-3"
+                  />
+                  @if (isReminderInactive(job)) {
+                    Rappel désactivé
+                  } @else {
+                    Rappel {{ getReminderStatusLabel(job) }}
+                    ({{ formatDateShort(job.reminder.nextReminderAt) }})
+                  }
+                </span>
+              }
+              @if (job.jobUrl) {
+                <span aria-hidden="true" class="text-border">·</span>
+                <a
+                  [href]="job.jobUrl"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
+                  (click)="$event.stopPropagation()"
+                >
+                  <app-icon name="lucide-external-link" cssClass="w-3 h-3" />
+                  Annonce
+                </a>
+              }
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+}

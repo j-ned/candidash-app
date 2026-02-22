@@ -1,43 +1,60 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthService } from '@core/services/auth';
-import { LoginRequest } from '@features/auth/models/auth-model';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
+import type { LoginCredentials } from '@features/auth/domain/models/auth.model';
+import { CommonModule } from '@angular/common';
 import { ForgotPasswordModalService } from '@shared/ui/forgot-password-modal';
+import { IconComponent } from '@shared/ui/icon/icon';
+
+type SigninForm = {
+  email: FormControl<string>;
+  password: FormControl<string>;
+};
 
 @Component({
   selector: 'app-signin',
-  imports: [ReactiveFormsModule, ButtonComponent, CommonModule, NgOptimizedImage],
+  imports: [ReactiveFormsModule, ButtonComponent, CommonModule, IconComponent, RouterLink],
   templateUrl: './signin.html',
+  host: {
+    class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
+    role: 'region',
+    '[attr.aria-labelledby]': '"signin-title"',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Signin {
-  private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly forgotPasswordModalService = inject(ForgotPasswordModalService);
-  readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly authService = inject(AuthStateService);
 
   readonly showPassword = signal(false);
 
-  readonly signinForm: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+  readonly signinForm = new FormGroup<SigninForm>({
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(6)],
+    }),
   });
 
-  // Template helpers to reduce cyclomatic complexity
   emailError(): string | null {
-    const ctrl = this.signinForm.get('email');
-    if (!ctrl || !(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
+    const ctrl = this.signinForm.controls.email;
+    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return "L'email est requis";
     if (ctrl.errors['email']) return 'Veuillez entrer un email valide';
     return null;
   }
 
   passwordError(): string | null {
-    const ctrl = this.signinForm.get('password');
-    if (!ctrl || !(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
+    const ctrl = this.signinForm.controls.password;
+    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le mot de passe est requis';
     if (ctrl.errors['minlength']) return 'Le mot de passe doit contenir au moins 6 caractères';
     return null;
@@ -49,20 +66,15 @@ export class Signin {
 
   onSubmit(): void {
     if (this.signinForm.valid) {
-      const credentials: LoginRequest = this.signinForm.value;
+      const credentials: LoginCredentials = this.signinForm.getRawValue();
 
-      this.authService.signin(credentials).subscribe({
-        next: () => {
-          this.router.navigate(['/dashboard']);
-        },
-        error: () => {},
-      });
+      this.authService.signin(credentials).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
     }
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.signinForm.get(fieldName);
-    return !!(field && field.invalid && field.touched);
+  isFieldInvalid(fieldName: keyof SigninForm): boolean {
+    const field = this.signinForm.controls[fieldName];
+    return field.invalid && field.touched;
   }
 
   togglePasswordVisibility(): void {
@@ -74,7 +86,7 @@ export class Signin {
   }
 
   async openForgotPasswordModal(): Promise<void> {
-    const currentEmail = this.signinForm.get('email')?.value ?? '';
+    const currentEmail = this.signinForm.controls.email.value;
 
     try {
       const result = await this.forgotPasswordModalService.showForgotPasswordModal({
@@ -82,10 +94,8 @@ export class Signin {
       });
 
       if (result.email) {
-        // Email envoyé avec succès
         console.log('Email de réinitialisation envoyé à:', result.email);
       } else if (result.cancelled) {
-        // Utilisateur a annulé
         console.log('Modal annulé');
       }
     } catch (error) {

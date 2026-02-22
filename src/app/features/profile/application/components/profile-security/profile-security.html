@@ -1,0 +1,110 @@
+<h2 id="security-title" class="text-lg font-semibold text-text mb-4 flex items-center mt-3 sm:text-xl sm:mb-6 sm:mt-5">
+  <app-icon name="lucide-key-round" cssClass="w-5 h-5 mr-2 sm:w-6 sm:h-6" />
+  Sécurité du compte
+</h2>
+
+<form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="space-y-3 sm:space-y-4">
+  <fieldset>
+    <legend class="sr-only">Changement de mot de passe</legend>
+
+    <div class="space-y-3 sm:space-y-4">
+      <div class="space-y-1 sm:space-y-2">
+        <label for="currentPassword" class="block text-sm font-medium text-text sm:text-base">Mot de passe actuel</label>
+        <div class="relative">
+          <input
+            id="currentPassword"
+            [type]="showCurrentPassword() ? 'text' : 'password'"
+            formControlName="currentPassword"
+            class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
+            [class.border-error]="isPasswordFieldInvalid('currentPassword')"
+            [class.border-border]="!isPasswordFieldInvalid('currentPassword')"
+            placeholder="Mot de passe actuel"
+          />
+          <button
+            type="button"
+            (click)="toggleCurrentPasswordVisibility()"
+            [attr.aria-label]="showCurrentPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 sm:right-3"
+            tabindex="-1"
+          >
+            <app-icon [name]="showCurrentPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
+        @if (currentPasswordError()) {
+          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ currentPasswordError() }}</p>
+        }
+      </div>
+
+      <div class="space-y-1 sm:space-y-2">
+        <label for="newPassword" class="block text-sm font-medium text-text sm:text-base">Nouveau mot de passe</label>
+        <div class="relative">
+          <input
+            id="newPassword"
+            [type]="showNewPassword() ? 'text' : 'password'"
+            formControlName="newPassword"
+            class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
+            [class.border-error]="isPasswordFieldInvalid('newPassword')"
+            [class.border-border]="!isPasswordFieldInvalid('newPassword')"
+            placeholder="Nouveau mot de passe"
+          />
+          <button
+            type="button"
+            (click)="toggleNewPasswordVisibility()"
+            [attr.aria-label]="showNewPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 sm:right-3"
+            tabindex="-1"
+          >
+            <app-icon [name]="showNewPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
+        @if (newPasswordError()) {
+          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ newPasswordError() }}</p>
+        }
+      </div>
+
+      <div class="space-y-1 sm:space-y-2">
+        <label for="confirmPassword" class="block text-sm font-medium text-text sm:text-base">Confirmer le nouveau mot de passe</label>
+        <div class="relative">
+          <input
+            id="confirmPassword"
+            [type]="showConfirmPassword() ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
+            [class.border-error]="
+              isPasswordFieldInvalid('confirmPassword') || confirmPasswordError()
+            "
+            [class.border-border]="
+              !isPasswordFieldInvalid('confirmPassword') && !confirmPasswordError()
+            "
+            placeholder="Confirmer le nouveau mot de passe"
+          />
+          <button
+            type="button"
+            (click)="toggleConfirmPasswordVisibility()"
+            [attr.aria-label]="showConfirmPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 sm:right-3"
+            tabindex="-1"
+          >
+            <app-icon [name]="showConfirmPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
+        @if (confirmPasswordError()) {
+          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ confirmPasswordError() }}</p>
+        }
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="pt-2 sm:pt-3">
+    <app-button
+      type="submit"
+      color="red"
+      [disabled]="passwordForm.invalid || profileService.isLoading()"
+      [isLoading]="profileService.isLoading()"
+      customClass="w-full px-4 py-2 text-sm sm:w-auto sm:px-6 sm:py-3 sm:text-base"
+    >
+      <span class="sm:hidden">{{ submitLabel() }}</span>
+      <span class="hidden sm:inline">{{ submitLabel() }}</span>
+    </app-button>
+  </div>
+</form>

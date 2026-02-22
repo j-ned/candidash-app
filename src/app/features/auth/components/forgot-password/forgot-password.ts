@@ -1,54 +1,67 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthService } from '@core/services/auth';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { CommonModule } from '@angular/common';
+import { IconComponent } from '@shared/ui/icon/icon';
+
+type ForgotPasswordForm = {
+  email: FormControl<string>;
+};
 
 @Component({
   selector: 'app-forgot-password',
-  imports: [ReactiveFormsModule, ButtonComponent, CommonModule, NgOptimizedImage],
+  imports: [ReactiveFormsModule, ButtonComponent, CommonModule, IconComponent, RouterLink],
   templateUrl: './forgot-password.html',
+  host: {
+    class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
+    role: 'region',
+    '[attr.aria-labelledby]': '"forgot-password-title"',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForgotPassword {
-  private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
-  readonly authService = inject(AuthService);
+  readonly authService = inject(AuthStateService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly emailSent = signal(false);
 
-  readonly forgotPasswordForm: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+  readonly forgotPasswordForm = new FormGroup<ForgotPasswordForm>({
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
   });
 
   onSubmit(): void {
     if (this.forgotPasswordForm.valid) {
-      const email = this.forgotPasswordForm.value.email;
+      const { email } = this.forgotPasswordForm.getRawValue();
 
-      this.authService.forgotPassword({ email }).subscribe({
-        next: () => {
-          this.emailSent.set(true);
-        },
-        error: () => {
-          // Le service gère déjà l'affichage des erreurs via toast
-          // Mais on peut définir emailSent à true pour des raisons de sécurité
-          // (ne pas révéler si l'email existe ou non)
-          this.emailSent.set(true);
-        },
-      });
+      this.authService
+        .forgotPassword({ email })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.emailSent.set(true);
+          },
+          error: () => {
+            this.emailSent.set(true);
+          },
+        });
     }
   }
 
   resetForm(): void {
     this.emailSent.set(false);
     this.forgotPasswordForm.reset();
-    this.forgotPasswordForm.get('email')?.markAsUntouched();
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.forgotPasswordForm.get(fieldName);
-    return !!(field && field.invalid && field.touched);
+  isFieldInvalid(fieldName: keyof ForgotPasswordForm): boolean {
+    const field = this.forgotPasswordForm.controls[fieldName];
+    return field.invalid && field.touched;
   }
 
   navigateToSignin(): void {

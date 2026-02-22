@@ -1,16 +1,18 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { LayoutComponent } from '@shared/ui/layout/layout';
 import { ButtonComponent } from '@shared/ui/button/button';
-import { Jobtrack } from '../jobs/services/jobtrack';
-import type { JobTrack } from '../jobs/models/jobtrack';
-import { JobtrackList } from '../jobs/components/jobtrack-list/jobtrack-list';
+import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
+import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
+import { JobtrackList } from '@features/jobtrack/application/components/jobtrack-list/jobtrack-list';
 import type { DashboardStats } from '@features/dashboard/components/dashboard-stats/model/dashboard-stats';
-import { NgOptimizedImage } from '@angular/common';
+import { IconComponent } from '@shared/ui/icon/icon';
+import { ReminderCheckerService } from '@features/jobtrack/application/reminder-checker.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [LayoutComponent, ButtonComponent, JobtrackList, NgOptimizedImage],
+  imports: [LayoutComponent, ButtonComponent, JobtrackList, IconComponent],
   template: `
     <app-layout>
       <div class="relative overflow-hidden">
@@ -19,20 +21,14 @@ import { NgOptimizedImage } from '@angular/common';
         ></div>
         <div class="relative">
           <!-- Header Navigation Bar -->
-          <div class="backdrop-blur-sm bg-background/95 border-b border-border/50">
+          <nav aria-label="Navigation du dashboard" class="backdrop-blur-sm bg-background/95 border-b border-border/50">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <div class="flex items-center justify-between h-16 sm:h-20">
                 <div class="flex items-center gap-3">
                   <div class="relative">
                     <div class="absolute inset-0 bg-primary/20 rounded-xl blur"></div>
                     <div class="relative p-2 bg-primary/10 rounded-xl">
-                      <img
-                        [ngSrc]="'/icons/chart.svg'"
-                        alt="Logo"
-                        class="w-8 h-8 sm:w-10 sm:h-10 icon-invert"
-                        width="32"
-                        height="32"
-                      />
+                      <app-icon name="lucide-bar-chart-3" cssClass="w-8 h-8 sm:w-10 sm:h-10" />
                     </div>
                   </div>
                   <div>
@@ -49,32 +45,28 @@ import { NgOptimizedImage } from '@angular/common';
                     color="primary"
                     (buttonClick)="goToCreate()"
                   >
-                    <img
-                      [ngSrc]="'/icons/add.svg'"
-                      alt="Ajouter"
-                      class="w-4 h-4 mr-1.5 sm:w-5 sm:h-5 sm:mr-2 icon-invert"
-                      width="16"
-                      height="16"
-                    />
+                    <app-icon name="lucide-plus" cssClass="w-4 h-4 mr-1.5 sm:w-5 sm:h-5 sm:mr-2" />
 
                     <span class="hidden sm:inline">Ajoute une annonce</span>
                   </app-button>
                 </div>
               </div>
             </div>
-          </div>
+          </nav>
         </div>
       </div>
-      <div class="container mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+      <section aria-label="Liste des candidatures" class="container mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
         <app-jobtrack-list />
-      </div>
+      </section>
     </app-layout>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPageComponent {
-  private readonly service = inject(Jobtrack);
+  private readonly listJobtracksUseCase = inject(ListJobtracksUseCase);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly reminderChecker = inject(ReminderCheckerService);
 
   readonly stats = signal<DashboardStats>({
     total: 0,
@@ -86,11 +78,12 @@ export class DashboardPageComponent {
   });
 
   constructor() {
+    this.reminderChecker.start(this.destroyRef);
     this.refresh();
   }
 
   private refresh(): void {
-    this.service.list().subscribe({
+    this.listJobtracksUseCase.execute().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (items) => {
         this.updateStats(items);
       },

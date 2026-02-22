@@ -8,13 +8,13 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [authGuard],
+    canMatch: [authGuard],
     loadChildren: () =>
       import('@features/dashboard/route/dashboard.routes').then((m) => m.dashboardRoutes),
   },
   {
     path: 'auth',
-    canActivate: [guestGuard],
+    canMatch: [guestGuard],
     loadChildren: () => import('@features/auth/route/auth.routes').then((m) => m.authRoutes),
   },
   {
