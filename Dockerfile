@@ -17,8 +17,8 @@ RUN pnpm install --frozen-lockfile
 # Copie tout le code source
 COPY . .
 
-# Configuration de l'API URL via build argument (utiliser secrets en production)
-ARG API_URL=https://api-candidash.nedellec-julien.fr/api/v1
+# Configuration de l'API URL via build argument (défini dans Dokploy)
+ARG API_URL=http://localhost:3000/api/v1
 ENV API_URL=${API_URL}
 
 # Build l'application Angular en mode production
