@@ -17,15 +17,8 @@ RUN pnpm install --frozen-lockfile
 # Copie tout le code source
 COPY . .
 
-# Configuration de l'API URL via build argument (défini dans Dokploy)
-ARG API_URL=http://localhost:3000/api/v1
-ENV API_URL=${API_URL}
-
 # Build l'application Angular en mode production
 RUN pnpm run build --configuration production
-
-# Générer le fichier config.json avec l'API URL depuis les secrets
-RUN echo "{\"apiUrl\":\"${API_URL}\"}" > dist/ng-candidash-app/browser/config.json
 
 # ---- Étape de production ----
 # Utilise Nginx Alpine comme image finale légère
@@ -54,5 +47,11 @@ RUN printf 'server {\n\
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;\n\
 }\n' > /etc/nginx/conf.d/default.conf
 
+# Script d'entrypoint pour injecter API_URL au runtime
+RUN printf '#!/bin/sh\n\
+API_URL="${API_URL:-http://localhost:3000/api/v1}"\n\
+echo "{\"apiUrl\":\"${API_URL}\"}" > /usr/share/nginx/html/config.json\n\
+exec nginx -g "daemon off;"\n' > /docker-entrypoint-custom.sh && chmod +x /docker-entrypoint-custom.sh
+
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/docker-entrypoint-custom.sh"]
