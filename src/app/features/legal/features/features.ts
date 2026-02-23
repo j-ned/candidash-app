@@ -38,11 +38,11 @@ import { IconComponent } from '@shared/ui/icon/icon';
               class="aspect-video bg-card border border-border rounded-xl overflow-hidden shadow-xl"
             >
               <video class="w-full h-full object-cover" controls preload="metadata" poster="" aria-label="Démonstration de Candidash">
-                <source src="/video/video_feature.webm" type="video/webm" />
+                <source src="/video/demo.mp4" type="video/mp4" />
                 <p class="text-center text-muted p-8">
                   Votre navigateur ne supporte pas la lecture de vidéos HTML5.
                   <br />
-                  <a href="/video/video_feature.webm" class="text-primary hover:underline">
+                  <a href="/video/demo.mp4" class="text-primary hover:underline">
                     Télécharger la vidéo
                   </a>
                 </p>
