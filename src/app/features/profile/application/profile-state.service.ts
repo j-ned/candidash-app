@@ -108,7 +108,7 @@ export class ProfileStateService {
           error: null,
         }));
 
-        this.authService.updateUserData({ ...profile });
+        this.authService.updateUserData({ ...profile, totpEnabled: this.authService.user()?.totpEnabled ?? false });
 
         this.toastService.show(
           'success',

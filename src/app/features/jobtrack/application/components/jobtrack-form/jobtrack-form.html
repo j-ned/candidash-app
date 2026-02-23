@@ -1,5 +1,5 @@
 <app-layout>
-  <div class="max-w-3xl mx-auto p-4 sm:p-6">
+  <div class="max-w-5xl mx-auto p-4 sm:p-6">
     <!-- Header with back navigation -->
     <div class="flex items-center justify-between mb-6 sm:mb-8">
       <button
@@ -54,8 +54,8 @@
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
-          <!-- Titre du poste -->
-          <div class="space-y-1.5">
+          <!-- Titre du poste (pleine largeur) -->
+          <div class="space-y-1.5 md:col-span-2">
             <label for="title" class="block text-xs font-medium text-text sm:text-sm">
               Titre du poste recherché
               <span class="text-error">*</span>
@@ -112,24 +112,29 @@
             </div>
           </div>
 
-          <!-- Type de contrat -->
-          <div class="space-y-1.5">
-            <label for="contractType" class="block text-xs font-medium text-text sm:text-sm">
+          <!-- Type de contrat (pleine largeur, chips) -->
+          <div class="space-y-1.5 md:col-span-2">
+            <span class="block text-xs font-medium text-text sm:text-sm">
               Type de contrat
-            </label>
-            <select
-              id="contractType"
-              class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
-              formControlName="contractType"
-            >
-              <option value="">Non précisé</option>
-              <option value="CDI">CDI - Contrat à Durée Indéterminée</option>
-              <option value="CDD">CDD - Contrat à Durée Déterminée</option>
-              <option value="INTERIM">Intérim - Mission temporaire</option>
-              <option value="STAGE">Stage - Formation professionnelle</option>
-              <option value="ALTERNANCE">Alternance - Formation en alternance</option>
-              <option value="FREELANCE">Freelance - Mission indépendante</option>
-            </select>
+            </span>
+            <div class="flex flex-wrap gap-2">
+              @for (ct of allContractTypes; track ct) {
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                  [class]="form.get('contractType')!.value === ct
+                    ? contractTypeConfig[ct].badgeClass + ' cursor-default'
+                    : 'bg-transparent text-muted border-border/40 hover:text-text hover:bg-card cursor-pointer'"
+                  (click)="toggleContractType(ct)"
+                >
+                  {{ contractTypeConfig[ct].label }}
+                </button>
+              }
+            </div>
+            <p class="text-xs text-muted flex items-center gap-1">
+              <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
+              Cliquez à nouveau pour désélectionner
+            </p>
           </div>
         </div>
       </fieldset>

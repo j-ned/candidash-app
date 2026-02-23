@@ -5,6 +5,7 @@ const defaults: User = {
   email: 'john@example.com',
   username: 'john',
   role: 'USER',
+  totpEnabled: false,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
