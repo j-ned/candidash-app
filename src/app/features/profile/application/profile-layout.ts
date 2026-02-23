@@ -1,10 +1,10 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { LayoutComponent } from '@shared/ui/layout/layout';
-import { ProfileHeader, ProfileInfo, ProfileSecurity } from './components';
+import { ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa } from './components';
 
 @Component({
   selector: 'app-profile-layout',
-  imports: [LayoutComponent, ProfileHeader, ProfileInfo, ProfileSecurity],
+  imports: [LayoutComponent, ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa],
   template: `
     <app-layout>
       <div
@@ -20,6 +20,7 @@ import { ProfileHeader, ProfileInfo, ProfileSecurity } from './components';
               <app-profile-security />
             </div>
           </div>
+          <app-profile-2fa />
         </div>
       </div>
     </app-layout>

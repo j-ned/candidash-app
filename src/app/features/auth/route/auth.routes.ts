@@ -15,6 +15,11 @@ export const authRoutes: Routes = [
       import('../components/verification/verification').then((m) => m.Verification),
   },
   {
+    path: '2fa-verify',
+    loadComponent: () =>
+      import('../components/totp-verify/totp-verify').then((m) => m.TotpVerify),
+  },
+  {
     path: 'forgot-password',
     loadComponent: () =>
       import('../components/forgot-password/forgot-password').then((m) => m.ForgotPassword),
