@@ -5,6 +5,7 @@ export type User = {
   email: string;
   username?: string;
   role: UserRole;
+  totpEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -65,4 +66,35 @@ export type ForgotPasswordResponse = {
 
 export type ResetPasswordResponse = {
   message: string;
+};
+
+export type TwoFactorPendingResponse = {
+  requires2FA: true;
+  tempToken: string;
+  message: string;
+};
+
+export type LoginResponse = AuthResponse | TwoFactorPendingResponse;
+
+export type TotpSetupResponse = {
+  qrCodeDataUri: string;
+  otpauthUri: string;
+};
+
+export type TotpVerifySetupResponse = {
+  recoveryCodes: string[];
+};
+
+export type ValidateTotpRequest = {
+  tempToken: string;
+  token: string;
+};
+
+export type TotpRecoveryRequest = {
+  tempToken: string;
+  recoveryCode: string;
+};
+
+export type DisableTotpRequest = {
+  password: string;
 };

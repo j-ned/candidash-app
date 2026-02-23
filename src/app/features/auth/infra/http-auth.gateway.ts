@@ -8,11 +8,16 @@ import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   LoginCredentials,
+  LoginResponse,
   RefreshResponse,
   RegisterData,
   RegistrationResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  TotpRecoveryRequest,
+  TotpSetupResponse,
+  TotpVerifySetupResponse,
+  ValidateTotpRequest,
   VerifyRegistrationRequest,
 } from '../domain/models/auth.model';
 
@@ -25,8 +30,8 @@ export class HttpAuthGateway extends AuthGateway {
     return this.configService.apiUrl;
   }
 
-  signin(credentials: LoginCredentials): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, credentials);
+  signin(credentials: LoginCredentials): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, credentials);
   }
 
   signup(data: RegisterData): Observable<RegistrationResponse> {
@@ -63,5 +68,27 @@ export class HttpAuthGateway extends AuthGateway {
 
   refreshToken(): Observable<RefreshResponse> {
     return this.http.post<RefreshResponse>(`${this.baseUrl}/auth/refresh`, {});
+  }
+
+  setupTotp(): Observable<TotpSetupResponse> {
+    return this.http.post<TotpSetupResponse>(`${this.baseUrl}/auth/2fa/setup`, {});
+  }
+
+  verifyTotpSetup(token: string): Observable<TotpVerifySetupResponse> {
+    return this.http.post<TotpVerifySetupResponse>(`${this.baseUrl}/auth/2fa/verify-setup`, {
+      token,
+    });
+  }
+
+  disableTotp(password: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/2fa/disable`, { password });
+  }
+
+  validateTotp(request: ValidateTotpRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/2fa/validate`, request);
+  }
+
+  useRecoveryCode(request: TotpRecoveryRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/2fa/recovery`, request);
   }
 }

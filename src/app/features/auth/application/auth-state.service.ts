@@ -9,6 +9,7 @@ import type {
   AuthResponse,
   AuthState,
   LoginCredentials,
+  LoginResponse,
   RegisterData,
   RefreshResponse,
   VerifyRegistrationRequest,
@@ -27,6 +28,8 @@ import { ResendVerificationUseCase } from '../domain/use-cases/resend-verificati
 import { ForgotPasswordUseCase } from '../domain/use-cases/forgot-password.use-case';
 import { ResetPasswordUseCase } from '../domain/use-cases/reset-password.use-case';
 import { RefreshTokenUseCase } from '../domain/use-cases/refresh-token.use-case';
+import { ValidateTotpUseCase } from '../domain/use-cases/validate-totp.use-case';
+import { UseRecoveryCodeUseCase } from '../domain/use-cases/use-recovery-code.use-case';
 
 @Injectable({ providedIn: 'root' })
 export class AuthStateService {
@@ -41,6 +44,8 @@ export class AuthStateService {
   private readonly forgotPasswordUseCase = inject(ForgotPasswordUseCase);
   private readonly resetPasswordUseCase = inject(ResetPasswordUseCase);
   private readonly refreshTokenUseCase = inject(RefreshTokenUseCase);
+  private readonly validateTotpUseCase = inject(ValidateTotpUseCase);
+  private readonly useRecoveryCodeUseCase = inject(UseRecoveryCodeUseCase);
 
   private readonly authState = signal<AuthState>({
     isAuthenticated: false,
@@ -52,6 +57,9 @@ export class AuthStateService {
   private readonly refreshInProgress = signal(false);
   private readonly autoLoginInProgress = signal(false);
 
+  readonly pendingTwoFactorToken = signal<string | null>(null);
+  readonly hasPending2FA = computed(() => this.pendingTwoFactorToken() !== null);
+
   readonly isAuthenticated = computed(() => this.authState().isAuthenticated);
   readonly user = computed(() => this.authState().user);
   readonly isLoading = computed(() => this.authState().isLoading);
@@ -61,12 +69,41 @@ export class AuthStateService {
     this.initializeAuthFromStorage();
   }
 
-  signin(credentials: LoginCredentials): Observable<AuthResponse> {
+  signin(credentials: LoginCredentials): Observable<LoginResponse> {
     this.setLoading(true);
     this.clearError();
 
     return this.signinUseCase.execute(credentials).pipe(
       tap((response) => {
+        if ('requires2FA' in response) {
+          this.pendingTwoFactorToken.set(response.tempToken);
+          this.setLoading(false);
+          this.router.navigate(['/auth/2fa-verify']);
+        } else {
+          this.handleAuthSuccess(response);
+          this.router.navigate(['/dashboard']);
+        }
+      }),
+      catchError((error) => {
+        this.handleAuthError(error);
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  validateTotp(token: string): Observable<AuthResponse> {
+    this.setLoading(true);
+    this.clearError();
+
+    const tempToken = this.pendingTwoFactorToken();
+    if (!tempToken) {
+      this.setLoading(false);
+      return throwError(() => new Error('No pending 2FA token'));
+    }
+
+    return this.validateTotpUseCase.execute({ tempToken, token }).pipe(
+      tap((response) => {
+        this.pendingTwoFactorToken.set(null);
         this.handleAuthSuccess(response);
         this.router.navigate(['/dashboard']);
       }),
@@ -75,6 +112,41 @@ export class AuthStateService {
         return throwError(() => error);
       }),
     );
+  }
+
+  useRecoveryCode(code: string): Observable<AuthResponse> {
+    this.setLoading(true);
+    this.clearError();
+
+    const tempToken = this.pendingTwoFactorToken();
+    if (!tempToken) {
+      this.setLoading(false);
+      return throwError(() => new Error('No pending 2FA token'));
+    }
+
+    return this.useRecoveryCodeUseCase
+      .execute({ tempToken, recoveryCode: code })
+      .pipe(
+        tap((response) => {
+          this.pendingTwoFactorToken.set(null);
+          this.handleAuthSuccess(response);
+          this.toastService.show(
+            'warning',
+            'Code de récupération utilisé',
+            'Pensez à vérifier vos codes de récupération restants dans votre profil.',
+            { duration: 6000, dismissible: true },
+          );
+          this.router.navigate(['/dashboard']);
+        }),
+        catchError((error) => {
+          this.handleAuthError(error);
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  clearPending2FA(): void {
+    this.pendingTwoFactorToken.set(null);
   }
 
   signup(userData: RegisterData): Observable<RegistrationResponse> {

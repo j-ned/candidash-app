@@ -19,7 +19,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     req.url.includes('/auth/login') ||
     req.url.includes('/auth/refresh') ||
     req.url.includes('/auth/logout') ||
-    req.url.includes('/accounts/registration');
+    req.url.includes('/accounts/registration') ||
+    req.url.includes('/auth/2fa/validate') ||
+    req.url.includes('/auth/2fa/recovery');
 
   let authReq = req;
 
