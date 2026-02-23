@@ -75,12 +75,12 @@ export class AuthStateService {
 
     return this.signinUseCase.execute(credentials).pipe(
       tap((response) => {
-        if ('requires2FA' in response) {
-          this.pendingTwoFactorToken.set(response.tempToken);
+        if ('requires2FA' in response && response.requires2FA) {
+          this.pendingTwoFactorToken.set((response as { tempToken: string }).tempToken);
           this.setLoading(false);
           this.router.navigate(['/auth/2fa-verify']);
         } else {
-          this.handleAuthSuccess(response);
+          this.handleAuthSuccess(response as AuthResponse);
           this.router.navigate(['/dashboard']);
         }
       }),

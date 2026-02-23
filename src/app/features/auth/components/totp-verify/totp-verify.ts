@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
 import { IconComponent } from '@shared/ui/icon/icon';
 import { AuthStateService } from '@features/auth/application/auth-state.service';
@@ -16,7 +16,7 @@ type RecoveryForm = {
 
 @Component({
   selector: 'app-totp-verify',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent, RouterLink],
+  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
   templateUrl: './totp-verify.html',
   host: {
     class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg',

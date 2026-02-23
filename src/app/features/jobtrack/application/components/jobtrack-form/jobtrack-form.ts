@@ -19,7 +19,7 @@ import { UpdateJobtrackUseCase } from '@features/jobtrack/domain/use-cases/updat
 import { UploadDocumentUseCase } from '@features/jobtrack/domain/use-cases/upload-document.use-case';
 import { DownloadDocumentUseCase } from '@features/jobtrack/domain/use-cases/download-document.use-case';
 import { DeleteDocumentUseCase } from '@features/jobtrack/domain/use-cases/delete-document.use-case';
-import { STATUS_CONFIG, ALL_STATUSES } from '@features/jobtrack/domain/models/jobtrack.model';
+import { STATUS_CONFIG, ALL_STATUSES, CONTRACT_TYPE_CONFIG, ALL_CONTRACT_TYPES } from '@features/jobtrack/domain/models/jobtrack.model';
 import type {
   CreateJobTrackWithReminderDto,
   DocumentType,
@@ -75,6 +75,8 @@ export class JobTrackFormPageComponent implements OnInit {
   readonly isEdit = signal(false);
   readonly allStatuses = ALL_STATUSES;
   readonly statusConfig = STATUS_CONFIG;
+  readonly allContractTypes = ALL_CONTRACT_TYPES;
+  readonly contractTypeConfig = CONTRACT_TYPE_CONFIG;
 
   /** Original reminder from backend (edit mode only) */
   private readonly existingReminder = signal<Reminder | null>(null);
@@ -550,6 +552,11 @@ export class JobTrackFormPageComponent implements OnInit {
           this.router.navigate(['/dashboard/jobtrack']);
         },
       });
+  }
+
+  toggleContractType(type: ContractType): void {
+    const current = this.form.get('contractType')!.value;
+    this.form.get('contractType')!.setValue(current === type ? null : type);
   }
 
   cancel(): void {
