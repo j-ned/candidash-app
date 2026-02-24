@@ -14,6 +14,14 @@ type SigninForm = {
   password: FormControl<string>;
 };
 
+type TotpForm = {
+  token: FormControl<string>;
+};
+
+type RecoveryForm = {
+  recoveryCode: FormControl<string>;
+};
+
 @Component({
   selector: 'app-signin',
   imports: [ReactiveFormsModule, ButtonComponent, IconComponent, RouterLink],
@@ -32,6 +40,21 @@ export class Signin {
   readonly authService = inject(AuthStateService);
 
   readonly showPassword = signal(false);
+  readonly useRecoveryMode = signal(false);
+
+  readonly totpForm = new FormGroup<TotpForm>({
+    token: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/^\d{6}$/)],
+    }),
+  });
+
+  readonly recoveryForm = new FormGroup<RecoveryForm>({
+    recoveryCode: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
 
   readonly signinForm = new FormGroup<SigninForm>({
     email: new FormControl('', {
@@ -83,6 +106,52 @@ export class Signin {
 
   navigateToSignup(): void {
     this.router.navigate(['/auth/signup']);
+  }
+
+  onSubmitTotp(): void {
+    if (this.totpForm.valid) {
+      const { token } = this.totpForm.getRawValue();
+      this.authService.validateTotp(token).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+    }
+  }
+
+  onSubmitRecovery(): void {
+    if (this.recoveryForm.valid) {
+      const { recoveryCode } = this.recoveryForm.getRawValue();
+      this.authService.useRecoveryCode(recoveryCode).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+    }
+  }
+
+  toggleRecoveryMode(): void {
+    this.useRecoveryMode.update((v) => !v);
+    this.totpForm.reset();
+    this.recoveryForm.reset();
+  }
+
+  cancelTotp(): void {
+    this.authService.clearPending2FA();
+    this.useRecoveryMode.set(false);
+    this.totpForm.reset();
+    this.recoveryForm.reset();
+  }
+
+  totpSubmitLabel(): string {
+    return this.authService.isLoading() ? 'Vérification...' : 'Vérifier';
+  }
+
+  tokenError(): string | null {
+    const ctrl = this.totpForm.controls.token;
+    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
+    if (ctrl.errors['required']) return 'Le code est requis';
+    if (ctrl.errors['pattern']) return 'Le code doit contenir exactement 6 chiffres';
+    return null;
+  }
+
+  recoveryCodeError(): string | null {
+    const ctrl = this.recoveryForm.controls.recoveryCode;
+    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
+    if (ctrl.errors['required']) return 'Le code de récupération est requis';
+    return null;
   }
 
   async openForgotPasswordModal(): Promise<void> {

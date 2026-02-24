@@ -78,7 +78,6 @@ export class AuthStateService {
         if ('requires2FA' in response && response.requires2FA) {
           this.pendingTwoFactorToken.set((response as { tempToken: string }).tempToken);
           this.setLoading(false);
-          this.router.navigate(['/auth/2fa-verify']);
         } else {
           this.handleAuthSuccess(response as AuthResponse);
           this.router.navigate(['/dashboard']);
