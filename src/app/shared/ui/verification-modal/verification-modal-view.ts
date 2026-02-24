@@ -105,7 +105,7 @@ type VerificationModalForm = {
               type="button"
               (click)="onResend()"
               [disabled]="authService.isLoading() || resendCooldown() > 0"
-              class="text-primary-700 hover:text-primary-800 font-medium text-sm underline underline-offset-4 hover:no-underline px-4 py-2 rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline hover:bg-primary/10"
+              class="text-primary-800 hover:text-primary-900 font-medium text-sm underline underline-offset-4 hover:no-underline px-4 py-2 rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline hover:bg-primary/10"
             >
               @if (resendCooldown() > 0) {
                 Renvoyer le code ({{ resendCooldown() }}s)

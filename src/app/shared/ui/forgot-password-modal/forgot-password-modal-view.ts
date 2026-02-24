@@ -111,7 +111,7 @@ type ForgotPasswordModalForm = {
                 type="button"
                 (click)="resetForm()"
                 [disabled]="resendCooldown() > 0"
-                class="text-primary-700 hover:text-primary-800 font-medium text-sm transition-colors duration-200 underline-offset-4 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
+                class="text-primary-800 hover:text-primary-900 font-medium text-sm transition-colors duration-200 underline-offset-4 hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
               >
                 @if (resendCooldown() > 0) {
                   Renvoyer dans {{ resendCooldown() }}s

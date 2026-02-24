@@ -1,5 +1,5 @@
 <div
-  class="bg-surface border border-border-dark rounded-lg p-6 shadow-sm sm:rounded-xl sm:p-8 md:shadow-lg"
+  class="bg-card border border-border-dark rounded-lg p-6 shadow-md sm:rounded-xl sm:p-8 md:shadow-lg"
 >
   <h2
     id="signin-title"
@@ -82,7 +82,7 @@
       <button
         type="button"
         (click)="openForgotPasswordModal()"
-        class="text-primary-700 hover:text-primary-800 font-medium transition-colors duration-200 underline-offset-4 hover:underline"
+        class="text-primary-800 hover:text-primary-900 font-medium transition-colors duration-200 underline-offset-4 hover:underline"
       >
         Mot de passe oublié ?
       </button>
@@ -91,7 +91,7 @@
       Pas encore de compte ?
       <a
         routerLink="/auth/signup"
-        class="text-primary-700 hover:text-primary-800 font-medium ml-1 transition-colors duration-200 underline-offset-4 hover:underline"
+        class="text-primary-800 hover:text-primary-900 font-medium ml-1 transition-colors duration-200 underline-offset-4 hover:underline"
       >
         Créer un compte
       </a>
@@ -198,7 +198,7 @@
           <button
             type="button"
             (click)="toggleRecoveryMode()"
-            class="text-primary-700 hover:text-primary-800 text-sm font-medium transition-colors duration-200 underline-offset-4 hover:underline sm:text-base"
+            class="text-primary-800 hover:text-primary-900 text-sm font-medium transition-colors duration-200 underline-offset-4 hover:underline sm:text-base"
           >
             @if (useRecoveryMode()) {
               Utiliser le code TOTP
