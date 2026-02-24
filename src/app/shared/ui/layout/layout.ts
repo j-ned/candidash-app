@@ -40,7 +40,7 @@ import { RouterLink } from '@angular/router';
         ></div>
       </div>
 
-      <header class="absolute top-0 left-0 right-0 z-30 p-4 sm:p-6">
+      <header class="absolute top-0 left-0 right-0 z-30 p-2 sm:p-6">
         <div class="flex items-center justify-between">
           <div class="opacity-0"></div>
 
@@ -59,7 +59,7 @@ import { RouterLink } from '@angular/router';
         </div>
       </header>
 
-      <main class="relative z-10 flex min-h-screen items-start justify-center p-4 pt-20 sm:p-6 sm:pt-24 lg:p-8 lg:pt-28">
+      <main class="relative z-10 flex min-h-screen items-start justify-center p-2 pt-20 sm:p-6 sm:pt-24 lg:p-8 lg:pt-28">
         <div class="w-full max-w-6xl mx-auto">
           <div
             class="relative backdrop-blur-sm bg-card/50 border border-border/30 rounded-3xl shadow-2xl shadow-primary/5 overflow-hidden"
@@ -69,7 +69,7 @@ import { RouterLink } from '@angular/router';
               aria-hidden="true"
             ></div>
 
-            <div class="relative p-6 sm:p-8 lg:p-12">
+            <div class="relative p-4 sm:p-8 lg:p-12">
               <div class="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
                 <ng-content></ng-content>
               </div>
@@ -78,7 +78,7 @@ import { RouterLink } from '@angular/router';
         </div>
       </main>
 
-      <footer class="absolute bottom-0 left-0 right-0 z-10 p-4 sm:p-6">
+      <footer class="absolute bottom-0 left-0 right-0 z-10 p-2 sm:p-6">
         <div class="flex items-center justify-center">
           <div
             class="backdrop-blur-sm bg-card/60 border border-border/40 rounded-full px-6 py-2 shadow-lg"

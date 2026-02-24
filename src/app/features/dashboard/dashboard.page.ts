@@ -22,8 +22,8 @@ import { ReminderCheckerService } from '@features/jobtrack/application/reminder-
         <div class="relative">
           <!-- Header Navigation Bar -->
           <nav aria-label="Navigation du dashboard" class="backdrop-blur-sm bg-background/95 border-b border-border/50">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div class="flex items-center justify-between h-16 sm:h-20">
+            <div class="container mx-auto px-1 sm:px-6 lg:px-8">
+              <div class="flex items-center justify-between h-14 sm:h-20">
                 <div class="flex items-center gap-3">
                   <div class="relative">
                     <div class="absolute inset-0 bg-primary/20 rounded-xl blur"></div>
@@ -40,13 +40,12 @@ import { ReminderCheckerService } from '@features/jobtrack/application/reminder-
                 <div class="flex items-center gap-2 sm:gap-3">
                   <app-button
                     [customClass]="
-                      'inline-flex items-center px-4 py-2 text-sm font-medium shadow-lg hover:shadow-xl transition-all sm:px-6 sm:py-2.5'
+                      '!w-auto inline-flex items-center justify-center !p-2 !rounded-xl !shadow-md !text-sm sm:!px-5 sm:!py-2.5 sm:!rounded-lg sm:!shadow-lg'
                     "
                     color="primary"
                     (buttonClick)="goToCreate()"
                   >
-                    <app-icon name="lucide-plus" cssClass="w-4 h-4 mr-1.5 sm:w-5 sm:h-5 sm:mr-2" />
-
+                    <app-icon name="lucide-plus" cssClass="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
                     <span class="hidden sm:inline">Ajoute une annonce</span>
                   </app-button>
                 </div>
@@ -55,7 +54,7 @@ import { ReminderCheckerService } from '@features/jobtrack/application/reminder-
           </nav>
         </div>
       </div>
-      <section aria-label="Liste des candidatures" class="container mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+      <section aria-label="Liste des candidatures" class="container mx-auto px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
         <app-jobtrack-list />
       </section>
     </app-layout>
