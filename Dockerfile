@@ -34,11 +34,26 @@ RUN printf 'server {\n\
     root /usr/share/nginx/html;\n\
     index index.html;\n\
 \n\
+    # Security headers\n\
+    add_header X-Content-Type-Options "nosniff" always;\n\
+    add_header X-Frame-Options "DENY" always;\n\
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n\
+    add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;\n\
+\n\
     location / {\n\
         try_files $uri $uri/ /index.html;\n\
     }\n\
 \n\
-    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {\n\
+    # Prevent caching index.html so new deployments are picked up immediately\n\
+    location = /index.html {\n\
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;\n\
+        add_header X-Content-Type-Options "nosniff" always;\n\
+        add_header X-Frame-Options "DENY" always;\n\
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n\
+        add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;\n\
+    }\n\
+\n\
+    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp|mp4)$ {\n\
         expires 1y;\n\
         add_header Cache-Control "public, immutable";\n\
     }\n\

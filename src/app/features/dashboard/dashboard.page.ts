@@ -55,7 +55,7 @@ import { ReminderChecker } from '@features/jobtrack/application/reminder-checker
         </div>
       </div>
       <section aria-label="Liste des candidatures" class="container mx-auto px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-        <app-jobtrack-list />
+        <app-jobtrack-list [initialJobs]="jobsList()" />
       </section>
     </app-layout>
   `,
@@ -67,6 +67,7 @@ export class DashboardPage {
   private readonly destroyRef = inject(DestroyRef);
   private readonly reminderChecker = inject(ReminderChecker);
 
+  readonly jobsList = signal<JobTrack[]>([]);
   readonly stats = signal<DashboardStats>({
     total: 0,
     applied: 0,
@@ -83,6 +84,7 @@ export class DashboardPage {
   private refresh(): void {
     this.listJobtracksUseCase.execute().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (items) => {
+        this.jobsList.set(items);
         this.updateStats(items);
       },
       error: () => {},

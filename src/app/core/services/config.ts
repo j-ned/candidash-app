@@ -1,6 +1,6 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 export type AppConfig = {
   apiUrl: string;
@@ -19,7 +19,7 @@ export class Config {
 
   async loadConfig(): Promise<void> {
     try {
-      this.config = await firstValueFrom(this.http.get<AppConfig>('/config.json'));
+      this.config = await firstValueFrom(this.http.get<AppConfig>('/config.json').pipe(timeout(5000)));
     } catch {
       this.config = { apiUrl: this.defaultApiUrl };
     }
