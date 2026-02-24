@@ -1,9 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { IconComponent } from '@shared/ui/icon/icon';
-import { ProfileStateService } from '@features/profile/application/profile-state.service';
+import { Button } from '@shared/ui/button/button';
+import { Icon } from '@shared/ui/icon/icon';
+import { ProfileState } from '@features/profile/application/profile-state';
 import type { ChangePasswordRequest } from '@features/profile/domain/models/profile.model';
 import { passwordMatchValidator } from '@shared/validators/password-match.validator';
 
@@ -15,7 +15,7 @@ type PasswordChangeForm = {
 
 @Component({
   selector: 'app-profile-security',
-  imports: [ReactiveFormsModule, IconComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, Icon, Button],
   templateUrl: './profile-security.html',
   host: {
     class: 'block bg-card border border-border rounded-md p-4 sm:rounded-lg sm:p-6',
@@ -25,7 +25,7 @@ type PasswordChangeForm = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileSecurity {
-  readonly profileService = inject(ProfileStateService);
+  readonly profileService = inject(ProfileState);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly showCurrentPassword = signal(false);

@@ -1,11 +1,11 @@
 import { Component, ChangeDetectionStrategy, input, output, computed, inject } from '@angular/core';
-import { ToastService } from '@shared/ui/toast/service/toast';
+import { Toaster } from '@shared/ui/toast/service/toast';
 import { ToastData } from '@shared/ui/toast/model/toast-model';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-toast',
-  imports: [IconComponent],
+  imports: [Icon],
   template: `
     <div
       [class]="toastClasses()"
@@ -69,8 +69,8 @@ import { IconComponent } from '@shared/ui/icon/icon';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ToastComponent {
-  private readonly toastService = inject(ToastService);
+export class Toast {
+  private readonly toastService = inject(Toaster);
 
   readonly toast = input.required<ToastData>();
   readonly dismissed = output<string>();

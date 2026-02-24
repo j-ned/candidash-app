@@ -1,5 +1,5 @@
 // Services
-export { TokenService } from './services/token';
+export { TokenStore } from './services/token';
 
 // Guards
 export { authGuard, guestGuard } from './guards/auth';

@@ -57,7 +57,7 @@ src/app/
 │   │   ├── infra/
 │   │   │   └── http-auth.gateway.ts       # HttpClient implementation of AuthGateway
 │   │   └── application/
-│   │       ├── auth-state.service.ts      # Signal state + orchestration (toasts, navigation)
+│   │       ├── auth-state.ts              # Signal state + orchestration (toasts, navigation)
 │   │       └── (components remain in auth/components/)
 │   │
 │   ├── jobtrack/
@@ -78,7 +78,7 @@ src/app/
 │   │   ├── infra/
 │   │   │   └── http-profile.gateway.ts
 │   │   └── application/
-│   │       ├── profile-state.service.ts   # Signal state for profile
+│   │       ├── profile-state.ts           # Signal state for profile
 │   │       ├── profile-layout.ts
 │   │       └── components/                # profile-header, profile-info, profile-security, simple-avatar
 │   │
@@ -106,7 +106,7 @@ src/app/
 
 **Use Cases**: Each use case is a `@Injectable` class with one `execute()` method that delegates to the gateway. Components inject use cases, not gateways directly.
 
-**State services**: `AuthStateService` and `ProfileStateService` manage signal-based state and orchestrate side effects (toasts, navigation, localStorage). Components inject these for state reads.
+**State services**: `AuthState` and `ProfileState` manage signal-based state and orchestrate side effects (toasts, navigation, localStorage). Components inject these for state reads.
 
 **Domain models**: All models use `type` (not `interface`). Union types instead of enums (e.g., `type UserRole = 'USER' | 'ADMIN'`).
 
@@ -116,7 +116,7 @@ src/app/
 
 **Routing**: All routes lazy-loaded via `loadComponent()` / `loadChildren()`. Auth-protected routes use `authGuard`; guest-only routes use `guestGuard`.
 
-**Authentication**: JWT access token stored in-memory (`TokenService` signal). Refresh token is an HttpOnly cookie (backend-managed). Auth interceptor auto-attaches Bearer token and handles 401 refresh-retry. User data cached in `localStorage` key `auth_user`.
+**Authentication**: JWT access token stored in-memory (`TokenStore` signal). Refresh token is an HttpOnly cookie (backend-managed). Auth interceptor auto-attaches Bearer token and handles 401 refresh-retry. User data cached in `localStorage` key `auth_user`.
 
 **API URL resolution**: `Config` service loads `/config.json` at startup via `provideAppInitializer()`; falls back to `http://localhost:3000/api/v1`. No `environment.ts` — the auth interceptor and all gateways use `Config.apiUrl`.
 
@@ -130,6 +130,7 @@ src/app/
 - **Inputs/Outputs**: `input()` / `input.required()` and `output()` signal APIs (not decorators)
 - **Selectors**: `app-` prefix, kebab-case
 - **Tests**: `*.spec.ts` co-located next to source files, TestBed-style
+- **Class naming (Angular 2025 style guide)**: No type suffixes. Components: `Button`, `Layout`, `Home` (not `ButtonComponent`). Services: `AuthState`, `Toaster`, `ThemeManager` (not `AuthStateService`). Exceptions: `*UseCase` and `*Gateway` keep their suffixes.
 
 ### File Naming
 
@@ -139,7 +140,7 @@ src/app/
 | Gateway (contract) | `*.gateway.ts` | `auth.gateway.ts` |
 | Gateway (impl) | `http-*.gateway.ts` | `http-auth.gateway.ts` |
 | Use case | `*.use-case.ts` | `signin.use-case.ts` |
-| State service | `*-state.service.ts` | `auth-state.service.ts` |
+| State service | `*-state.ts` | `auth-state.ts` |
 | Use case method | `execute()` | — |
 | Component | kebab-case | `signin.ts` |
 | Routes | `feature.routes.ts` | `auth.routes.ts` |

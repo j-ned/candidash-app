@@ -2,17 +2,17 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRe
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
-import { ButtonComponent } from '@shared/ui/button/button';
+import { Button } from '@shared/ui/button/button';
 import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
 import { DeleteJobtrackUseCase } from '@features/jobtrack/domain/use-cases/delete-jobtrack.use-case';
 import { STATUS_CONFIG } from '@features/jobtrack/domain/models/jobtrack.model';
 import type { JobTrack, JobStatus } from '@features/jobtrack/domain/models/jobtrack.model';
-import { ToastService } from '@shared/ui/toast/service/toast';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Toaster } from '@shared/ui/toast/service/toast';
+import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-jobtrack-list',
-  imports: [ButtonComponent, IconComponent, RouterLink],
+  imports: [Button, Icon, RouterLink],
   templateUrl: './jobtrack-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -20,7 +20,7 @@ export class JobtrackList {
   private readonly listJobtracksUseCase = inject(ListJobtracksUseCase);
   private readonly deleteJobtrackUseCase = inject(DeleteJobtrackUseCase);
   private readonly router = inject(Router);
-  private readonly toast = inject(ToastService);
+  private readonly toast = inject(Toaster);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly jobs = signal<JobTrack[]>([]);

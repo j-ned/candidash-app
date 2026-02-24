@@ -11,8 +11,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { LayoutComponent } from '@shared/ui/layout/layout';
-import { ButtonComponent } from '@shared/ui/button/button';
+import { Layout } from '@shared/ui/layout/layout';
+import { Button } from '@shared/ui/button/button';
 import { GetJobtrackUseCase } from '@features/jobtrack/domain/use-cases/get-jobtrack.use-case';
 import { CreateJobtrackUseCase } from '@features/jobtrack/domain/use-cases/create-jobtrack.use-case';
 import { UpdateJobtrackUseCase } from '@features/jobtrack/domain/use-cases/update-jobtrack.use-case';
@@ -30,9 +30,9 @@ import type {
   UpdateJobTrackWithReminderDto,
 } from '@features/jobtrack/domain/models/jobtrack.model';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ToastService } from '@shared/ui/toast/service/toast';
-import { IconComponent } from '@shared/ui/icon/icon';
-import { PdfViewerModalService } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
+import { Toaster } from '@shared/ui/toast/service/toast';
+import { Icon } from '@shared/ui/icon/icon';
+import { PdfViewerModal } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
 
 type JobtrackForm = {
   title: FormControl<string>;
@@ -53,11 +53,11 @@ const TERMINAL_STATUSES: ReadonlySet<JobStatus> = new Set(['ACCEPTED', 'REJECTED
 
 @Component({
   selector: 'app-jobtrack-form-page',
-  imports: [LayoutComponent, ReactiveFormsModule, ButtonComponent, IconComponent],
+  imports: [Layout, ReactiveFormsModule, Button, Icon],
   templateUrl: './jobtrack-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class JobTrackFormPageComponent implements OnInit {
+export class JobtrackFormPage implements OnInit {
   private readonly router = inject(Router);
   private readonly getJobtrackUseCase = inject(GetJobtrackUseCase);
   private readonly createJobtrackUseCase = inject(CreateJobtrackUseCase);
@@ -65,8 +65,8 @@ export class JobTrackFormPageComponent implements OnInit {
   private readonly uploadDocumentUseCase = inject(UploadDocumentUseCase);
   private readonly downloadDocumentUseCase = inject(DownloadDocumentUseCase);
   private readonly deleteDocumentUseCase = inject(DeleteDocumentUseCase);
-  private readonly toast = inject(ToastService);
-  private readonly pdfViewerModal = inject(PdfViewerModalService);
+  private readonly toast = inject(Toaster);
+  private readonly pdfViewerModal = inject(PdfViewerModal);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input<string>();

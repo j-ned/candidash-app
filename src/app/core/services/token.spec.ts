@@ -1,14 +1,14 @@
 import { TestBed } from '@angular/core/testing';
-import { TokenService } from './token';
+import { TokenStore } from './token';
 
-describe('TokenService', () => {
-  let service: TokenService;
+describe('TokenStore', () => {
+  let service: TokenStore;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [TokenService],
+      providers: [TokenStore],
     });
-    service = TestBed.inject(TokenService);
+    service = TestBed.inject(TokenStore);
     localStorage.clear();
   });
 

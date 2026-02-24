@@ -1,10 +1,10 @@
 import { Component, ChangeDetectionStrategy, inject, signal, input, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { LayoutComponent } from '@shared/ui/layout/layout';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { IconComponent } from '@shared/ui/icon/icon';
-import { ToastService } from '@shared/ui/toast/service/toast';
+import { Layout } from '@shared/ui/layout/layout';
+import { Button } from '@shared/ui/button/button';
+import { Icon } from '@shared/ui/icon/icon';
+import { Toaster } from '@shared/ui/toast/service/toast';
 import { GetJobtrackUseCase } from '@features/jobtrack/domain/use-cases/get-jobtrack.use-case';
 import { UpdateJobtrackUseCase } from '@features/jobtrack/domain/use-cases/update-jobtrack.use-case';
 import { UploadDocumentUseCase } from '@features/jobtrack/domain/use-cases/upload-document.use-case';
@@ -12,24 +12,24 @@ import { DownloadDocumentUseCase } from '@features/jobtrack/domain/use-cases/dow
 import { DeleteDocumentUseCase } from '@features/jobtrack/domain/use-cases/delete-document.use-case';
 import { STATUS_CONFIG, ALL_STATUSES } from '@features/jobtrack/domain/models/jobtrack.model';
 import type { JobTrack, JobStatus, DocumentType } from '@features/jobtrack/domain/models/jobtrack.model';
-import { PdfViewerModalService } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
+import { PdfViewerModal } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 @Component({
   selector: 'app-jobtrack-detail',
-  imports: [LayoutComponent, ButtonComponent, IconComponent],
+  imports: [Layout, Button, Icon],
   templateUrl: './jobtrack-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class JobtrackDetailComponent implements OnInit {
+export class JobtrackDetail implements OnInit {
   private readonly getJobtrackUseCase = inject(GetJobtrackUseCase);
   private readonly updateJobtrackUseCase = inject(UpdateJobtrackUseCase);
   private readonly uploadDocumentUseCase = inject(UploadDocumentUseCase);
   private readonly downloadDocumentUseCase = inject(DownloadDocumentUseCase);
   private readonly deleteDocumentUseCase = inject(DeleteDocumentUseCase);
-  private readonly toast = inject(ToastService);
-  private readonly pdfViewerModal = inject(PdfViewerModalService);
+  private readonly toast = inject(Toaster);
+  private readonly pdfViewerModal = inject(PdfViewerModal);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 

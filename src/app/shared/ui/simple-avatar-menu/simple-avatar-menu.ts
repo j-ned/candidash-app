@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { AuthState } from '@features/auth/application/auth-state';
 import { SimpleAvatar } from '@features/profile/application/components';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-simple-avatar-menu',
-  imports: [SimpleAvatar, IconComponent],
+  imports: [SimpleAvatar, Icon],
   host: { class: 'relative block' },
   template: `
       <button
@@ -78,9 +78,9 @@ import { IconComponent } from '@shared/ui/icon/icon';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SimpleAvatarMenuComponent {
+export class SimpleAvatarMenu {
   private readonly router = inject(Router);
-  readonly authService = inject(AuthStateService);
+  readonly authService = inject(AuthState);
 
   readonly isMenuOpen = signal(false);
 

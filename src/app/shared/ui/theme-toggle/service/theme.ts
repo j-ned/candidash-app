@@ -6,7 +6,7 @@ export type Theme = 'light' | 'dark';
 @Injectable({
   providedIn: 'root',
 })
-export class ThemeService {
+export class ThemeManager {
   private readonly document = inject(DOCUMENT);
   private readonly _theme = signal<Theme>('light');
 

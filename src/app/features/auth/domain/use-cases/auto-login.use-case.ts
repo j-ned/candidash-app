@@ -2,13 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, throwError, EMPTY, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthGateway } from '../gateways/auth.gateway';
-import { TokenService } from '@core/services/token';
+import { TokenStore } from '@core/services/token';
 import type { User } from '../models/auth.model';
 
 @Injectable({ providedIn: 'root' })
 export class AutoLoginUseCase {
   private readonly gateway = inject(AuthGateway);
-  private readonly tokenService = inject(TokenService);
+  private readonly tokenService = inject(TokenStore);
 
   private autoLoginInProgress = false;
 

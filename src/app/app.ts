@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
 import { ToastContainer } from '@shared/ui/toast/toast-container';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { AuthState } from '@features/auth/application/auth-state';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +12,7 @@ import { AuthStateService } from '@features/auth/application/auth-state.service'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  private readonly authService = inject(AuthStateService);
+  private readonly authService = inject(AuthState);
 
   constructor() {
     if (this.authService.checkAuthStatus() && !this.authService.isAuthenticated()) {

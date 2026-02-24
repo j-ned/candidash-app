@@ -1,10 +1,10 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
-import { ThemeService } from '@shared/ui/theme-toggle/service/theme';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { ThemeManager } from '@shared/ui/theme-toggle/service/theme';
+import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-theme-toggle',
-  imports: [IconComponent],
+  imports: [Icon],
   template: `
     <button
       type="button"
@@ -28,7 +28,7 @@ import { IconComponent } from '@shared/ui/icon/icon';
   },
 })
 export class ThemeToggle {
-  readonly themeService = inject(ThemeService);
+  readonly themeService = inject(ThemeManager);
 
   readonly buttonClasses = computed(() =>
     [

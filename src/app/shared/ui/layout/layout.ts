@@ -7,13 +7,13 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
-import { SimpleAvatarMenuComponent } from '../simple-avatar-menu/simple-avatar-menu';
+import { AuthState } from '@features/auth/application/auth-state';
+import { SimpleAvatarMenu } from '../simple-avatar-menu/simple-avatar-menu';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-layout',
-  imports: [ThemeToggle, SimpleAvatarMenuComponent, RouterLink],
+  imports: [ThemeToggle, SimpleAvatarMenu, RouterLink],
   template: `
     <div
       class="relative flex flex-col min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-surface"
@@ -200,9 +200,9 @@ import { RouterLink } from '@angular/router';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LayoutComponent implements OnInit, OnDestroy {
+export class Layout implements OnInit, OnDestroy {
   private readonly renderer = inject(Renderer2);
-  readonly authService = inject(AuthStateService);
+  readonly authService = inject(AuthState);
   private haloElement?: HTMLElement;
   private mouseMoveListener?: (event: MouseEvent) => void;
   private rafId: number | null = null;

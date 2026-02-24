@@ -1,10 +1,10 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { LayoutComponent } from '@shared/ui/layout/layout';
+import { Layout } from '@shared/ui/layout/layout';
 import { ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa } from './components';
 
 @Component({
   selector: 'app-profile-layout',
-  imports: [LayoutComponent, ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa],
+  imports: [Layout, ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa],
   template: `
     <app-layout>
       <div
@@ -27,4 +27,4 @@ import { ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa } from './compo
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProfileLayoutComponent {}
+export class ProfileLayout {}

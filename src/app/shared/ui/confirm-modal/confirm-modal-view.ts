@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { ConfirmModalData } from './confirm-modal';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-confirm-modal-view',
-  imports: [IconComponent],
+  imports: [Icon],
   template: `
     <div
       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] animate-in fade-in duration-200"

@@ -3,11 +3,11 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, EMPTY, throwError } from 'rxjs';
 import { catchError, tap, switchMap } from 'rxjs/operators';
-import { TokenService } from '@core/services/token';
-import { ToastService } from '@shared/ui/toast/service/toast';
+import { TokenStore } from '@core/services/token';
+import { Toaster } from '@shared/ui/toast/service/toast';
 import type {
   AuthResponse,
-  AuthState,
+  AuthState as AuthStateModel,
   LoginCredentials,
   LoginResponse,
   RegisterData,
@@ -32,9 +32,9 @@ import { ValidateTotpUseCase } from '../domain/use-cases/validate-totp.use-case'
 import { UseRecoveryCodeUseCase } from '../domain/use-cases/use-recovery-code.use-case';
 
 @Injectable({ providedIn: 'root' })
-export class AuthStateService {
-  private readonly tokenService = inject(TokenService);
-  private readonly toastService = inject(ToastService);
+export class AuthState {
+  private readonly tokenService = inject(TokenStore);
+  private readonly toastService = inject(Toaster);
   private readonly router = inject(Router);
   private readonly signinUseCase = inject(SigninUseCase);
   private readonly signupUseCase = inject(SignupUseCase);
@@ -47,7 +47,7 @@ export class AuthStateService {
   private readonly validateTotpUseCase = inject(ValidateTotpUseCase);
   private readonly useRecoveryCodeUseCase = inject(UseRecoveryCodeUseCase);
 
-  private readonly authState = signal<AuthState>({
+  private readonly authState = signal<AuthStateModel>({
     isAuthenticated: false,
     user: null,
     isLoading: false,

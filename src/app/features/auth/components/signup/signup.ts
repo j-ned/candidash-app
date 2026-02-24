@@ -2,11 +2,11 @@ import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { AuthState } from '@features/auth/application/auth-state';
 import type { RegisterData } from '@features/auth/domain/models/auth.model';
-import { VerificationModalService } from '@shared/ui/verification-modal/verification-modal';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { VerificationModal } from '@shared/ui/verification-modal/verification-modal';
+import { Icon } from '@shared/ui/icon/icon';
 import { passwordMatchValidator } from '@shared/validators/password-match.validator';
 
 type SignupForm = {
@@ -18,7 +18,7 @@ type SignupForm = {
 
 @Component({
   selector: 'app-signup',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent, RouterLink],
+  imports: [ReactiveFormsModule, Button, Icon, RouterLink],
   templateUrl: './signup.html',
   host: {
     class: 'block w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
@@ -29,8 +29,8 @@ type SignupForm = {
 })
 export class Signup {
   private readonly router = inject(Router);
-  readonly authService = inject(AuthStateService);
-  private readonly verificationModalService = inject(VerificationModalService);
+  readonly authService = inject(AuthState);
+  private readonly verificationModalService = inject(VerificationModal);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly showPassword = signal(false);

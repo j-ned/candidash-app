@@ -9,11 +9,11 @@ import {
   effect,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { AuthState } from '@features/auth/application/auth-state';
 import type { ForgotPasswordModalData } from './forgot-password-modal';
 import { clearCooldownTimer, startCooldownTimer } from '@shared/utils/cooldown';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 type ForgotPasswordModalForm = {
   email: FormControl<string>;
@@ -21,7 +21,7 @@ type ForgotPasswordModalForm = {
 
 @Component({
   selector: 'app-forgot-password-modal-view',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
+  imports: [ReactiveFormsModule, Button, Icon],
   template: `
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" (click)="onCancel()" aria-hidden="true"></div>
     <div
@@ -143,7 +143,7 @@ type ForgotPasswordModalForm = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForgotPasswordModalView implements OnDestroy {
-  readonly authService = inject(AuthStateService);
+  readonly authService = inject(AuthState);
 
   readonly data = input<ForgotPasswordModalData>({});
   readonly emailSubmitted = output<string>();

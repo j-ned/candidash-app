@@ -31,7 +31,7 @@ interface ConfirmModalComponent {
 @Injectable({
   providedIn: 'root',
 })
-export class ConfirmModalService {
+export class ConfirmModal {
   private modalComponentRef: ComponentRef<ConfirmModalComponent> | null = null;
   private readonly modalStack = signal<ComponentRef<ConfirmModalComponent>[]>([]);
 
@@ -39,7 +39,7 @@ export class ConfirmModalService {
   private readonly injector = inject(EnvironmentInjector);
 
   async confirm(data: ConfirmModalData): Promise<boolean> {
-    console.log('ConfirmModalService.confirm called with:', data);
+    console.log('ConfirmModal.confirm called with:', data);
     return new Promise<boolean>((resolve) => {
       const modalRef = createComponent(ConfirmModalView as unknown as Type<ConfirmModalComponent>, {
         environmentInjector: this.injector,

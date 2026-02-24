@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 export type PdfViewerModalData = {
   blobUrl: string;
@@ -9,7 +9,7 @@ export type PdfViewerModalData = {
 
 @Component({
   selector: 'app-pdf-viewer-modal-view',
-  imports: [IconComponent],
+  imports: [Icon],
   template: `
     <div
       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] animate-in fade-in duration-200"

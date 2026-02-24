@@ -24,7 +24,7 @@ interface PdfViewerModalComponent {
 @Injectable({
   providedIn: 'root',
 })
-export class PdfViewerModalService {
+export class PdfViewerModal {
   private modalComponentRef: ComponentRef<PdfViewerModalComponent> | null = null;
   private readonly modalStack = signal<ComponentRef<PdfViewerModalComponent>[]>([]);
 

@@ -2,8 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { ToastService } from '@shared/ui/toast/service/toast';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Toaster } from '@shared/ui/toast/service/toast';
+import { AuthState } from '@features/auth/application/auth-state';
 import { GetProfileUseCase } from '../domain/use-cases/get-profile.use-case';
 import { UpdateProfileUseCase } from '../domain/use-cases/update-profile.use-case';
 import { ChangePasswordUseCase } from '../domain/use-cases/change-password.use-case';
@@ -11,20 +11,20 @@ import { DeleteAccountUseCase } from '../domain/use-cases/delete-account.use-cas
 import type {
   ChangePasswordRequest,
   ProfileData,
-  ProfileState,
+  ProfileState as ProfileStateModel,
   UpdateProfileRequest,
 } from '../domain/models/profile.model';
 
 @Injectable({ providedIn: 'root' })
-export class ProfileStateService {
-  private readonly toastService = inject(ToastService);
-  private readonly authService = inject(AuthStateService);
+export class ProfileState {
+  private readonly toastService = inject(Toaster);
+  private readonly authService = inject(AuthState);
   private readonly getProfileUseCase = inject(GetProfileUseCase);
   private readonly updateProfileUseCase = inject(UpdateProfileUseCase);
   private readonly changePasswordUseCase = inject(ChangePasswordUseCase);
   private readonly deleteAccountUseCase = inject(DeleteAccountUseCase);
 
-  private readonly profileState = signal<ProfileState>({
+  private readonly profileState = signal<ProfileStateModel>({
     profile: null,
     stats: null,
     isLoading: false,
