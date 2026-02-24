@@ -2,15 +2,15 @@ import { Injectable, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, switchMap } from 'rxjs';
 import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
-import { ToastService } from '@shared/ui/toast/service/toast';
+import { Toaster } from '@shared/ui/toast/service/toast';
 import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
 
 const CHECK_INTERVAL_MS = 60_000;
 
 @Injectable({ providedIn: 'root' })
-export class ReminderCheckerService {
+export class ReminderChecker {
   private readonly listJobtracksUseCase = inject(ListJobtracksUseCase);
-  private readonly toast = inject(ToastService);
+  private readonly toast = inject(Toaster);
 
   private started = false;
   private readonly notifiedIds = new Set<string>();

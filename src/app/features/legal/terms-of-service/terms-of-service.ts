@@ -166,7 +166,7 @@ import { Router } from '@angular/router';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TermsOfServiceComponent {
+export class TermsOfService {
   readonly lastUpdated = new Date('2026-02-22').toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'long',

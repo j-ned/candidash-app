@@ -2,9 +2,9 @@ import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef, OnInit 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { IconComponent } from '@shared/ui/icon/icon';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { Icon } from '@shared/ui/icon/icon';
+import { AuthState } from '@features/auth/application/auth-state';
 
 type TotpForm = {
   token: FormControl<string>;
@@ -16,7 +16,7 @@ type RecoveryForm = {
 
 @Component({
   selector: 'app-totp-verify',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
+  imports: [ReactiveFormsModule, Button, Icon],
   templateUrl: './totp-verify.html',
   host: {
     class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg',
@@ -28,7 +28,7 @@ type RecoveryForm = {
 export class TotpVerify implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  readonly authService = inject(AuthStateService);
+  readonly authService = inject(AuthState);
 
   readonly useRecoveryMode = signal(false);
 

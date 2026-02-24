@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   host: { class: 'inline-flex shrink-0' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class IconComponent {
+export class Icon {
   readonly name = input.required<string>();
   readonly cssClass = input<string>('w-5 h-5');
   readonly ariaHidden = input<string>('true');

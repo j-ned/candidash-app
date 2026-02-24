@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { defer, of, throwError } from 'rxjs';
 import { AutoLoginUseCase } from './auto-login.use-case';
 import { AuthGateway } from '../gateways/auth.gateway';
-import { TokenService } from '@core/services/token';
+import { TokenStore } from '@core/services/token';
 import { UserBuilder } from '../../test-utils/user.builder';
 import type { RefreshResponse } from '../models/auth.model';
 
@@ -27,7 +27,7 @@ describe('AutoLoginUseCase', () => {
       providers: [
         AutoLoginUseCase,
         { provide: AuthGateway, useValue: gateway },
-        { provide: TokenService, useValue: tokenService },
+        { provide: TokenStore, useValue: tokenService },
       ],
     });
     return {

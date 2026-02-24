@@ -11,8 +11,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { AuthState } from '@features/auth/application/auth-state';
 import { startCooldownTimer, clearCooldownTimer } from '@shared/utils/cooldown';
 import { verificationCodeValidator } from '@shared/validators/verification-code.validator';
 
@@ -22,7 +22,7 @@ type VerificationForm = {
 
 @Component({
   selector: 'app-verification',
-  imports: [ReactiveFormsModule, ButtonComponent, RouterLink],
+  imports: [ReactiveFormsModule, Button, RouterLink],
   templateUrl: './verification.html',
   host: {
     class: 'block w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
@@ -33,7 +33,7 @@ type VerificationForm = {
 })
 export class Verification implements OnInit, OnDestroy {
   private readonly router = inject(Router);
-  readonly authService = inject(AuthStateService);
+  readonly authService = inject(AuthState);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly email = input<string>('');

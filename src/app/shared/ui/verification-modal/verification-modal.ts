@@ -28,7 +28,7 @@ interface VerificationModalComponent {
 @Injectable({
   providedIn: 'root',
 })
-export class VerificationModalService {
+export class VerificationModal {
   private modalComponentRef: ComponentRef<VerificationModalComponent> | null = null;
   private readonly modalStack = signal<ComponentRef<VerificationModalComponent>[]>([]);
 

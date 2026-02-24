@@ -24,7 +24,7 @@ interface ForgotPasswordModalComponent {
 @Injectable({
   providedIn: 'root',
 })
-export class ForgotPasswordModalService {
+export class ForgotPasswordModal {
   private modalComponentRef: ComponentRef<ForgotPasswordModalComponent> | null = null;
   private readonly modalStack = signal<ComponentRef<ForgotPasswordModalComponent>[]>([]);
 

@@ -4,7 +4,7 @@ import { authGuard, guestGuard } from '@core/guards/auth';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./features/home/home').then((m) => m.HomeComponent),
+    loadComponent: () => import('./features/home/home').then((m) => m.Home),
   },
   {
     path: 'dashboard',
@@ -19,11 +19,11 @@ export const routes: Routes = [
   },
   {
     path: 'terms-of-service',
-    loadComponent: () => import('./features/legal/terms-of-service/terms-of-service').then((m) => m.TermsOfServiceComponent),
+    loadComponent: () => import('./features/legal/terms-of-service/terms-of-service').then((m) => m.TermsOfService),
   },
   {
     path: 'features',
-    loadComponent: () => import('./features/legal/features/features').then((m) => m.FeaturesComponent),
+    loadComponent: () => import('./features/legal/features/features').then((m) => m.Features),
   },
   {
     path: '**',

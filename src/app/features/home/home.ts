@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { IconComponent } from '@shared/ui/icon/icon';
-import { LayoutComponent } from '@shared/ui/layout/layout';
+import { Button } from '@shared/ui/button/button';
+import { Icon } from '@shared/ui/icon/icon';
+import { Layout } from '@shared/ui/layout/layout';
 import { PageButton } from '@features/home/model/home-model';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { AuthState } from '@features/auth/application/auth-state';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, ButtonComponent, LayoutComponent, IconComponent],
+  imports: [RouterLink, Button, Layout, Icon],
   template: `
     <app-layout>
       <div
@@ -83,8 +83,8 @@ import { AuthStateService } from '@features/auth/application/auth-state.service'
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent {
-  private readonly authState = inject(AuthStateService);
+export class Home {
+  private readonly authState = inject(AuthState);
   private readonly router = inject(Router);
 
   constructor() {

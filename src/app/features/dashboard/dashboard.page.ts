@@ -1,18 +1,18 @@
 import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { LayoutComponent } from '@shared/ui/layout/layout';
-import { ButtonComponent } from '@shared/ui/button/button';
+import { Layout } from '@shared/ui/layout/layout';
+import { Button } from '@shared/ui/button/button';
 import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
 import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
 import { JobtrackList } from '@features/jobtrack/application/components/jobtrack-list/jobtrack-list';
 import type { DashboardStats } from '@features/dashboard/components/dashboard-stats/model/dashboard-stats';
-import { IconComponent } from '@shared/ui/icon/icon';
-import { ReminderCheckerService } from '@features/jobtrack/application/reminder-checker.service';
+import { Icon } from '@shared/ui/icon/icon';
+import { ReminderChecker } from '@features/jobtrack/application/reminder-checker';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [LayoutComponent, ButtonComponent, JobtrackList, IconComponent],
+  imports: [Layout, Button, JobtrackList, Icon],
   template: `
     <app-layout>
       <div class="relative overflow-hidden">
@@ -61,11 +61,11 @@ import { ReminderCheckerService } from '@features/jobtrack/application/reminder-
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardPageComponent {
+export class DashboardPage {
   private readonly listJobtracksUseCase = inject(ListJobtracksUseCase);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly reminderChecker = inject(ReminderCheckerService);
+  private readonly reminderChecker = inject(ReminderChecker);
 
   readonly stats = signal<DashboardStats>({
     total: 0,

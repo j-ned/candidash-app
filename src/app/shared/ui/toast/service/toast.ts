@@ -1,13 +1,13 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { ToastConfig, ToastData, ToastType } from '@shared/ui/toast/model/toast-model';
-import { ConfirmModalService } from '@shared/ui/confirm-modal/confirm-modal';
+import { ConfirmModal } from '@shared/ui/confirm-modal/confirm-modal';
 import { ConfirmModalData } from '@shared/ui/confirm-modal/confirm-modal';
 
 @Injectable({
   providedIn: 'root',
 })
-export class ToastService {
-  private readonly confirmModalService = inject(ConfirmModalService);
+export class Toaster {
+  private readonly confirmModalService = inject(ConfirmModal);
   private readonly _toasts = signal<ToastData[]>([]);
   private readonly _config = signal<ToastConfig>({
     position: 'top-right',

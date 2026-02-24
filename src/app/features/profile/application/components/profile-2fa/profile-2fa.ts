@@ -1,19 +1,19 @@
 import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { IconComponent } from '@shared/ui/icon/icon';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { Icon } from '@shared/ui/icon/icon';
+import { AuthState } from '@features/auth/application/auth-state';
 import { SetupTotpUseCase } from '@features/auth/domain/use-cases/setup-totp.use-case';
 import { VerifyTotpSetupUseCase } from '@features/auth/domain/use-cases/verify-totp-setup.use-case';
 import { DisableTotpUseCase } from '@features/auth/domain/use-cases/disable-totp.use-case';
-import { ToastService } from '@shared/ui/toast/service/toast';
+import { Toaster } from '@shared/ui/toast/service/toast';
 
 type TotpSetupState = 'idle' | 'qrcode' | 'verify' | 'recovery-codes';
 
 @Component({
   selector: 'app-profile-2fa',
-  imports: [ReactiveFormsModule, IconComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, Icon, Button],
   templateUrl: './profile-2fa.html',
   host: {
     class: 'block bg-card border border-border rounded-md p-4 sm:rounded-lg sm:p-6',
@@ -23,11 +23,11 @@ type TotpSetupState = 'idle' | 'qrcode' | 'verify' | 'recovery-codes';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Profile2fa {
-  private readonly authService = inject(AuthStateService);
+  private readonly authService = inject(AuthState);
   private readonly setupTotpUseCase = inject(SetupTotpUseCase);
   private readonly verifyTotpSetupUseCase = inject(VerifyTotpSetupUseCase);
   private readonly disableTotpUseCase = inject(DisableTotpUseCase);
-  private readonly toastService = inject(ToastService);
+  private readonly toastService = inject(Toaster);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<TotpSetupState>('idle');

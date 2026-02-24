@@ -10,11 +10,11 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { AuthState } from '@features/auth/application/auth-state';
 
 import { passwordMatchValidator } from '@shared/validators/password-match.validator';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 type ResetPasswordForm = {
   newPassword: FormControl<string>;
@@ -23,7 +23,7 @@ type ResetPasswordForm = {
 
 @Component({
   selector: 'app-reset-password',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
+  imports: [ReactiveFormsModule, Button, Icon],
   templateUrl: './reset-password.html',
   host: {
     class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
@@ -34,7 +34,7 @@ type ResetPasswordForm = {
 })
 export class ResetPassword implements OnInit {
   private readonly router = inject(Router);
-  readonly authService = inject(AuthStateService);
+  readonly authService = inject(AuthState);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly token = input<string>('');

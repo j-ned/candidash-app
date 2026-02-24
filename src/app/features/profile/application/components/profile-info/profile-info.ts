@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { ProfileStateService } from '@features/profile/application/profile-state.service';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { ProfileState } from '@features/profile/application/profile-state';
+import { AuthState } from '@features/auth/application/auth-state';
 import type { UpdateProfileRequest } from '@features/profile/domain/models/profile.model';
 import { Router } from '@angular/router';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 type ProfileInfoForm = {
   email: FormControl<string>;
@@ -15,7 +15,7 @@ type ProfileInfoForm = {
 
 @Component({
   selector: 'app-profile-info',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
+  imports: [ReactiveFormsModule, Button, Icon],
   templateUrl: './profile-info.html',
   host: {
     class: 'block space-y-4 sm:space-y-6',
@@ -25,8 +25,8 @@ type ProfileInfoForm = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileInfo implements OnInit {
-  readonly profileService = inject(ProfileStateService);
-  readonly authService = inject(AuthStateService);
+  readonly profileService = inject(ProfileState);
+  readonly authService = inject(AuthState);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 

@@ -1,10 +1,10 @@
 
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-button',
-  imports: [IconComponent],
+  imports: [Icon],
   template: `
     <button
       [type]="type()"
@@ -22,7 +22,7 @@ import { IconComponent } from '@shared/ui/icon/icon';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ButtonComponent {
+export class Button {
   readonly buttonClick = output<MouseEvent>();
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly color = input<'primary' | 'secondary' | 'accent' | 'red'>('primary');

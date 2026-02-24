@@ -8,11 +8,11 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ButtonComponent } from '@shared/ui/button/button';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
+import { Button } from '@shared/ui/button/button';
+import { AuthState } from '@features/auth/application/auth-state';
 import { startCooldownTimer, clearCooldownTimer } from '@shared/utils/cooldown';
 import type { VerificationModalData } from './verification-modal';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 import { verificationCodeValidator } from '@shared/validators/verification-code.validator';
 
 type VerificationModalForm = {
@@ -21,7 +21,7 @@ type VerificationModalForm = {
 
 @Component({
   selector: 'app-verification-modal-view',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent],
+  imports: [ReactiveFormsModule, Button, Icon],
   template: `
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" (click)="onCancel()" aria-hidden="true"></div>
 
@@ -126,7 +126,7 @@ type VerificationModalForm = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerificationModalView implements OnDestroy {
-  readonly authService = inject(AuthStateService);
+  readonly authService = inject(AuthState);
 
   readonly data = input.required<VerificationModalData>();
   readonly verificationSubmitted = output<string>();

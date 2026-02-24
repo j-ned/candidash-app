@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthStateService } from '@features/auth/application/auth-state.service';
-import { TokenService } from '@core/services/token';
+import { AuthState } from '@features/auth/application/auth-state';
+import { TokenStore } from '@core/services/token';
 import { Config } from '@core/services/config';
 import { Observable, catchError, switchMap, throwError, share } from 'rxjs';
 import type { RefreshResponse } from '@features/auth/domain/models/auth.model';
@@ -9,8 +9,8 @@ import type { RefreshResponse } from '@features/auth/domain/models/auth.model';
 let refreshInFlight$: Observable<RefreshResponse> | null = null;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthStateService);
-  const tokenService = inject(TokenService);
+  const authService = inject(AuthState);
+  const tokenService = inject(TokenStore);
   const config = inject(Config);
 
   const isApiCall = req.url.startsWith(config.apiUrl);

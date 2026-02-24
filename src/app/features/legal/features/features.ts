@@ -1,11 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
-import { IconComponent } from '@shared/ui/icon/icon';
+import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
   selector: 'app-features',
-  imports: [IconComponent, ThemeToggle],
+  imports: [Icon, ThemeToggle],
   host: { class: 'min-h-screen bg-background flex flex-col' },
   template: `
       <!-- Header simple -->
@@ -74,7 +74,7 @@ import { IconComponent } from '@shared/ui/icon/icon';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FeaturesComponent {
+export class Features {
   private readonly router = inject(Router);
 
   goBack(): void {
