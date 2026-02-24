@@ -31,9 +31,12 @@ export class ReminderChecker {
       });
   }
 
+  private readonly TERMINAL_STATUSES: ReadonlySet<string> = new Set(['ACCEPTED', 'REJECTED']);
+
   private notifyOverdue(jobs: JobTrack[]): void {
     const overdue = jobs.filter(
       (job) =>
+        !this.TERMINAL_STATUSES.has(job.status) &&
         job.reminder?.isActive &&
         new Date(job.reminder.nextReminderAt) < new Date(),
     );
