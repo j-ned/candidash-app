@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, input, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
@@ -22,6 +22,8 @@ export class JobtrackList {
   private readonly router = inject(Router);
   private readonly toast = inject(Toaster);
   private readonly destroyRef = inject(DestroyRef);
+
+  readonly initialJobs = input<JobTrack[]>();
 
   readonly jobs = signal<JobTrack[]>([]);
   readonly loading = signal<boolean>(true);
@@ -61,7 +63,13 @@ export class JobtrackList {
   });
 
   constructor() {
-    this.refresh();
+    const initial = this.initialJobs();
+    if (initial) {
+      this.jobs.set(initial);
+      this.loading.set(false);
+    } else {
+      this.refresh();
+    }
   }
 
   readonly filteredJobs = computed(() => {

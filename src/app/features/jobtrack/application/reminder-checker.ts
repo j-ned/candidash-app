@@ -1,6 +1,6 @@
 import { Injectable, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { interval, switchMap } from 'rxjs';
+import { interval, startWith, switchMap } from 'rxjs';
 import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
 import { Toaster } from '@shared/ui/toast/service/toast';
 import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
@@ -19,11 +19,9 @@ export class ReminderChecker {
     if (this.started) return;
     this.started = true;
 
-    // Check immediately, then every 60s
-    this.check();
-
     interval(CHECK_INTERVAL_MS)
       .pipe(
+        startWith(0),
         switchMap(() => this.listJobtracksUseCase.execute()),
         takeUntilDestroyed(destroyRef),
       )
@@ -31,13 +29,6 @@ export class ReminderChecker {
         next: (jobs) => this.notifyOverdue(jobs),
         error: () => {},
       });
-  }
-
-  private check(): void {
-    this.listJobtracksUseCase.execute().subscribe({
-      next: (jobs) => this.notifyOverdue(jobs),
-      error: () => {},
-    });
   }
 
   private notifyOverdue(jobs: JobTrack[]): void {
