@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '@shared/ui/button/button';
+import { IconComponent } from '@shared/ui/icon/icon';
 import { LayoutComponent } from '@shared/ui/layout/layout';
 import { PageButton } from '@features/home/model/home-model';
 import { AuthStateService } from '@features/auth/application/auth-state.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, ButtonComponent, LayoutComponent],
+  imports: [RouterLink, ButtonComponent, LayoutComponent, IconComponent],
   template: `
     <app-layout>
       <div
-        class="w-full max-w-sm mx-auto px-4 py-8 space-y-6 text-center sm:max-w-md sm:py-12 sm:space-y-8 md:max-w-2xl md:py-16 md:space-y-10 lg:max-w-4xl lg:py-20 lg:space-y-12 xl:max-w-6xl"
+        class="flex-1 flex flex-col justify-center w-full max-w-sm mx-auto px-4 py-8 space-y-6 text-center sm:max-w-md sm:py-12 sm:space-y-8 md:max-w-2xl md:py-16 md:space-y-10 lg:max-w-4xl lg:py-20 lg:space-y-12 xl:max-w-6xl"
       >
         <div class="relative">
           <h1
@@ -61,6 +62,22 @@ import { AuthStateService } from '@features/auth/application/auth-state.service'
         <div class="flex justify-center pt-4 sm:pt-6 md:pt-8">
           <div class="w-12 h-1 bg-primary/20 rounded-full sm:w-16 md:w-20 lg:w-24"></div>
         </div>
+
+        <div class="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3 sm:gap-4 md:gap-6 sm:pt-4">
+          @for (feature of features; track feature.title) {
+            <div
+              class="flex flex-row items-center gap-3 p-3 rounded-xl border border-border/30 bg-background/30 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 sm:flex-col sm:items-center sm:gap-2 sm:p-4 md:p-6"
+            >
+              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 shrink-0 sm:w-12 sm:h-12 sm:rounded-xl">
+                <app-icon [name]="feature.icon" cssClass="w-5 h-5 text-primary sm:w-6 sm:h-6" />
+              </div>
+              <div class="sm:text-center">
+                <h3 class="text-sm font-semibold text-text sm:text-base">{{ feature.title }}</h3>
+                <p class="text-xs text-muted sm:text-sm">{{ feature.description }}</p>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     </app-layout>
   `,
@@ -80,6 +97,24 @@ export class HomeComponent {
   readonly subtitle =
     "Centralise tes candidatures, gagne du temps et reste toujours organisé dans ta recherche d'emploi.";
   readonly badgeText = 'Application';
+
+  readonly features = [
+    {
+      icon: 'lucide-timer',
+      title: 'Rappels automatiques',
+      description: 'Recevez un email de relance selon la fréquence choisie.',
+    },
+    {
+      icon: 'lucide-file-text',
+      title: 'CV & lettres joints',
+      description: 'Attachez vos documents PDF à chaque candidature.',
+    },
+    {
+      icon: 'lucide-lock',
+      title: 'Sécurisé (2FA)',
+      description: 'Protégez votre compte avec l\'authentification à deux facteurs.',
+    },
+  ];
 
   readonly buttons: PageButton[] = [
     {

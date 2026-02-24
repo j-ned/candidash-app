@@ -16,7 +16,7 @@ import { RouterLink } from '@angular/router';
   imports: [ThemeToggle, SimpleAvatarMenuComponent, RouterLink],
   template: `
     <div
-      class="relative min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-surface"
+      class="relative flex flex-col min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-surface"
     >
       <div class="absolute inset-0 z-0" aria-hidden="true">
         <div class="absolute inset-0 opacity-30 dark:opacity-20">
@@ -59,18 +59,18 @@ import { RouterLink } from '@angular/router';
         </div>
       </header>
 
-      <main class="relative z-10 flex min-h-screen items-start justify-center p-2 pt-20 sm:p-6 sm:pt-24 lg:p-8 lg:pt-28">
-        <div class="w-full max-w-6xl mx-auto">
+      <main class="relative z-10 flex flex-1 items-stretch justify-center p-2 pt-20 pb-2 sm:p-6 sm:pt-24 sm:pb-4 lg:p-8 lg:pt-28 lg:pb-6">
+        <div class="w-full max-w-6xl mx-auto flex flex-col">
           <div
-            class="relative backdrop-blur-sm bg-card/50 border border-border/30 rounded-3xl shadow-2xl shadow-primary/5 overflow-hidden"
+            class="relative flex-1 flex flex-col backdrop-blur-sm bg-card/50 border border-border/30 rounded-3xl shadow-2xl shadow-primary/5 overflow-hidden"
           >
             <div
               class="absolute inset-0 rounded-3xl border border-accent/20 pointer-events-none"
               aria-hidden="true"
             ></div>
 
-            <div class="relative p-4 sm:p-8 lg:p-12">
-              <div class="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+            <div class="relative flex-1 flex flex-col p-4 sm:p-8 lg:p-12">
+              <div class="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
                 <ng-content></ng-content>
               </div>
             </div>
@@ -78,7 +78,7 @@ import { RouterLink } from '@angular/router';
         </div>
       </main>
 
-      <footer class="absolute bottom-0 left-0 right-0 z-10 p-2 sm:p-6">
+      <footer class="relative z-10 p-2 pb-3 sm:p-4">
         <div class="flex items-center justify-center">
           <div
             class="backdrop-blur-sm bg-card/60 border border-border/40 rounded-full px-6 py-2 shadow-lg"
