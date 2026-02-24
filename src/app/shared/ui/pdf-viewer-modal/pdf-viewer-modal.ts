@@ -67,12 +67,10 @@ export class PdfViewerModal {
   private closeModal(modalRef: ComponentRef<PdfViewerModalComponent>, blobUrl: string): void {
     this.modalStack.update((stack) => stack.filter((ref) => ref !== modalRef));
 
-    this.appRef.detachView(modalRef.hostView);
-
     const modalElement = modalRef.location.nativeElement as HTMLElement;
-    modalElement?.parentNode?.removeChild(modalElement);
-
+    this.appRef.detachView(modalRef.hostView);
     modalRef.destroy();
+    modalElement?.remove();
 
     URL.revokeObjectURL(blobUrl);
 
