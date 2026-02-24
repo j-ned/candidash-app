@@ -27,7 +27,7 @@ FROM nginx:alpine
 # Copie les fichiers buildés depuis l'étape de build
 COPY --from=build /app/dist/ng-candidash-app/browser/ /usr/share/nginx/html/
 
-# Configuration Nginx basique mais efficace
+# Configuration Nginx optimisée (gzip + cache + security headers)
 RUN printf 'server {\n\
     listen 80;\n\
     server_name localhost;\n\
@@ -44,7 +44,11 @@ RUN printf 'server {\n\
     }\n\
 \n\
     gzip on;\n\
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;\n\
+    gzip_vary on;\n\
+    gzip_proxied any;\n\
+    gzip_comp_level 6;\n\
+    gzip_min_length 256;\n\
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml application/wasm;\n\
 }\n' > /etc/nginx/conf.d/default.conf
 
 # Script d'entrypoint pour injecter API_URL au runtime
