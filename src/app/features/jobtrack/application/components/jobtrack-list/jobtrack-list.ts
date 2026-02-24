@@ -31,26 +31,24 @@ export class JobtrackList {
   readonly statusFilters = [
     { value: 'all' as const, label: 'Toutes mes candidatures', icon: 'lucide-file-text' },
     { value: 'APPLIED' as const, label: 'Candidatures envoyées', icon: 'lucide-file-check' },
-    { value: 'PENDING' as const, label: "En cours d'examen", icon: 'lucide-clock' },
-    { value: 'INTERVIEW' as const, label: 'Entretiens', icon: 'lucide-users' },
+    { value: 'INTERVIEW' as const, label: 'Entretiens prévus', icon: 'lucide-users' },
     { value: 'ACCEPTED' as const, label: 'Acceptées', icon: 'lucide-star' },
     { value: 'REJECTED' as const, label: 'Refusées', icon: 'lucide-x' },
   ];
 
   // Static lookup maps — avoid re-creating objects on every CD cycle
   private static readonly STATUS_LABELS: Record<string, string> = {
-    all: 'toutes', APPLIED: 'envoyée', PENDING: 'en cours',
-    INTERVIEW: 'entretien', ACCEPTED: 'acceptée', REJECTED: 'refusée',
+    all: 'toutes', APPLIED: 'envoyée',
+    INTERVIEW: 'entretien prévu', ACCEPTED: 'acceptée', REJECTED: 'refusée',
   };
   private static readonly SHORT_LABELS: Record<string, string> = {
-    all: 'Toutes', APPLIED: 'Envoyées', PENDING: 'Examen',
-    INTERVIEW: 'Entretiens', ACCEPTED: 'Acceptées', REJECTED: 'Refusées',
+    all: 'Toutes', APPLIED: 'Envoyées',
+    INTERVIEW: 'Entretiens prévus', ACCEPTED: 'Acceptées', REJECTED: 'Refusées',
   };
   private static readonly EMPTY_STATE_MESSAGES: Record<string, string> = {
     all: "Commencez par ajouter votre première candidature et organisez votre recherche d'emploi efficacement.",
     APPLIED: "Vous n'avez pas encore de candidatures envoyées. C'est le moment de postuler !",
-    PENDING: "Aucune candidature en cours d'examen. Vos dossiers n'ont pas encore été étudiés.",
-    INTERVIEW: "Pas d'entretiens programmés pour le moment. Continuez vos candidatures !",
+    INTERVIEW: "Pas d'entretiens prévus pour le moment. Continuez vos candidatures !",
     ACCEPTED: 'Aucune offre acceptée encore. Persévérez, le succès est proche !',
     REJECTED: "Aucune candidature refusée. C'est encourageant, continuez ainsi !",
   };

@@ -70,7 +70,6 @@ export class DashboardPageComponent {
   readonly stats = signal<DashboardStats>({
     total: 0,
     applied: 0,
-    pending: 0,
     interview: 0,
     accepted: 0,
     rejected: 0,
@@ -94,7 +93,6 @@ export class DashboardPageComponent {
     this.stats.set({
       total: jobs.length,
       applied: jobs.filter((j) => j.status === 'APPLIED').length,
-      pending: jobs.filter((j) => j.status === 'PENDING').length,
       interview: jobs.filter((j) => j.status === 'INTERVIEW').length,
       accepted: jobs.filter((j) => j.status === 'ACCEPTED').length,
       rejected: jobs.filter((j) => j.status === 'REJECTED').length,
