@@ -76,12 +76,10 @@ export class ForgotPasswordModal {
   private closeModal(modalRef: ComponentRef<ForgotPasswordModalComponent>): void {
     this.modalStack.update((stack) => stack.filter((ref) => ref !== modalRef));
 
-    this.appRef.detachView(modalRef.hostView);
-
     const modalElement = modalRef.location.nativeElement as HTMLElement;
-    modalElement?.parentNode?.removeChild(modalElement);
-
+    this.appRef.detachView(modalRef.hostView);
     modalRef.destroy();
+    modalElement?.remove();
 
     if (this.modalStack().length === 0) {
       document.body.style.overflow = '';
