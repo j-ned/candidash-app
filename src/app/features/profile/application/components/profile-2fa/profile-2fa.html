@@ -7,10 +7,13 @@
 @if (state() === 'idle') {
   @if (!isTotpEnabled) {
     <div class="space-y-3 sm:space-y-4">
-      <p class="text-muted text-sm sm:text-base">
-        Protégez votre compte avec une application d'authentification
-        (Bitwarden, 1Password, Google Authenticator, Authy...).
-      </p>
+      <div class="flex items-start gap-2">
+        <app-icon name="lucide-smartphone" cssClass="w-4 h-4 text-muted shrink-0 mt-0.5 sm:w-5 sm:h-5" />
+        <p class="text-muted text-sm sm:text-base">
+          Protégez votre compte avec une application d'authentification
+          (Bitwarden, 1Password, Google Authenticator, Authy...).
+        </p>
+      </div>
       <app-button
         color="primary"
         [isLoading]="isLoading()"
@@ -18,14 +21,17 @@
         (buttonClick)="startSetup()"
         customClass="w-full px-4 py-2 text-sm sm:w-auto sm:px-6 sm:py-3 sm:text-base"
       >
-        Activer la 2FA
+        <span class="flex items-center gap-1.5">
+          <app-icon name="lucide-shield-plus" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+          Activer la 2FA
+        </span>
       </app-button>
     </div>
   } @else {
     <div class="space-y-3 sm:space-y-4">
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success sm:text-sm">
-          <app-icon name="lucide-check-circle" cssClass="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <app-icon name="lucide-circle-check" cssClass="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           2FA activée
         </span>
       </div>
@@ -39,12 +45,16 @@
           (buttonClick)="toggleDisableForm()"
           customClass="w-full px-4 py-2 text-sm sm:w-auto sm:px-6 sm:py-3 sm:text-base"
         >
-          Désactiver la 2FA
+          <span class="flex items-center gap-1.5">
+            <app-icon name="lucide-shield-off" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+            Désactiver la 2FA
+          </span>
         </app-button>
       } @else {
         <form [formGroup]="disableForm" (ngSubmit)="onDisableTotp()" class="space-y-3 sm:space-y-4">
           <div class="space-y-1 sm:space-y-2">
-            <label for="disable-password" class="block text-sm font-medium text-text sm:text-base">
+            <label for="disable-password" class="flex items-center gap-1.5 text-sm font-medium text-text sm:text-base">
+              <app-icon name="lucide-lock-keyhole" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
               Confirmez votre mot de passe
             </label>
             <input
@@ -83,9 +93,12 @@
 <!-- État QR Code -->
 @if (state() === 'qrcode') {
   <div class="space-y-4 sm:space-y-6">
-    <p class="text-muted text-sm sm:text-base">
-      Scannez ce QR code avec votre application d'authentification.
-    </p>
+    <div class="flex items-start gap-2">
+      <app-icon name="lucide-qr-code" cssClass="w-4 h-4 text-muted shrink-0 mt-0.5 sm:w-5 sm:h-5" />
+      <p class="text-muted text-sm sm:text-base">
+        Scannez ce QR code avec votre application d'authentification.
+      </p>
+    </div>
 
     <div class="flex justify-center">
       @if (qrCodeDataUri()) {
@@ -104,9 +117,15 @@
         class="text-primary-800 hover:text-primary-900 text-sm font-medium transition-colors duration-200 underline-offset-4 hover:underline sm:text-base"
       >
         @if (showManualSetup()) {
-          Masquer la saisie manuelle
+          <span class="flex items-center gap-1.5">
+            <app-icon name="lucide-qr-code" cssClass="w-4 h-4" />
+            Masquer la saisie manuelle
+          </span>
         } @else {
-          Impossible de scanner ? Saisie manuelle
+          <span class="flex items-center gap-1.5">
+            <app-icon name="lucide-keyboard" cssClass="w-4 h-4" />
+            Impossible de scanner ? Saisie manuelle
+          </span>
         }
       </button>
     </div>
@@ -124,14 +143,20 @@
         (buttonClick)="goToVerify()"
         customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
       >
-        Suivant
+        <span class="flex items-center gap-1.5">
+          Suivant
+          <app-icon name="lucide-arrow-right" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+        </span>
       </app-button>
       <app-button
         color="secondary"
         (buttonClick)="cancelSetup()"
         customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
       >
-        Annuler
+        <span class="flex items-center gap-1.5">
+          <app-icon name="lucide-x" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+          Annuler
+        </span>
       </app-button>
     </div>
   </div>
@@ -174,14 +199,20 @@
           [isLoading]="isLoading()"
           customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
         >
-          Activer la 2FA
+          <span class="flex items-center gap-1.5">
+            <app-icon name="lucide-shield-check" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+            Activer la 2FA
+          </span>
         </app-button>
         <app-button
           color="secondary"
           (buttonClick)="cancelSetup()"
           customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
         >
-          Annuler
+          <span class="flex items-center gap-1.5">
+            <app-icon name="lucide-x" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+            Annuler
+          </span>
         </app-button>
       </div>
     </form>
@@ -193,7 +224,7 @@
   <div class="space-y-4 sm:space-y-6">
     <div class="bg-warning/10 border border-warning/30 rounded-md p-3 sm:p-4">
       <div class="flex items-start gap-2">
-        <app-icon name="lucide-alert-triangle" cssClass="w-5 h-5 text-warning shrink-0 mt-0.5" />
+        <app-icon name="lucide-triangle-alert" cssClass="w-5 h-5 text-warning shrink-0 mt-0.5" />
         <p class="text-sm text-text sm:text-base">
           Sauvegardez ces codes dans un endroit sûr. Chaque code ne peut être utilisé qu'une seule fois.
           Si vous perdez l'accès à votre application d'authentification, ces codes seront votre seul moyen de connexion.
@@ -225,7 +256,10 @@
         (buttonClick)="finishSetup()"
         customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
       >
-        Terminé
+        <span class="flex items-center gap-1.5">
+          <app-icon name="lucide-check" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+          Terminé
+        </span>
       </app-button>
     </div>
   </div>
