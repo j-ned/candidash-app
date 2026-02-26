@@ -21,7 +21,7 @@
         [class]="
           selectedStatus() === status.value
             ? 'bg-primary text-background'
-            : 'bg-card border border-border text-muted hover:text-text hover:border-text/20'
+            : 'bg-card border border-border text-muted hover:text-primary hover:border-primary/30 hover:bg-primary/5'
         "
         (click)="filterByStatus(status.value)"
       >

@@ -275,6 +275,12 @@ export class JobtrackDetail implements OnInit {
     return job.reminder !== null && job.reminder !== undefined && !job.reminder.isActive;
   }
 
+  getStatusBadgeClass(currentStatus: JobStatus, s: JobStatus): string {
+    return currentStatus === s
+      ? this.statusConfig[s].badgeClass + ' cursor-default'
+      : 'bg-transparent text-muted border-border/40 ' + this.statusConfig[s].hoverClass + ' cursor-pointer';
+  }
+
   goToEdit(): void {
     this.router.navigate(['/dashboard/jobtrack', this.id(), 'edit']);
   }
