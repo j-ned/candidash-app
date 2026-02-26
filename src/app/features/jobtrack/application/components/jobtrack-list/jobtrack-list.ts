@@ -211,16 +211,24 @@ export class JobtrackList {
     });
   }
 
+  private static readonly FILTER_BASE =
+    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer';
+
+  private static readonly COUNT_BASE =
+    'inline-flex items-center justify-center min-w-[18px] h-[18px] text-xs font-bold rounded-full';
+
   getFilterClass(value: JobStatus | 'all'): string {
+    const base = JobtrackList.FILTER_BASE;
     return this.selectedStatus() === value
-      ? JobtrackList.FILTER_ACTIVE_CLASSES[value]
-      : 'bg-card border border-border text-muted ' + JobtrackList.FILTER_HOVER_CLASSES[value];
+      ? base + ' ' + JobtrackList.FILTER_ACTIVE_CLASSES[value]
+      : base + ' bg-card border border-border text-muted ' + JobtrackList.FILTER_HOVER_CLASSES[value];
   }
 
   getFilterCountClass(value: JobStatus | 'all'): string {
+    const base = JobtrackList.COUNT_BASE;
     return this.selectedStatus() === value
-      ? 'bg-background/20 text-background'
-      : 'bg-muted/15 text-muted';
+      ? base + ' bg-background/20 text-background'
+      : base + ' bg-muted/15 text-muted';
   }
 
   getEmptyStateEmoji(): string {

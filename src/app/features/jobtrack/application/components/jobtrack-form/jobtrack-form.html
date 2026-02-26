@@ -121,7 +121,6 @@
               @for (ct of allContractTypes; track ct) {
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
                   [class]="getContractBadgeClass(ct)"
                   (click)="toggleContractType(ct)"
                 >
@@ -166,7 +165,6 @@
               @for (s of allStatuses; track s) {
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
                   [class]="getStatusBadgeClass(s)"
                   (click)="form.get('status')!.setValue(s)"
                 >
