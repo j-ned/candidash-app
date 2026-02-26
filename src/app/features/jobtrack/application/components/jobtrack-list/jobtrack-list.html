@@ -17,12 +17,12 @@
     @for (status of statusFilters; track status.value) {
       <button
         type="button"
-        [class]="getFilterClass(status.value)"
+        [attr.class]="getFilterClass(status.value)"
         (click)="filterByStatus(status.value)"
       >
         {{ getShortLabel(status.value) }}
         @if (getCountForStatus(status.value) > 0) {
-          <span [class]="getFilterCountClass(status.value)">
+          <span [attr.class]="getFilterCountClass(status.value)">
             {{ getCountForStatus(status.value) }}
           </span>
         }

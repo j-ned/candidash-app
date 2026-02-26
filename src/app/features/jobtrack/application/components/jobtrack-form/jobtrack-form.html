@@ -121,7 +121,7 @@
               @for (ct of allContractTypes; track ct) {
                 <button
                   type="button"
-                  [class]="getContractBadgeClass(ct)"
+                  [attr.class]="getContractBadgeClass(ct)"
                   (click)="toggleContractType(ct)"
                 >
                   {{ contractTypeConfig[ct].label }}
@@ -165,7 +165,7 @@
               @for (s of allStatuses; track s) {
                 <button
                   type="button"
-                  [class]="getStatusBadgeClass(s)"
+                  [attr.class]="getStatusBadgeClass(s)"
                   (click)="form.get('status')!.setValue(s)"
                 >
                   <span aria-hidden="true">{{ statusConfig[s].emoji }}</span>
