@@ -37,7 +37,7 @@
           @for (s of allStatuses; track s) {
             <button
               type="button"
-              [class]="getStatusBadgeClass(job.status, s)"
+              [attr.class]="getStatusBadgeClass(job.status, s)"
               [disabled]="job.status === s || statusUpdating()"
               (click)="changeStatus(s)"
             >
