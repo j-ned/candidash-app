@@ -38,6 +38,22 @@ export class JobtrackList {
     { value: 'REJECTED' as const, label: 'Refusées', icon: 'lucide-x' },
   ];
 
+  private static readonly FILTER_HOVER_CLASSES: Record<string, string> = {
+    all: 'hover:text-primary hover:border-primary/30 hover:bg-primary/5',
+    APPLIED: 'hover:text-blue-600 hover:border-blue-500/30 hover:bg-blue-500/5',
+    INTERVIEW: 'hover:text-primary hover:border-primary/30 hover:bg-primary/5',
+    ACCEPTED: 'hover:text-green-600 hover:border-green-500/30 hover:bg-green-500/5',
+    REJECTED: 'hover:text-error hover:border-error/30 hover:bg-error/5',
+  };
+
+  private static readonly FILTER_ACTIVE_CLASSES: Record<string, string> = {
+    all: 'bg-primary text-background',
+    APPLIED: 'bg-blue-500 text-background',
+    INTERVIEW: 'bg-primary text-background',
+    ACCEPTED: 'bg-green-500 text-background',
+    REJECTED: 'bg-error text-background',
+  };
+
   // Static lookup maps — avoid re-creating objects on every CD cycle
   private static readonly STATUS_LABELS: Record<string, string> = {
     all: 'toutes', APPLIED: 'envoyée',
@@ -193,6 +209,18 @@ export class JobtrackList {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  getFilterClass(value: JobStatus | 'all'): string {
+    return this.selectedStatus() === value
+      ? JobtrackList.FILTER_ACTIVE_CLASSES[value]
+      : 'bg-card border border-border text-muted ' + JobtrackList.FILTER_HOVER_CLASSES[value];
+  }
+
+  getFilterCountClass(value: JobStatus | 'all'): string {
+    return this.selectedStatus() === value
+      ? 'bg-background/20 text-background'
+      : 'bg-muted/15 text-muted';
   }
 
   getEmptyStateEmoji(): string {
