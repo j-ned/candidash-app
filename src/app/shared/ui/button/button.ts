@@ -50,6 +50,7 @@ export class Button {
       'shadow-lg',
       'hover:shadow-xl',
       'active:shadow-md',
+      'cursor-pointer',
     ];
 
     const color = this.color();
