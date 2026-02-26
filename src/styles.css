@@ -528,6 +528,47 @@
 .hover\:bg-error-600:hover { background-color: var(--color-error-600); }
 .hover\:bg-info-600:hover { background-color: var(--color-info-600); }
 
+/* Filter & Badge Hover State Classes */
+.hover\:bg-primary\/15:hover { background-color: color-mix(in oklch, var(--color-primary) 15%, transparent); }
+.hover\:border-primary\/40:hover { border-color: color-mix(in oklch, var(--color-primary) 40%, transparent); }
+.hover\:text-primary:hover { color: var(--color-primary); }
+
+.hover\:bg-blue-500\/15:hover { background-color: oklch(62.3% 0.214 259.815 / 0.15); }
+.hover\:border-blue-500\/40:hover { border-color: oklch(62.3% 0.214 259.815 / 0.4); }
+.hover\:text-blue-500:hover { color: oklch(62.3% 0.214 259.815); }
+
+.hover\:bg-green-500\/15:hover { background-color: oklch(72.3% 0.219 149.579 / 0.15); }
+.hover\:border-green-500\/40:hover { border-color: oklch(72.3% 0.219 149.579 / 0.4); }
+.hover\:text-green-500:hover { color: oklch(72.3% 0.219 149.579); }
+
+.hover\:bg-error\/15:hover { background-color: color-mix(in oklch, var(--color-error) 15%, transparent); }
+.hover\:border-error\/40:hover { border-color: color-mix(in oklch, var(--color-error) 40%, transparent); }
+.hover\:text-error:hover { color: var(--color-error); }
+
+.hover\:bg-emerald-500\/15:hover { background-color: oklch(69.6% 0.17 162.48 / 0.15); }
+.hover\:border-emerald-500\/40:hover { border-color: oklch(69.6% 0.17 162.48 / 0.4); }
+.hover\:text-emerald-500:hover { color: oklch(69.6% 0.17 162.48); }
+
+.hover\:bg-sky-500\/15:hover { background-color: oklch(68.5% 0.169 237.323 / 0.15); }
+.hover\:border-sky-500\/40:hover { border-color: oklch(68.5% 0.169 237.323 / 0.4); }
+.hover\:text-sky-500:hover { color: oklch(68.5% 0.169 237.323); }
+
+.hover\:bg-amber-500\/15:hover { background-color: oklch(76.9% 0.188 70.08 / 0.15); }
+.hover\:border-amber-500\/40:hover { border-color: oklch(76.9% 0.188 70.08 / 0.4); }
+.hover\:text-amber-500:hover { color: oklch(76.9% 0.188 70.08); }
+
+.hover\:bg-violet-500\/15:hover { background-color: oklch(60.6% 0.25 292.717 / 0.15); }
+.hover\:border-violet-500\/40:hover { border-color: oklch(60.6% 0.25 292.717 / 0.4); }
+.hover\:text-violet-500:hover { color: oklch(60.6% 0.25 292.717); }
+
+.hover\:bg-pink-500\/15:hover { background-color: oklch(65.6% 0.241 354.308 / 0.15); }
+.hover\:border-pink-500\/40:hover { border-color: oklch(65.6% 0.241 354.308 / 0.4); }
+.hover\:text-pink-500:hover { color: oklch(65.6% 0.241 354.308); }
+
+.hover\:bg-orange-500\/15:hover { background-color: oklch(70.5% 0.213 47.604 / 0.15); }
+.hover\:border-orange-500\/40:hover { border-color: oklch(70.5% 0.213 47.604 / 0.4); }
+.hover\:text-orange-500:hover { color: oklch(70.5% 0.213 47.604); }
+
 /* Focus State Classes */
 .focus\:bg-primary-700:focus { background-color: var(--color-primary-700); }
 .focus\:bg-secondary-700:focus { background-color: var(--color-secondary-700); }
