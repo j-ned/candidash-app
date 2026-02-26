@@ -275,14 +275,10 @@ export class JobtrackDetail implements OnInit {
     return job.reminder !== null && job.reminder !== undefined && !job.reminder.isActive;
   }
 
-  private static readonly BADGE_BASE =
-    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all';
-
   getStatusBadgeClass(currentStatus: JobStatus, s: JobStatus): string {
-    const base = JobtrackDetail.BADGE_BASE;
     return currentStatus === s
-      ? base + ' ' + this.statusConfig[s].badgeClass + ' cursor-default'
-      : base + ' bg-transparent text-muted border-border/40 ' + this.statusConfig[s].hoverClass + ' cursor-pointer';
+      ? this.statusConfig[s].badgeClass + ' cursor-default'
+      : 'bg-transparent text-muted border-border/40 ' + this.statusConfig[s].hoverClass + ' cursor-pointer';
   }
 
   goToEdit(): void {

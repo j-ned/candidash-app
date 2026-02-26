@@ -37,7 +37,8 @@
           @for (s of allStatuses; track s) {
             <button
               type="button"
-              [attr.class]="getStatusBadgeClass(job.status, s)"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+              [class]="getStatusBadgeClass(job.status, s)"
               [disabled]="job.status === s || statusUpdating()"
               (click)="changeStatus(s)"
             >

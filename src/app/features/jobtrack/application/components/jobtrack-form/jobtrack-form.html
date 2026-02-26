@@ -121,7 +121,8 @@
               @for (ct of allContractTypes; track ct) {
                 <button
                   type="button"
-                  [attr.class]="getContractBadgeClass(ct)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                  [class]="getContractBadgeClass(ct)"
                   (click)="toggleContractType(ct)"
                 >
                   {{ contractTypeConfig[ct].label }}
@@ -165,7 +166,8 @@
               @for (s of allStatuses; track s) {
                 <button
                   type="button"
-                  [attr.class]="getStatusBadgeClass(s)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                  [class]="getStatusBadgeClass(s)"
                   (click)="form.get('status')!.setValue(s)"
                 >
                   <span aria-hidden="true">{{ statusConfig[s].emoji }}</span>

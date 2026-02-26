@@ -31,28 +31,12 @@ export class JobtrackList {
   readonly jobToDelete = signal<string | null>(null);
 
   readonly statusFilters = [
-    { value: 'all' as const, label: 'Toutes mes candidatures', icon: 'lucide-file-text' },
-    { value: 'APPLIED' as const, label: 'Candidatures envoyées', icon: 'lucide-file-check' },
-    { value: 'INTERVIEW' as const, label: 'Entretiens prévus', icon: 'lucide-users' },
-    { value: 'ACCEPTED' as const, label: 'Acceptées', icon: 'lucide-star' },
-    { value: 'REJECTED' as const, label: 'Refusées', icon: 'lucide-x' },
+    { value: 'all' as const, activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
+    { value: 'APPLIED' as const, activeClass: 'bg-blue-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-blue-500 hover:border-blue-500/40 hover:bg-blue-500/15' },
+    { value: 'INTERVIEW' as const, activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
+    { value: 'ACCEPTED' as const, activeClass: 'bg-green-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-green-500 hover:border-green-500/40 hover:bg-green-500/15' },
+    { value: 'REJECTED' as const, activeClass: 'bg-error text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-error hover:border-error/40 hover:bg-error/15' },
   ];
-
-  private static readonly FILTER_HOVER_CLASSES: Record<string, string> = {
-    all: 'hover:text-primary hover:border-primary/40 hover:bg-primary/15',
-    APPLIED: 'hover:text-blue-500 hover:border-blue-500/40 hover:bg-blue-500/15',
-    INTERVIEW: 'hover:text-primary hover:border-primary/40 hover:bg-primary/15',
-    ACCEPTED: 'hover:text-green-500 hover:border-green-500/40 hover:bg-green-500/15',
-    REJECTED: 'hover:text-error hover:border-error/40 hover:bg-error/15',
-  };
-
-  private static readonly FILTER_ACTIVE_CLASSES: Record<string, string> = {
-    all: 'bg-primary text-background',
-    APPLIED: 'bg-blue-500 text-background',
-    INTERVIEW: 'bg-primary text-background',
-    ACCEPTED: 'bg-green-500 text-background',
-    REJECTED: 'bg-error text-background',
-  };
 
   // Static lookup maps — avoid re-creating objects on every CD cycle
   private static readonly STATUS_LABELS: Record<string, string> = {
@@ -209,26 +193,6 @@ export class JobtrackList {
       },
       error: () => this.loading.set(false),
     });
-  }
-
-  private static readonly FILTER_BASE =
-    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer';
-
-  private static readonly COUNT_BASE =
-    'inline-flex items-center justify-center min-w-[18px] h-[18px] text-xs font-bold rounded-full';
-
-  getFilterClass(value: JobStatus | 'all'): string {
-    const base = JobtrackList.FILTER_BASE;
-    return this.selectedStatus() === value
-      ? base + ' ' + JobtrackList.FILTER_ACTIVE_CLASSES[value]
-      : base + ' bg-card border border-border text-muted ' + JobtrackList.FILTER_HOVER_CLASSES[value];
-  }
-
-  getFilterCountClass(value: JobStatus | 'all'): string {
-    const base = JobtrackList.COUNT_BASE;
-    return this.selectedStatus() === value
-      ? base + ' bg-background/20 text-background'
-      : base + ' bg-muted/15 text-muted';
   }
 
   getEmptyStateEmoji(): string {

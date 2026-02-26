@@ -17,12 +17,16 @@
     @for (status of statusFilters; track status.value) {
       <button
         type="button"
-        [attr.class]="getFilterClass(status.value)"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer"
+        [class]="selectedStatus() === status.value ? status.activeClass : status.inactiveClass"
         (click)="filterByStatus(status.value)"
       >
         {{ getShortLabel(status.value) }}
         @if (getCountForStatus(status.value) > 0) {
-          <span [attr.class]="getFilterCountClass(status.value)">
+          <span
+            class="inline-flex items-center justify-center min-w-[18px] h-[18px] text-xs font-bold rounded-full"
+            [class]="selectedStatus() === status.value ? 'bg-background/20 text-background' : 'bg-muted/15 text-muted'"
+          >
             {{ getCountForStatus(status.value) }}
           </span>
         }
