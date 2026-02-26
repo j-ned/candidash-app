@@ -554,21 +554,16 @@ export class JobtrackFormPage implements OnInit {
       });
   }
 
-  private static readonly BADGE_BASE =
-    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all';
-
   getStatusBadgeClass(s: JobStatus): string {
-    const base = JobtrackFormPage.BADGE_BASE;
     return this.form.get('status')!.value === s
-      ? base + ' ' + this.statusConfig[s].badgeClass + ' cursor-default'
-      : base + ' bg-transparent text-muted border-border/40 ' + this.statusConfig[s].hoverClass + ' cursor-pointer';
+      ? this.statusConfig[s].badgeClass + ' cursor-default'
+      : 'bg-transparent text-muted border-border/40 ' + this.statusConfig[s].hoverClass + ' cursor-pointer';
   }
 
   getContractBadgeClass(ct: ContractType): string {
-    const base = JobtrackFormPage.BADGE_BASE;
     return this.form.get('contractType')!.value === ct
-      ? base + ' ' + this.contractTypeConfig[ct].badgeClass + ' cursor-default'
-      : base + ' bg-transparent text-muted border-border/40 ' + this.contractTypeConfig[ct].hoverClass + ' cursor-pointer';
+      ? this.contractTypeConfig[ct].badgeClass + ' cursor-default'
+      : 'bg-transparent text-muted border-border/40 ' + this.contractTypeConfig[ct].hoverClass + ' cursor-pointer';
   }
 
   toggleContractType(type: ContractType): void {
