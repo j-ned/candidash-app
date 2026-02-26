@@ -39,11 +39,11 @@ export class JobtrackList {
   ];
 
   private static readonly FILTER_HOVER_CLASSES: Record<string, string> = {
-    all: 'hover:text-primary hover:border-primary/30 hover:bg-primary/5',
-    APPLIED: 'hover:text-blue-600 hover:border-blue-500/30 hover:bg-blue-500/5',
-    INTERVIEW: 'hover:text-primary hover:border-primary/30 hover:bg-primary/5',
-    ACCEPTED: 'hover:text-green-600 hover:border-green-500/30 hover:bg-green-500/5',
-    REJECTED: 'hover:text-error hover:border-error/30 hover:bg-error/5',
+    all: 'hover:text-primary hover:border-primary/40 hover:bg-primary/15',
+    APPLIED: 'hover:text-blue-500 hover:border-blue-500/40 hover:bg-blue-500/15',
+    INTERVIEW: 'hover:text-primary hover:border-primary/40 hover:bg-primary/15',
+    ACCEPTED: 'hover:text-green-500 hover:border-green-500/40 hover:bg-green-500/15',
+    REJECTED: 'hover:text-error hover:border-error/40 hover:bg-error/15',
   };
 
   private static readonly FILTER_ACTIVE_CLASSES: Record<string, string> = {
