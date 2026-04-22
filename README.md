@@ -352,6 +352,6 @@ docker run --rm -p 8080:80 candidash-frontend
 **Développé par [Julien Nédellec](https://j-ned.dev)**
 
 [![Portfolio](https://img.shields.io/badge/Portfolio-j--ned.dev-4f46e5?style=for-the-badge)](https://j-ned.dev)
-[![GitHub](https://img.shields.io/badge/GitHub-djoudj--dev-181717?style=for-the-badge&logo=github)](https://github.com/djoudj-dev)
+[![GitHub](https://img.shields.io/badge/GitHub-j--ned-181717?style=for-the-badge&logo=github)](https://github.com/j-ned)
 
 </div>
