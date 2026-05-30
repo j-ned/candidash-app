@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Config } from '@core/services/config';
 import { ProfileGateway } from '../domain/gateways/profile.gateway';
 import type {
@@ -8,6 +8,8 @@ import type {
   ProfileData,
   UpdateProfileRequest,
 } from '../domain/models/profile.model';
+import type { ProfileDataApi } from './profile.types';
+import { toProfileData } from './profile.adapter';
 
 @Injectable()
 export class HttpProfileGateway extends ProfileGateway {
@@ -18,12 +20,14 @@ export class HttpProfileGateway extends ProfileGateway {
     return this.configService.apiUrl;
   }
 
-  getProfile(userId: string): Observable<ProfileData> {
-    return this.http.get<ProfileData>(`${this.baseUrl}/accounts/profile/${userId}`);
+  getProfileUrl(userId: string): string {
+    return `${this.baseUrl}/accounts/profile/${userId}`;
   }
 
   updateProfile(userId: string, data: UpdateProfileRequest): Observable<ProfileData> {
-    return this.http.put<ProfileData>(`${this.baseUrl}/accounts/profile-update/${userId}`, data);
+    return this.http
+      .put<ProfileDataApi>(`${this.baseUrl}/accounts/profile-update/${userId}`, data)
+      .pipe(map(toProfileData));
   }
 
   changePassword(data: ChangePasswordRequest): Observable<{ message: string }> {

@@ -1,14 +1,77 @@
-import { Component, ChangeDetectionStrategy, inject, input, signal, computed, DestroyRef } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  input,
+  output,
+  signal,
+  computed,
+  DestroyRef,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
-import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
-import { DeleteJobtrackUseCase } from '@features/jobtrack/domain/use-cases/delete-jobtrack.use-case';
 import { STATUS_CONFIG } from '@features/jobtrack/domain/models/jobtrack.model';
-import type { JobTrack, JobStatus } from '@features/jobtrack/domain/models/jobtrack.model';
+import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
+import type {
+  JobTrack,
+  JobStatus,
+} from '@features/jobtrack/domain/models/jobtrack.model';
 import { Toaster } from '@shared/ui/toast/service/toast';
 import { Icon } from '@shared/ui/icon/icon';
+
+type StatusOrAll = JobStatus | 'all';
+
+const STATUS_LABELS: Record<string, string> = {
+  all: 'toutes',
+  APPLIED: 'envoyée',
+  INTERVIEW: 'entretien prévu',
+  ACCEPTED: 'acceptée',
+  REJECTED: 'refusée',
+};
+const SHORT_LABELS: Record<string, string> = {
+  all: 'Toutes',
+  APPLIED: 'Envoyées',
+  INTERVIEW: 'Entretiens prévus',
+  ACCEPTED: 'Acceptées',
+  REJECTED: 'Refusées',
+};
+const EMPTY_STATE_MESSAGES: Record<string, string> = {
+  all: "Commencez par ajouter votre première candidature et organisez votre recherche d'emploi efficacement.",
+  APPLIED: "Vous n'avez pas encore de candidatures envoyées. C'est le moment de postuler !",
+  INTERVIEW: "Pas d'entretiens prévus pour le moment. Continuez vos candidatures !",
+  ACCEPTED: 'Aucune offre acceptée encore. Persévérez, le succès est proche !',
+  REJECTED: "Aucune candidature refusée. C'est encourageant, continuez ainsi !",
+};
+const DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+const DATE_FMT_SHORT = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'short',
+});
+const STATUS_FILTERS = [
+  { value: 'all', activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
+  { value: 'APPLIED', activeClass: 'bg-blue-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-blue-500 hover:border-blue-500/40 hover:bg-blue-500/15' },
+  { value: 'INTERVIEW', activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
+  { value: 'ACCEPTED', activeClass: 'bg-green-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-green-500 hover:border-green-500/40 hover:bg-green-500/15' },
+  { value: 'REJECTED', activeClass: 'bg-error text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-error hover:border-error/40 hover:bg-error/15' },
+] as const satisfies readonly { value: StatusOrAll; activeClass: string; inactiveClass: string }[];
+
+export type JobView = JobTrack & {
+  statusBadgeClass: string;
+  statusEmoji: string;
+  statusLabelLong: string;
+  statusLabelShort: string;
+  appliedAtFormatted: string | null;
+  reminderInactive: boolean;
+  reminderOverdue: boolean;
+  reminderStatusLabel: string;
+  reminderNextFormatted: string | null;
+  reminderIconName: string;
+};
 
 @Component({
   selector: 'app-jobtrack-list',
@@ -17,141 +80,105 @@ import { Icon } from '@shared/ui/icon/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JobtrackList {
-  private readonly listJobtracksUseCase = inject(ListJobtracksUseCase);
-  private readonly deleteJobtrackUseCase = inject(DeleteJobtrackUseCase);
   private readonly router = inject(Router);
+  private readonly jobtrackGateway = inject(JobtrackGateway);
   private readonly toast = inject(Toaster);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly initialJobs = input<JobTrack[]>();
+  // Composant présentationnel : les annonces et l'état de chargement sont
+  // fournis par le parent (qui possède le httpResource). La suppression émet
+  // `changed` pour que le parent recharge sa source full-signal.
+  readonly jobs = input.required<JobTrack[]>();
+  readonly loading = input(false);
+  readonly changed = output<void>();
 
-  readonly jobs = signal<JobTrack[]>([]);
-  readonly loading = signal<boolean>(true);
-  readonly selectedStatus = signal<JobStatus | 'all'>('all');
-  readonly jobToDelete = signal<string | null>(null);
+  protected readonly selectedStatus = signal<StatusOrAll>('all');
+  protected readonly jobToDelete = signal<string | null>(null);
 
-  readonly statusFilters = [
-    { value: 'all' as const, activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
-    { value: 'APPLIED' as const, activeClass: 'bg-blue-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-blue-500 hover:border-blue-500/40 hover:bg-blue-500/15' },
-    { value: 'INTERVIEW' as const, activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
-    { value: 'ACCEPTED' as const, activeClass: 'bg-green-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-green-500 hover:border-green-500/40 hover:bg-green-500/15' },
-    { value: 'REJECTED' as const, activeClass: 'bg-error text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-error hover:border-error/40 hover:bg-error/15' },
-  ];
-
-  // Static lookup maps — avoid re-creating objects on every CD cycle
-  private static readonly STATUS_LABELS: Record<string, string> = {
-    all: 'toutes', APPLIED: 'envoyée',
-    INTERVIEW: 'entretien prévu', ACCEPTED: 'acceptée', REJECTED: 'refusée',
-  };
-  private static readonly SHORT_LABELS: Record<string, string> = {
-    all: 'Toutes', APPLIED: 'Envoyées',
-    INTERVIEW: 'Entretiens prévus', ACCEPTED: 'Acceptées', REJECTED: 'Refusées',
-  };
-  private static readonly EMPTY_STATE_MESSAGES: Record<string, string> = {
-    all: "Commencez par ajouter votre première candidature et organisez votre recherche d'emploi efficacement.",
-    APPLIED: "Vous n'avez pas encore de candidatures envoyées. C'est le moment de postuler !",
-    INTERVIEW: "Pas d'entretiens prévus pour le moment. Continuez vos candidatures !",
-    ACCEPTED: 'Aucune offre acceptée encore. Persévérez, le succès est proche !',
-    REJECTED: "Aucune candidature refusée. C'est encourageant, continuez ainsi !",
-  };
-
-  private readonly dateFormatter = new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
-  private readonly dateFormatterShort = new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric', month: 'short',
-  });
-
-  constructor() {
-    const initial = this.initialJobs();
-    if (initial) {
-      this.jobs.set(initial);
-      this.loading.set(false);
-    } else {
-      this.refresh();
-    }
-  }
-
-  readonly filteredJobs = computed(() => {
-    const status = this.selectedStatus();
-    if (status === 'all') return this.jobs();
-    return this.jobs().filter((job) => job.status === status);
-  });
-
-  // Computed counts — recalculated only when jobs() changes
-  readonly statusCounts = computed(() => {
-    const counts: Record<string, number> = { all: 0 };
-    const allJobs = this.jobs();
-    counts['all'] = allJobs.length;
-    for (const job of allJobs) {
+  private readonly statusCounts = computed(() => {
+    const counts: Record<string, number> = { all: this.jobs().length };
+    for (const job of this.jobs()) {
       counts[job.status] = (counts[job.status] ?? 0) + 1;
     }
     return counts;
   });
 
-  filterByStatus(status: JobStatus | 'all'): void {
-    this.selectedStatus.set(status);
-  }
+  protected readonly statusFilters = computed(() =>
+    STATUS_FILTERS.map((filter) => ({
+      ...filter,
+      shortLabel: SHORT_LABELS[filter.value] ?? filter.value,
+      count: this.statusCounts()[filter.value] ?? 0,
+    })),
+  );
 
-  getCountForStatus(status: JobStatus | 'all'): number {
-    return this.statusCounts()[status] ?? 0;
-  }
+  protected readonly filteredJobs = computed<JobView[]>(() => {
+    const status = this.selectedStatus();
+    const jobs =
+      status === 'all'
+        ? this.jobs()
+        : this.jobs().filter((job) => job.status === status);
+    return jobs.map((job) => this.toView(job));
+  });
 
-  getStatusLabel(status: JobStatus | 'all'): string {
-    return JobtrackList.STATUS_LABELS[status] ?? status;
-  }
+  protected readonly emptyStateEmoji = computed(() => {
+    const status = this.selectedStatus();
+    return status === 'all' ? '💼' : (STATUS_CONFIG[status]?.emoji ?? '📋');
+  });
 
-  getStatusEmoji(status: JobStatus): string {
-    return STATUS_CONFIG[status]?.emoji ?? '📋';
-  }
+  protected readonly emptyStateMessage = computed(
+    () =>
+      EMPTY_STATE_MESSAGES[this.selectedStatus()] ??
+      'Aucune candidature correspondante trouvée.',
+  );
 
-  getStatusLabelLong(status: JobStatus): string {
-    return STATUS_CONFIG[status]?.label ?? status;
-  }
+  private toView(job: JobTrack): JobView {
+    const reminder = job.reminder ?? null;
+    const now = new Date();
+    const inactive = reminder !== null && !reminder.isActive;
+    const overdue =
+      reminder !== null &&
+      reminder.isActive &&
+      new Date(reminder.nextReminderAt) < now;
 
-  getReminderLabel(frequency: number): string {
-    const options: Record<number, string> = {
-      3: 'Suivi rapide (3j)', 7: 'Suivi standard (1sem)',
-      14: 'Suivi patient (2sem)', 30: 'Suivi long terme (1mois)',
+    return {
+      ...job,
+      statusBadgeClass:
+        STATUS_CONFIG[job.status]?.badgeClass ?? 'bg-surface text-muted',
+      statusEmoji: STATUS_CONFIG[job.status]?.emoji ?? '📋',
+      statusLabelLong: STATUS_CONFIG[job.status]?.label ?? job.status,
+      statusLabelShort: STATUS_LABELS[job.status] ?? job.status,
+      appliedAtFormatted: job.appliedAt
+        ? DATE_FMT.format(new Date(job.appliedAt))
+        : null,
+      reminderInactive: inactive,
+      reminderOverdue: overdue,
+      reminderStatusLabel: this.reminderStatusLabel(job),
+      reminderNextFormatted: reminder
+        ? DATE_FMT_SHORT.format(new Date(reminder.nextReminderAt))
+        : null,
+      reminderIconName: inactive
+        ? 'lucide-circle-x'
+        : overdue
+          ? 'lucide-triangle-alert'
+          : 'lucide-timer',
     };
-    return options[frequency] ?? `Tous les ${frequency} jours`;
   }
 
-  getReminderStatusLabel(job: JobTrack): string {
-    if (!job.reminder) return '';
-    if (!job.reminder.isActive) return 'Désactivé';
+  private reminderStatusLabel(job: JobTrack): string {
+    if (!job.reminder || !job.reminder.isActive) return '';
     const next = new Date(job.reminder.nextReminderAt);
     const now = new Date();
     if (next < now) return 'En retard';
-    const days = Math.ceil((next.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+    const days = Math.ceil(
+      (next.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
+    );
     if (days === 0) return "Aujourd'hui";
     if (days === 1) return 'Demain';
     return `Dans ${days}j`;
   }
 
-  isReminderOverdue(job: JobTrack): boolean {
-    if (!job.reminder?.isActive) return false;
-    return new Date(job.reminder.nextReminderAt) < new Date();
-  }
-
-  isReminderInactive(job: JobTrack): boolean {
-    return job.reminder !== null && job.reminder !== undefined && !job.reminder.isActive;
-  }
-
-  getShortLabel(status: JobStatus | 'all'): string {
-    return JobtrackList.SHORT_LABELS[status] ?? status;
-  }
-
-  getStatusBadgeClass(status: JobStatus): string {
-    return STATUS_CONFIG[status]?.badgeClass ?? 'bg-surface text-muted';
-  }
-
-  formatDate(dateString: string): string {
-    return this.dateFormatter.format(new Date(dateString));
-  }
-
-  formatDateShort(dateString: string): string {
-    return this.dateFormatterShort.format(new Date(dateString));
+  filterByStatus(status: StatusOrAll): void {
+    this.selectedStatus.set(status);
   }
 
   goToCreate(): void {
@@ -171,38 +198,22 @@ export class JobtrackList {
   }
 
   confirmDelete(job: JobTrack): void {
-    this.deleteJobtrackUseCase.execute(job.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.toast.success('Candidature supprimée', 'La candidature a été supprimée avec succès');
-        this.jobToDelete.set(null);
-        this.refresh();
-      },
-      error: () => {
-        this.toast.danger('Erreur', 'Impossible de supprimer la candidature');
-        this.jobToDelete.set(null);
-      },
-    });
-  }
-
-  private refresh(): void {
-    this.loading.set(true);
-    this.listJobtracksUseCase.execute().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (items) => {
-        this.jobs.set(items);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
-  }
-
-  getEmptyStateEmoji(): string {
-    const status = this.selectedStatus();
-    if (status === 'all') return '💼';
-    return STATUS_CONFIG[status]?.emoji ?? '📋';
-  }
-
-  getEmptyStateMessage(): string {
-    return JobtrackList.EMPTY_STATE_MESSAGES[this.selectedStatus()]
-      ?? 'Aucune candidature correspondante trouvée.';
+    this.jobtrackGateway
+      .delete(job.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.toast.success(
+            'Candidature supprimée',
+            'La candidature a été supprimée avec succès',
+          );
+          this.jobToDelete.set(null);
+          this.changed.emit();
+        },
+        error: () => {
+          this.toast.danger('Erreur', 'Impossible de supprimer la candidature');
+          this.jobToDelete.set(null);
+        },
+      });
   }
 }

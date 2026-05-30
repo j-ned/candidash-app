@@ -16,8 +16,8 @@
             [type]="showCurrentPassword() ? 'text' : 'password'"
             formControlName="currentPassword"
             class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
-            [class.border-error]="isPasswordFieldInvalid('currentPassword')"
-            [class.border-border]="!isPasswordFieldInvalid('currentPassword')"
+            [class.border-error]="currentPasswordInvalid()"
+            [class.border-border]="!currentPasswordInvalid()"
             placeholder="Mot de passe actuel"
           />
           <button
@@ -43,8 +43,8 @@
             [type]="showNewPassword() ? 'text' : 'password'"
             formControlName="newPassword"
             class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
-            [class.border-error]="isPasswordFieldInvalid('newPassword')"
-            [class.border-border]="!isPasswordFieldInvalid('newPassword')"
+            [class.border-error]="newPasswordInvalid()"
+            [class.border-border]="!newPasswordInvalid()"
             placeholder="Nouveau mot de passe"
           />
           <button
@@ -71,10 +71,10 @@
             formControlName="confirmPassword"
             class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
             [class.border-error]="
-              isPasswordFieldInvalid('confirmPassword') || confirmPasswordError()
+              confirmPasswordInvalid() || confirmPasswordError()
             "
             [class.border-border]="
-              !isPasswordFieldInvalid('confirmPassword') && !confirmPasswordError()
+              !confirmPasswordInvalid() && !confirmPasswordError()
             "
             placeholder="Confirmer le nouveau mot de passe"
           />

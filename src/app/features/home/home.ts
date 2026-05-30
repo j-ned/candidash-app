@@ -41,7 +41,7 @@ import { AuthState } from '@features/auth/application/auth-state';
                 [routerLink]="button.routerLink"
                 class="inline-block w-full transition-all duration-300 hover:-translate-y-1 hover:scale-105 sm:w-auto"
               >
-                <app-button [color]="button.color" [customClass]="getButtonClasses(button.color)">
+                <app-button [color]="button.color" [customClass]="buttonClasses">
                   {{ button.label }}
                 </app-button>
               </a>
@@ -49,7 +49,7 @@ import { AuthState } from '@features/auth/application/auth-state';
               <div class="w-full sm:w-auto">
                 <app-button
                   [color]="button.color"
-                  [customClass]="getButtonClasses(button.color)"
+                  [customClass]="buttonClasses"
                   (buttonClick)="handleButtonClick(button)"
                 >
                   {{ button.label }}
@@ -63,21 +63,36 @@ import { AuthState } from '@features/auth/application/auth-state';
           <div class="w-12 h-1 bg-primary/20 rounded-full sm:w-16 md:w-20 lg:w-24"></div>
         </div>
 
-        <div class="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3 sm:gap-4 md:gap-6 sm:pt-4">
-          @for (feature of features; track feature.title) {
-            <div
-              class="flex flex-row items-center gap-3 p-3 rounded-xl border border-border/30 bg-background/30 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 sm:flex-col sm:items-center sm:gap-2 sm:p-4 md:p-6"
-            >
-              <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 shrink-0 sm:w-12 sm:h-12 sm:rounded-xl">
-                <app-icon [name]="feature.icon" cssClass="w-5 h-5 text-primary sm:w-6 sm:h-6" />
+        <!-- Grille de features sous la ligne de flottaison : chargée à l'entrée
+             dans le viewport (@defer) avec squelette de mêmes dimensions. -->
+        @defer (hydrate on viewport) {
+          <div class="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3 sm:gap-4 md:gap-6 sm:pt-4">
+            @for (feature of features; track feature.title) {
+              <div
+                class="flex flex-row items-center gap-3 p-3 rounded-xl border border-border/30 bg-background/30 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 sm:flex-col sm:items-center sm:gap-2 sm:p-4 md:p-6"
+              >
+                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 shrink-0 sm:w-12 sm:h-12 sm:rounded-xl">
+                  <app-icon [name]="feature.icon" cssClass="w-5 h-5 text-primary sm:w-6 sm:h-6" />
+                </div>
+                <div class="sm:text-center">
+                  <h3 class="text-sm font-semibold text-text sm:text-base">{{ feature.title }}</h3>
+                  <p class="text-xs text-muted sm:text-sm">{{ feature.description }}</p>
+                </div>
               </div>
-              <div class="sm:text-center">
-                <h3 class="text-sm font-semibold text-text sm:text-base">{{ feature.title }}</h3>
-                <p class="text-xs text-muted sm:text-sm">{{ feature.description }}</p>
-              </div>
-            </div>
-          }
-        </div>
+            }
+          </div>
+        } @placeholder {
+          <div
+            class="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3 sm:gap-4 md:gap-6 sm:pt-4"
+            aria-hidden="true"
+          >
+            @for (i of [0, 1, 2]; track i) {
+              <div
+                class="h-20 rounded-xl border border-border/30 bg-background/30 animate-pulse sm:h-32"
+              ></div>
+            }
+          </div>
+        }
       </div>
     </app-layout>
   `,
@@ -129,9 +144,8 @@ export class Home {
     },
   ];
 
-  getButtonClasses(_color: 'primary' | 'secondary' | 'accent' | 'red'): string {
-    return 'w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 sm:w-auto sm:px-6 sm:py-3 sm:text-base sm:rounded-xl md:px-8 md:py-3.5 md:text-lg lg:px-10 lg:py-4';
-  }
+  protected readonly buttonClasses =
+    'w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 sm:w-auto sm:px-6 sm:py-3 sm:text-base sm:rounded-xl md:px-8 md:py-3.5 md:text-lg lg:px-10 lg:py-4';
 
   handleButtonClick(button: PageButton): void {
     if (button.action) {

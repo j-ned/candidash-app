@@ -13,13 +13,8 @@ import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Layout } from '@shared/ui/layout/layout';
 import { Button } from '@shared/ui/button/button';
-import { GetJobtrackUseCase } from '@features/jobtrack/domain/use-cases/get-jobtrack.use-case';
-import { CreateJobtrackUseCase } from '@features/jobtrack/domain/use-cases/create-jobtrack.use-case';
-import { UpdateJobtrackUseCase } from '@features/jobtrack/domain/use-cases/update-jobtrack.use-case';
-import { UploadDocumentUseCase } from '@features/jobtrack/domain/use-cases/upload-document.use-case';
-import { DownloadDocumentUseCase } from '@features/jobtrack/domain/use-cases/download-document.use-case';
-import { DeleteDocumentUseCase } from '@features/jobtrack/domain/use-cases/delete-document.use-case';
 import { STATUS_CONFIG, ALL_STATUSES, CONTRACT_TYPE_CONFIG, ALL_CONTRACT_TYPES } from '@features/jobtrack/domain/models/jobtrack.model';
+import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
 import type {
   CreateJobTrackWithReminderDto,
   DocumentType,
@@ -59,12 +54,7 @@ const TERMINAL_STATUSES: ReadonlySet<JobStatus> = new Set(['ACCEPTED', 'REJECTED
 })
 export class JobtrackFormPage implements OnInit {
   private readonly router = inject(Router);
-  private readonly getJobtrackUseCase = inject(GetJobtrackUseCase);
-  private readonly createJobtrackUseCase = inject(CreateJobtrackUseCase);
-  private readonly updateJobtrackUseCase = inject(UpdateJobtrackUseCase);
-  private readonly uploadDocumentUseCase = inject(UploadDocumentUseCase);
-  private readonly downloadDocumentUseCase = inject(DownloadDocumentUseCase);
-  private readonly deleteDocumentUseCase = inject(DeleteDocumentUseCase);
+  private readonly jobtrackGateway = inject(JobtrackGateway);
   private readonly toast = inject(Toaster);
   private readonly pdfViewerModal = inject(PdfViewerModal);
   private readonly destroyRef = inject(DestroyRef);
@@ -145,6 +135,7 @@ export class JobtrackFormPage implements OnInit {
   private readonly currentAppliedAt = signal('');
   private readonly currentIsActive = signal(true);
   private readonly currentStatus = signal<JobStatus>('APPLIED');
+  private readonly currentContractType = signal<ContractType | null>(null);
 
   /** Whether the current status is terminal (ACCEPTED/REJECTED) */
   readonly isTerminalStatus = computed(() => TERMINAL_STATUSES.has(this.currentStatus()));
@@ -222,13 +213,45 @@ export class JobtrackFormPage implements OnInit {
     this.form.get('status')!.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((v) => this.currentStatus.set(v));
+    this.form.get('contractType')!.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v) => this.currentContractType.set(v));
   }
+
+  // Maps statut/contrat → classe de badge (indexées dans le template, plus de méthode).
+  protected readonly statusBadgeClasses = computed(
+    () =>
+      Object.fromEntries(
+        this.allStatuses.map((s) => [
+          s,
+          this.currentStatus() === s
+            ? this.statusConfig[s].badgeClass + ' cursor-default'
+            : 'bg-transparent text-muted border-border/40 ' +
+              this.statusConfig[s].hoverClass +
+              ' cursor-pointer',
+        ]),
+      ) as Record<JobStatus, string>,
+  );
+
+  protected readonly contractBadgeClasses = computed(
+    () =>
+      Object.fromEntries(
+        this.allContractTypes.map((ct) => [
+          ct,
+          this.currentContractType() === ct
+            ? this.contractTypeConfig[ct].badgeClass + ' cursor-default'
+            : 'bg-transparent text-muted border-border/40 ' +
+              this.contractTypeConfig[ct].hoverClass +
+              ' cursor-pointer',
+        ]),
+      ) as Record<ContractType, string>,
+  );
 
   ngOnInit(): void {
     const jobId = this.id();
     if (jobId) {
       this.isEdit.set(true);
-      this.getJobtrackUseCase.execute(jobId).subscribe((job) => this.patchForm(job));
+      this.jobtrackGateway.get(jobId).subscribe((job) => this.patchForm(job));
     }
   }
 
@@ -321,8 +344,7 @@ export class JobtrackFormPage implements OnInit {
       const uploading = type === 'cv' ? this.cvUploading : this.lmUploading;
       uploading.set(true);
 
-      this.uploadDocumentUseCase
-        .execute(this.id()!, type, file)
+      this.jobtrackGateway.uploadDocument(this.id()!, type, file)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
@@ -348,8 +370,7 @@ export class JobtrackFormPage implements OnInit {
     const jobId = this.id();
     if (!jobId) return;
 
-    this.downloadDocumentUseCase
-      .execute(jobId, type)
+    this.jobtrackGateway.downloadDocument(jobId, type)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (blob) => {
@@ -371,8 +392,7 @@ export class JobtrackFormPage implements OnInit {
     const jobId = this.id();
     if (!jobId) return;
 
-    this.downloadDocumentUseCase
-      .execute(jobId, type)
+    this.jobtrackGateway.downloadDocument(jobId, type)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (blob) => {
@@ -403,8 +423,7 @@ export class JobtrackFormPage implements OnInit {
 
     if (!confirmed) return;
 
-    this.deleteDocumentUseCase
-      .execute(jobId, type)
+    this.jobtrackGateway.deleteDocument(jobId, type)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -477,7 +496,7 @@ export class JobtrackFormPage implements OnInit {
       if (value.appliedAt) updatePayload.appliedAt = value.appliedAt;
       if (value.notes) updatePayload.notes = value.notes;
 
-      this.updateJobtrackUseCase.execute(jobId!, updatePayload, false).subscribe({
+      this.jobtrackGateway.updateWithReminder(jobId!, updatePayload, false).subscribe({
         next: () => {
           this.submitting.set(false);
           this.toast.success(
@@ -508,7 +527,7 @@ export class JobtrackFormPage implements OnInit {
       if (value.appliedAt) createPayload.appliedAt = value.appliedAt;
       if (value.notes) createPayload.notes = value.notes;
 
-      this.createJobtrackUseCase.execute(createPayload).subscribe({
+      this.jobtrackGateway.createWithReminder(createPayload).subscribe({
         next: (created) => {
           this.uploadPendingFiles(created.id);
         },
@@ -532,8 +551,8 @@ export class JobtrackFormPage implements OnInit {
     }
 
     const uploads$ = [];
-    if (cv) uploads$.push(this.uploadDocumentUseCase.execute(jobTrackId, 'cv', cv));
-    if (lm) uploads$.push(this.uploadDocumentUseCase.execute(jobTrackId, 'lm', lm));
+    if (cv) uploads$.push(this.jobtrackGateway.uploadDocument(jobTrackId, 'cv', cv));
+    if (lm) uploads$.push(this.jobtrackGateway.uploadDocument(jobTrackId, 'lm', lm));
 
     forkJoin(uploads$)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -552,18 +571,6 @@ export class JobtrackFormPage implements OnInit {
           this.router.navigate(['/dashboard/jobtrack']);
         },
       });
-  }
-
-  getStatusBadgeClass(s: JobStatus): string {
-    return this.form.get('status')!.value === s
-      ? this.statusConfig[s].badgeClass + ' cursor-default'
-      : 'bg-transparent text-muted border-border/40 ' + this.statusConfig[s].hoverClass + ' cursor-pointer';
-  }
-
-  getContractBadgeClass(ct: ContractType): string {
-    return this.form.get('contractType')!.value === ct
-      ? this.contractTypeConfig[ct].badgeClass + ' cursor-default'
-      : 'bg-transparent text-muted border-border/40 ' + this.contractTypeConfig[ct].hoverClass + ' cursor-pointer';
   }
 
   toggleContractType(type: ContractType): void {

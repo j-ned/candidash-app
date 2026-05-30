@@ -1,4 +1,4 @@
-export interface PageButton {
+export type PageButton = {
   label: string;
   color: 'primary' | 'secondary' | 'accent' | 'red';
   customClass?: string;

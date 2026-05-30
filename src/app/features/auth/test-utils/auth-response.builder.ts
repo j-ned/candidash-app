@@ -2,7 +2,6 @@ import type { AuthResponse } from '../domain/models/auth.model';
 import { UserBuilder } from './user.builder';
 
 const defaults: AuthResponse = {
-  access_token: 'fake-jwt-token',
   user: UserBuilder.default().build(),
 };
 

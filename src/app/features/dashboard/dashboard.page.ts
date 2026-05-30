@@ -1,12 +1,19 @@
-import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  computed,
+  inject,
+  DestroyRef,
+} from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Layout } from '@shared/ui/layout/layout';
 import { Button } from '@shared/ui/button/button';
-import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
+import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
+import { toJobTrack } from '@features/jobtrack/infra/jobtrack.adapter';
+import type { JobTrackApi } from '@features/jobtrack/infra/jobtrack.types';
 import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
 import { JobtrackList } from '@features/jobtrack/application/components/jobtrack-list/jobtrack-list';
-import type { DashboardStats } from '@features/dashboard/components/dashboard-stats/model/dashboard-stats';
 import { Icon } from '@shared/ui/icon/icon';
 import { ReminderChecker } from '@features/jobtrack/application/reminder-checker';
 
@@ -32,7 +39,7 @@ import { ReminderChecker } from '@features/jobtrack/application/reminder-checker
                     </div>
                   </div>
                   <div>
-                    <h1 class="text-xl font-bold text-text sm:text-2xl">CandidDash</h1>
+                    <h1 class="text-xl font-bold text-text sm:text-2xl">Candidash</h1>
                     <p class="text-xs text-muted sm:text-sm">Dashboard de candidatures</p>
                   </div>
                 </div>
@@ -55,50 +62,33 @@ import { ReminderChecker } from '@features/jobtrack/application/reminder-checker
         </div>
       </div>
       <section aria-label="Liste des candidatures" class="container mx-auto px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-        <app-jobtrack-list [initialJobs]="jobsList()" />
+        <app-jobtrack-list
+          [jobs]="jobsList()"
+          [loading]="jobsLoading()"
+          (changed)="jobsResource.reload()"
+        />
       </section>
     </app-layout>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPage {
-  private readonly listJobtracksUseCase = inject(ListJobtracksUseCase);
   private readonly router = inject(Router);
+  private readonly jobtrackGateway = inject(JobtrackGateway);
   private readonly destroyRef = inject(DestroyRef);
   private readonly reminderChecker = inject(ReminderChecker);
 
-  readonly jobsList = signal<JobTrack[]>([]);
-  readonly stats = signal<DashboardStats>({
-    total: 0,
-    applied: 0,
-    interview: 0,
-    accepted: 0,
-    rejected: 0,
-  });
+  // Chargement full signal de la liste (la gateway fournit l'URL).
+  protected readonly jobsResource = httpResource<JobTrack[]>(
+    () => this.jobtrackGateway.listUrl(),
+    { parse: (raw) => (raw as JobTrackApi[]).map(toJobTrack) },
+  );
+
+  protected readonly jobsList = computed(() => this.jobsResource.value() ?? []);
+  protected readonly jobsLoading = computed(() => this.jobsResource.isLoading());
 
   constructor() {
     this.reminderChecker.start(this.destroyRef);
-    this.refresh();
-  }
-
-  private refresh(): void {
-    this.listJobtracksUseCase.execute().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (items) => {
-        this.jobsList.set(items);
-        this.updateStats(items);
-      },
-      error: () => {},
-    });
-  }
-
-  private updateStats(jobs: JobTrack[]): void {
-    this.stats.set({
-      total: jobs.length,
-      applied: jobs.filter((j) => j.status === 'APPLIED').length,
-      interview: jobs.filter((j) => j.status === 'INTERVIEW').length,
-      accepted: jobs.filter((j) => j.status === 'ACCEPTED').length,
-      rejected: jobs.filter((j) => j.status === 'REJECTED').length,
-    });
   }
 
   goToCreate(): void {

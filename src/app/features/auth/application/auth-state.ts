@@ -1,4 +1,5 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, EMPTY, throwError } from 'rxjs';
@@ -20,32 +21,15 @@ import type {
   RegistrationResponse,
   User,
 } from '../domain/models/auth.model';
-import { SigninUseCase } from '../domain/use-cases/signin.use-case';
-import { SignupUseCase } from '../domain/use-cases/signup.use-case';
-import { SignoutUseCase } from '../domain/use-cases/signout.use-case';
-import { VerifyRegistrationUseCase } from '../domain/use-cases/verify-registration.use-case';
-import { ResendVerificationUseCase } from '../domain/use-cases/resend-verification.use-case';
-import { ForgotPasswordUseCase } from '../domain/use-cases/forgot-password.use-case';
-import { ResetPasswordUseCase } from '../domain/use-cases/reset-password.use-case';
-import { RefreshTokenUseCase } from '../domain/use-cases/refresh-token.use-case';
-import { ValidateTotpUseCase } from '../domain/use-cases/validate-totp.use-case';
-import { UseRecoveryCodeUseCase } from '../domain/use-cases/use-recovery-code.use-case';
+import { AuthGateway } from '../domain/gateways/auth.gateway';
 
 @Injectable({ providedIn: 'root' })
 export class AuthState {
   private readonly tokenService = inject(TokenStore);
   private readonly toastService = inject(Toaster);
   private readonly router = inject(Router);
-  private readonly signinUseCase = inject(SigninUseCase);
-  private readonly signupUseCase = inject(SignupUseCase);
-  private readonly signoutUseCase = inject(SignoutUseCase);
-  private readonly verifyRegistrationUseCase = inject(VerifyRegistrationUseCase);
-  private readonly resendVerificationUseCase = inject(ResendVerificationUseCase);
-  private readonly forgotPasswordUseCase = inject(ForgotPasswordUseCase);
-  private readonly resetPasswordUseCase = inject(ResetPasswordUseCase);
-  private readonly refreshTokenUseCase = inject(RefreshTokenUseCase);
-  private readonly validateTotpUseCase = inject(ValidateTotpUseCase);
-  private readonly useRecoveryCodeUseCase = inject(UseRecoveryCodeUseCase);
+  private readonly authGateway = inject(AuthGateway);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly authState = signal<AuthStateModel>({
     isAuthenticated: false,
@@ -73,7 +57,7 @@ export class AuthState {
     this.setLoading(true);
     this.clearError();
 
-    return this.signinUseCase.execute(credentials).pipe(
+    return this.authGateway.signin(credentials).pipe(
       tap((response) => {
         if ('requires2FA' in response && response.requires2FA) {
           this.pendingTwoFactorToken.set((response as { tempToken: string }).tempToken);
@@ -100,7 +84,7 @@ export class AuthState {
       return throwError(() => new Error('No pending 2FA token'));
     }
 
-    return this.validateTotpUseCase.execute({ tempToken, token }).pipe(
+    return this.authGateway.validateTotp({ tempToken, token }).pipe(
       tap((response) => {
         this.pendingTwoFactorToken.set(null);
         this.handleAuthSuccess(response);
@@ -123,8 +107,8 @@ export class AuthState {
       return throwError(() => new Error('No pending 2FA token'));
     }
 
-    return this.useRecoveryCodeUseCase
-      .execute({ tempToken, recoveryCode: code })
+    return this.authGateway
+      .useRecoveryCode({ tempToken, recoveryCode: code })
       .pipe(
         tap((response) => {
           this.pendingTwoFactorToken.set(null);
@@ -152,7 +136,7 @@ export class AuthState {
     this.setLoading(true);
     this.clearError();
 
-    return this.signupUseCase.execute(userData).pipe(
+    return this.authGateway.signup(userData).pipe(
       tap(() => {
         this.setLoading(false);
         this.toastService.show(
@@ -173,7 +157,7 @@ export class AuthState {
     this.setLoading(true);
     this.clearError();
 
-    return this.verifyRegistrationUseCase.execute(verificationData).pipe(
+    return this.authGateway.verifyRegistration(verificationData).pipe(
       tap((response) => {
         this.handleAuthSuccess(response);
         this.router.navigate(['/dashboard']);
@@ -195,7 +179,7 @@ export class AuthState {
     this.setLoading(true);
     this.clearError();
 
-    return this.resendVerificationUseCase.execute(email).pipe(
+    return this.authGateway.resendVerificationCode(email).pipe(
       tap((response) => {
         this.setLoading(false);
         this.toastService.show('success', 'Code renvoyé', response.message, {
@@ -214,7 +198,7 @@ export class AuthState {
     this.setLoading(true);
     this.clearError();
 
-    return this.forgotPasswordUseCase.execute(request).pipe(
+    return this.authGateway.forgotPassword(request).pipe(
       tap(() => {
         this.setLoading(false);
         this.toastService.show(
@@ -235,7 +219,7 @@ export class AuthState {
     this.setLoading(true);
     this.clearError();
 
-    return this.resetPasswordUseCase.execute(request).pipe(
+    return this.authGateway.resetPassword(request).pipe(
       tap(() => {
         this.setLoading(false);
         this.toastService.show(
@@ -253,7 +237,7 @@ export class AuthState {
   }
 
   signout(): Observable<void> {
-    return this.signoutUseCase.execute().pipe(
+    return this.authGateway.signout().pipe(
       tap(() => this.clearAuthData()),
       catchError(() => {
         this.clearAuthData();
@@ -274,7 +258,7 @@ export class AuthState {
 
     this.refreshInProgress.set(true);
 
-    return this.refreshTokenUseCase.execute().pipe(
+    return this.authGateway.refreshToken().pipe(
       tap(() => {
         this.refreshInProgress.set(false);
       }),
@@ -393,10 +377,12 @@ export class AuthState {
   }
 
   private storeUserData(user: User): void {
+    if (!this.isBrowser) return;
     localStorage.setItem('auth_user', JSON.stringify(user));
   }
 
   private getStoredUser(): User | null {
+    if (!this.isBrowser) return null;
     const userStr = localStorage.getItem('auth_user');
     if (!userStr || userStr === 'undefined') {
       return null;
@@ -409,7 +395,7 @@ export class AuthState {
   }
 
   clearAuthData(): void {
-    localStorage.removeItem('auth_user');
+    if (this.isBrowser) localStorage.removeItem('auth_user');
 
     this.authState.update((state) => ({
       ...state,
@@ -444,7 +430,7 @@ export class AuthState {
         isAuthenticated: true,
       }));
     } else if (!hasRefreshToken) {
-      localStorage.removeItem('auth_user');
+      if (this.isBrowser) localStorage.removeItem('auth_user');
       this.authState.update((state) => ({
         ...state,
         isAuthenticated: false,

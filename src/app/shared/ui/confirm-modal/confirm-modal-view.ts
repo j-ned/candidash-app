@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { ConfirmModalData } from './confirm-modal';
 import { Icon } from '@shared/ui/icon/icon';
 
@@ -63,7 +63,7 @@ import { Icon } from '@shared/ui/icon/icon';
             <button
               type="button"
               (click)="onConfirm()"
-              [class]="getConfirmButtonClasses()"
+              [class]="confirmButtonClasses()"
               class="inline-flex justify-center items-center px-4 py-2.5 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ease-in-out active:scale-95 sm:w-auto w-full"
             >
               {{ data().confirmText ?? 'Confirmer' }}
@@ -79,9 +79,9 @@ import { Icon } from '@shared/ui/icon/icon';
   },
 })
 export class ConfirmModalView {
-  data = input.required<ConfirmModalData>();
-  confirmed = output<boolean>();
-  cancelled = output<void>();
+  readonly data = input.required<ConfirmModalData>();
+  readonly confirmed = output<boolean>();
+  readonly cancelled = output<void>();
 
   onConfirm(): void {
     this.confirmed.emit(true);
@@ -91,7 +91,7 @@ export class ConfirmModalView {
     this.cancelled.emit();
   }
 
-  getConfirmButtonClasses(): string {
+  protected readonly confirmButtonClasses = computed(() => {
     const baseClasses = 'text-white border';
 
     switch (this.data().type) {
@@ -102,5 +102,5 @@ export class ConfirmModalView {
       default:
         return `${baseClasses} bg-primary border-primary hover:bg-primary-600 hover:border-primary-600 focus:ring-primary/50`;
     }
-  }
+  });
 }

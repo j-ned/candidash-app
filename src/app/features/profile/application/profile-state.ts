@@ -1,17 +1,16 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { Injectable, computed, inject, signal, effect } from '@angular/core';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Toaster } from '@shared/ui/toast/service/toast';
 import { AuthState } from '@features/auth/application/auth-state';
-import { GetProfileUseCase } from '../domain/use-cases/get-profile.use-case';
-import { UpdateProfileUseCase } from '../domain/use-cases/update-profile.use-case';
-import { ChangePasswordUseCase } from '../domain/use-cases/change-password.use-case';
-import { DeleteAccountUseCase } from '../domain/use-cases/delete-account.use-case';
+import { ProfileGateway } from '../domain/gateways/profile.gateway';
+import { toProfileData } from '../infra/profile.adapter';
+import type { ProfileDataApi } from '../infra/profile.types';
 import type {
   ChangePasswordRequest,
   ProfileData,
-  ProfileState as ProfileStateModel,
+  ProfileStats,
   UpdateProfileRequest,
 } from '../domain/models/profile.model';
 
@@ -19,75 +18,56 @@ import type {
 export class ProfileState {
   private readonly toastService = inject(Toaster);
   private readonly authService = inject(AuthState);
-  private readonly getProfileUseCase = inject(GetProfileUseCase);
-  private readonly updateProfileUseCase = inject(UpdateProfileUseCase);
-  private readonly changePasswordUseCase = inject(ChangePasswordUseCase);
-  private readonly deleteAccountUseCase = inject(DeleteAccountUseCase);
+  private readonly profileGateway = inject(ProfileGateway);
 
-  private readonly profileState = signal<ProfileStateModel>({
-    profile: null,
-    stats: null,
-    isLoading: false,
-    error: null,
+  // Chargement full signal : la gateway fournit l'URL, httpResource fait le GET.
+  // Pas d'effect impératif ni de subscribe — la requête se relance quand l'utilisateur change.
+  private readonly profileResource = httpResource<ProfileData>(
+    () => {
+      const user = this.authService.user();
+      return user && this.authService.isAuthenticated()
+        ? this.profileGateway.getProfileUrl(user.id)
+        : undefined;
+    },
+    { parse: (raw) => toProfileData(raw as ProfileDataApi) },
+  );
+
+  private readonly mutating = signal(false);
+  private readonly mutationError = signal<string | null>(null);
+
+  readonly stats = signal<ProfileStats | null>(null);
+
+  // Profil = valeur chargée, sinon coquille dérivée de l'utilisateur le temps du chargement.
+  readonly profile = computed<ProfileData | null>(() => {
+    const loaded = this.profileResource.hasValue()
+      ? this.profileResource.value()
+      : null;
+    if (loaded) return loaded;
+
+    const user = this.authService.user();
+    return user
+      ? {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        }
+      : null;
   });
 
-  readonly profile = computed(() => this.profileState().profile);
-  readonly stats = computed(() => this.profileState().stats);
-  readonly isLoading = computed(() => this.profileState().isLoading);
-  readonly error = computed(() => this.profileState().error);
+  readonly isLoading = computed(
+    () => this.profileResource.isLoading() || this.mutating(),
+  );
 
-  constructor() {
-    effect(() => {
-      const user = this.authService.user();
-      const isAuthenticated = this.authService.isAuthenticated();
+  readonly error = computed(
+    () => this.mutationError() ?? (this.profileResource.error() ? 'Erreur lors du chargement du profil' : null),
+  );
 
-      if (user && isAuthenticated) {
-        this.profileState.update((state) => ({
-          ...state,
-          profile: {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            role: user.role,
-            cvPath: state.profile?.cvPath ?? undefined,
-            avatarPath: state.profile?.avatarPath ?? undefined,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-          },
-        }));
-
-        this.getProfile().subscribe({
-          error: (error) => {
-            console.warn('Failed to load profile data on initialization:', error);
-          },
-        });
-      }
-    });
-  }
-
-  getProfile(): Observable<ProfileData> {
-    const userId = this.authService.user()?.id;
-    if (!userId) {
-      return throwError(() => new Error('Utilisateur non connecté'));
-    }
-
-    this.setLoading(true);
-    this.clearError();
-
-    return this.getProfileUseCase.execute(userId).pipe(
-      tap((profile) => {
-        this.profileState.update((state) => ({
-          ...state,
-          profile,
-          isLoading: false,
-          error: null,
-        }));
-      }),
-      catchError((error) => {
-        this.handleError(error, 'Erreur lors du chargement du profil');
-        return throwError(() => error);
-      }),
-    );
+  /** Recharge explicitement le profil depuis l'API. */
+  reload(): void {
+    this.profileResource.reload();
   }
 
   updateProfile(updateData: UpdateProfileRequest): Observable<ProfileData> {
@@ -96,20 +76,17 @@ export class ProfileState {
       return throwError(() => new Error('Utilisateur non connecté'));
     }
 
-    this.setLoading(true);
-    this.clearError();
+    this.mutating.set(true);
+    this.mutationError.set(null);
 
-    return this.updateProfileUseCase.execute(userId, updateData).pipe(
+    return this.profileGateway.updateProfile(userId, updateData).pipe(
       tap((profile) => {
-        this.profileState.update((state) => ({
-          ...state,
-          profile,
-          isLoading: false,
-          error: null,
-        }));
-
-        this.authService.updateUserData({ ...profile, totpEnabled: this.authService.user()?.totpEnabled ?? false });
-
+        this.mutating.set(false);
+        this.authService.updateUserData({
+          ...profile,
+          totpEnabled: this.authService.user()?.totpEnabled ?? false,
+        });
+        this.profileResource.reload();
         this.toastService.show(
           'success',
           'Profil mis à jour',
@@ -124,22 +101,21 @@ export class ProfileState {
     );
   }
 
-  changePassword(passwordData: ChangePasswordRequest): Observable<{ message: string }> {
-    this.setLoading(true);
-    this.clearError();
+  changePassword(
+    passwordData: ChangePasswordRequest,
+  ): Observable<{ message: string }> {
+    this.mutating.set(true);
+    this.mutationError.set(null);
 
-    return this.changePasswordUseCase.execute(passwordData).pipe(
+    return this.profileGateway.changePassword(passwordData).pipe(
       tap((response) => {
-        this.profileState.update((state) => ({
-          ...state,
-          isLoading: false,
-          error: null,
-        }));
-
-        this.toastService.show('success', 'Mot de passe modifié', response.message, {
-          duration: 4000,
-          dismissible: true,
-        });
+        this.mutating.set(false);
+        this.toastService.show(
+          'success',
+          'Mot de passe modifié',
+          response.message,
+          { duration: 4000, dismissible: true },
+        );
       }),
       catchError((error) => {
         this.handleError(error, 'Erreur lors du changement de mot de passe');
@@ -154,18 +130,12 @@ export class ProfileState {
       return throwError(() => new Error('Utilisateur non connecté'));
     }
 
-    this.setLoading(true);
-    this.clearError();
+    this.mutating.set(true);
+    this.mutationError.set(null);
 
-    return this.deleteAccountUseCase.execute(userId).pipe(
+    return this.profileGateway.deleteAccount(userId).pipe(
       tap((response) => {
-        this.profileState.update((state) => ({
-          ...state,
-          profile: null,
-          isLoading: false,
-          error: null,
-        }));
-
+        this.mutating.set(false);
         this.toastService.show(
           'success',
           'Compte supprimé',
@@ -177,20 +147,6 @@ export class ProfileState {
         return throwError(() => error);
       }),
     );
-  }
-
-  private setLoading(loading: boolean): void {
-    this.profileState.update((state) => ({
-      ...state,
-      isLoading: loading,
-    }));
-  }
-
-  private clearError(): void {
-    this.profileState.update((state) => ({
-      ...state,
-      error: null,
-    }));
   }
 
   private handleError(error: HttpErrorResponse, defaultMessage: string): void {
@@ -219,11 +175,8 @@ export class ProfileState {
       errorMessage = 'Impossible de se connecter au serveur';
     }
 
-    this.profileState.update((state) => ({
-      ...state,
-      isLoading: false,
-      error: errorMessage,
-    }));
+    this.mutating.set(false);
+    this.mutationError.set(errorMessage);
 
     this.toastService.show('danger', 'Erreur', errorMessage, {
       duration: 5000,

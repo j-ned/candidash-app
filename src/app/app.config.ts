@@ -1,7 +1,7 @@
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
+  provideZonelessChangeDetection,
   provideAppInitializer,
   inject,
 } from '@angular/core';
@@ -17,11 +17,16 @@ import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gat
 import { HttpJobtrackGateway } from '@features/jobtrack/infra/http-jobtrack.gateway';
 import { ProfileGateway } from '@features/profile/domain/gateways/profile.gateway';
 import { HttpProfileGateway } from '@features/profile/infra/http-profile.gateway';
+import {
+  provideClientHydration,
+  withEventReplay,
+  withIncrementalHydration,
+} from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     // Backend API
@@ -32,5 +37,8 @@ export const appConfig: ApplicationConfig = {
     { provide: AuthGateway, useClass: HttpAuthGateway },
     { provide: JobtrackGateway, useClass: HttpJobtrackGateway },
     { provide: ProfileGateway, useClass: HttpProfileGateway },
+    // Hydratation incrémentale (full hydration + event replay) — permet
+    // `@defer (hydrate on ...)` : le contenu est prérendu puis hydraté à la demande.
+    provideClientHydration(withIncrementalHydration(), withEventReplay()),
   ],
 };

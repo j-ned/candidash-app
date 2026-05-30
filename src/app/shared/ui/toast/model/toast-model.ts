@@ -1,6 +1,6 @@
 export type ToastType = 'success' | 'warning' | 'danger';
 
-export interface ToastData {
+export type ToastData = {
   id: string;
   type: ToastType;
   title: string;
@@ -9,7 +9,7 @@ export interface ToastData {
   dismissible?: boolean;
 }
 
-export interface ToastConfig {
+export type ToastConfig = {
   position?:
     | 'top-right'
     | 'top-left'

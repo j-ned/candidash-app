@@ -17,13 +17,13 @@ export type AuthState = {
   error: string | null;
 };
 
+// Cookie-only : le token n'est jamais dans le body, seulement en cookie HttpOnly.
 export type AuthResponse = {
-  access_token?: string;
   user: User;
 };
 
 export type RefreshResponse = {
-  access_token?: string;
+  message?: string;
 };
 
 export type RegistrationResponse = {

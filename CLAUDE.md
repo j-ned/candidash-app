@@ -33,7 +33,7 @@ docker run --rm -p 8080:80 candidash-frontend
 
 Each feature is structured in 3 layers: **domain** (pure logic) → **infra** (HTTP adapters) → **application** (state, UI components).
 
-**Dependency rule**: domain never imports from infra or application. Infra implements domain contracts. Application orchestrates use cases + state + UI.
+**Dependency rule**: domain never imports from infra or application. Infra implements domain contracts. Application orchestrates gateways (+ real use-cases when business logic warrants) + state + UI.
 
 ### Directory Layout
 
@@ -50,10 +50,7 @@ src/app/
 │   ├── auth/
 │   │   ├── domain/
 │   │   │   ├── models/auth.model.ts       # User, AuthState, LoginCredentials, etc. (types)
-│   │   │   ├── gateways/auth.gateway.ts   # abstract class AuthGateway
-│   │   │   └── use-cases/                 # signin, signup, signout, verify-registration,
-│   │   │                                  # resend-verification, forgot-password, reset-password,
-│   │   │                                  # refresh-token, auto-login
+│   │   │   └── gateways/auth.gateway.ts   # abstract class AuthGateway (the contract)
 │   │   ├── infra/
 │   │   │   └── http-auth.gateway.ts       # HttpClient implementation of AuthGateway
 │   │   └── application/
@@ -63,8 +60,7 @@ src/app/
 │   ├── jobtrack/
 │   │   ├── domain/
 │   │   │   ├── models/jobtrack.model.ts   # JobTrack, JobStatus, Reminder, DTOs (types)
-│   │   │   ├── gateways/jobtrack.gateway.ts
-│   │   │   └── use-cases/                 # list, get, create, update, delete
+│   │   │   └── gateways/jobtrack.gateway.ts
 │   │   ├── infra/
 │   │   │   └── http-jobtrack.gateway.ts
 │   │   └── application/
@@ -73,8 +69,7 @@ src/app/
 │   ├── profile/
 │   │   ├── domain/
 │   │   │   ├── models/profile.model.ts    # ProfileData, ChangePasswordRequest, etc. (types)
-│   │   │   ├── gateways/profile.gateway.ts
-│   │   │   └── use-cases/                 # get-profile, update-profile, change-password, delete-account
+│   │   │   └── gateways/profile.gateway.ts
 │   │   ├── infra/
 │   │   │   └── http-profile.gateway.ts
 │   │   └── application/
@@ -104,7 +99,7 @@ src/app/
 { provide: ProfileGateway, useClass: HttpProfileGateway },
 ```
 
-**Use Cases**: Each use case is a `@Injectable` class with one `execute()` method that delegates to the gateway. Components inject use cases, not gateways directly.
+**Gateways, not trivial use-cases** (EAK anti-trivial rule): smart components and state services inject the **domain gateway** directly (e.g. `inject(AuthGateway)`) and call its methods. The trivial passthrough use-case layer was removed — a use-case is only created when it carries real business logic (validation, orchestration, composition, Result-pattern error handling). The dependency rule still holds: `application → domain` (the gateway is an abstract class in `domain/gateways`, wired to its HTTP impl in `app.config.ts`).
 
 **State services**: `AuthState` and `ProfileState` manage signal-based state and orchestrate side effects (toasts, navigation, localStorage). Components inject these for state reads.
 

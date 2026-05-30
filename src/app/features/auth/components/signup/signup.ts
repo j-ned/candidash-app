@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
@@ -58,44 +58,84 @@ export class Signup {
     { validators: passwordMatchValidator('password', 'confirmPassword') },
   );
 
-  emailError(): string | null {
+  private readonly emailEvents = toSignal(this.signupForm.controls.email.events);
+  private readonly usernameEvents = toSignal(
+    this.signupForm.controls.username.events,
+  );
+  private readonly passwordEvents = toSignal(
+    this.signupForm.controls.password.events,
+  );
+  private readonly confirmEvents = toSignal(
+    this.signupForm.controls.confirmPassword.events,
+  );
+
+  protected readonly emailError = computed(() => {
+    this.emailEvents();
     const ctrl = this.signupForm.controls.email;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return "L'email est requis";
     if (ctrl.errors['email']) return 'Veuillez entrer un email valide';
     return null;
-  }
+  });
 
-  usernameError(): string | null {
+  protected readonly usernameError = computed(() => {
+    this.usernameEvents();
     const ctrl = this.signupForm.controls.username;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['minlength']) return "Le nom d'utilisateur doit contenir au moins 3 caractères";
+    if (ctrl.errors['minlength'])
+      return "Le nom d'utilisateur doit contenir au moins 3 caractères";
     if (ctrl.errors['pattern'])
       return "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores";
     return null;
-  }
+  });
 
-  passwordError(): string | null {
+  protected readonly passwordError = computed(() => {
+    this.passwordEvents();
     const ctrl = this.signupForm.controls.password;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le mot de passe est requis';
-    if (ctrl.errors['minlength']) return 'Le mot de passe doit contenir au moins 6 caractères';
+    if (ctrl.errors['minlength'])
+      return 'Le mot de passe doit contenir au moins 6 caractères';
     return null;
-  }
+  });
 
-  confirmPasswordError(): string | null {
+  protected readonly confirmPasswordError = computed(() => {
+    this.confirmEvents();
+    this.passwordEvents(); // le mismatch dépend aussi de password
     const ctrl = this.signupForm.controls.confirmPassword;
     const groupMismatch = this.signupForm.errors?.['passwordMismatch'];
     const touched = ctrl.touched || ctrl.dirty;
     if (!touched && !groupMismatch) return null;
-    if (ctrl.errors?.['required']) return 'La confirmation du mot de passe est requise';
+    if (ctrl.errors?.['required'])
+      return 'La confirmation du mot de passe est requise';
     if (groupMismatch) return 'Les mots de passe ne correspondent pas';
     return null;
-  }
+  });
 
-  submitLabel(): string {
-    return this.authService.isLoading() ? 'Création en cours...' : 'Créer le compte';
-  }
+  protected readonly emailInvalid = computed(() => {
+    this.emailEvents();
+    const f = this.signupForm.controls.email;
+    return f.invalid && f.touched;
+  });
+  protected readonly usernameInvalid = computed(() => {
+    this.usernameEvents();
+    const f = this.signupForm.controls.username;
+    return f.invalid && f.touched;
+  });
+  protected readonly passwordInvalid = computed(() => {
+    this.passwordEvents();
+    const f = this.signupForm.controls.password;
+    return f.invalid && f.touched;
+  });
+  protected readonly confirmPasswordInvalid = computed(() => {
+    this.confirmEvents();
+    const f = this.signupForm.controls.confirmPassword;
+    return f.invalid && f.touched;
+  });
+
+  protected readonly submitLabel = computed(() =>
+    this.authService.isLoading() ? 'Création en cours...' : 'Créer le compte',
+  );
 
   onSubmit(): void {
     if (this.signupForm.valid) {
@@ -145,11 +185,6 @@ export class Signup {
           },
         });
     }
-  }
-
-  isFieldInvalid(fieldName: keyof SignupForm): boolean {
-    const field = this.signupForm.controls[fieldName];
-    return field.invalid && field.touched;
   }
 
   togglePasswordVisibility(): void {

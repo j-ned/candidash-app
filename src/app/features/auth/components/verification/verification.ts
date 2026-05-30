@@ -9,23 +9,19 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { form, required, pattern, FormField } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
 import { AuthState } from '@features/auth/application/auth-state';
 import { startCooldownTimer, clearCooldownTimer } from '@shared/utils/cooldown';
-import { verificationCodeValidator } from '@shared/validators/verification-code.validator';
-
-type VerificationForm = {
-  verificationCode: FormControl<string>;
-};
 
 @Component({
   selector: 'app-verification',
-  imports: [ReactiveFormsModule, Button, RouterLink],
+  imports: [FormField, Button, RouterLink],
   templateUrl: './verification.html',
   host: {
-    class: 'block w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
+    class:
+      'block w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
     role: 'region',
     '[attr.aria-labelledby]': '"verification-title"',
   },
@@ -39,11 +35,11 @@ export class Verification implements OnInit, OnDestroy {
   readonly email = input<string>('');
   readonly resendCooldown = signal<number>(0);
 
-  readonly verificationForm = new FormGroup<VerificationForm>({
-    verificationCode: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, verificationCodeValidator],
-    }),
+  // Signal Forms (@angular/forms/signals) : modèle signal + schéma de validation déclaratif.
+  protected readonly model = signal({ verificationCode: '' });
+  protected readonly verificationForm = form(this.model, (path) => {
+    required(path.verificationCode);
+    pattern(path.verificationCode, /^\d{6}$/);
   });
 
   private cooldownInterval: ReturnType<typeof setInterval> | null = null;
@@ -55,13 +51,11 @@ export class Verification implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    if (this.verificationForm.valid && this.email()) {
-      const { verificationCode } = this.verificationForm.getRawValue();
-
+    if (this.verificationForm().valid() && this.email()) {
       this.authService
         .verifyRegistration({
           email: this.email(),
-          verificationCode,
+          verificationCode: this.model().verificationCode,
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe();
@@ -74,9 +68,7 @@ export class Verification implements OnInit, OnDestroy {
         .resendVerificationCode(this.email())
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: () => {
-            this.startCooldown();
-          },
+          next: () => this.startCooldown(),
         });
     }
   }
@@ -87,11 +79,6 @@ export class Verification implements OnInit, OnDestroy {
 
   navigateToSignup(): void {
     this.router.navigate(['/auth/signup']);
-  }
-
-  isFieldInvalid(fieldName: keyof VerificationForm): boolean {
-    const field = this.verificationForm.controls[fieldName];
-    return field.invalid && field.touched;
   }
 
   ngOnDestroy(): void {

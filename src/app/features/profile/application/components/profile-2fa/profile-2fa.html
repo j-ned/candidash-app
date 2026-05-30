@@ -5,7 +5,7 @@
 
 <!-- État idle -->
 @if (state() === 'idle') {
-  @if (!isTotpEnabled) {
+  @if (!isTotpEnabled()) {
     <div class="space-y-3 sm:space-y-4">
       <div class="flex items-start gap-2">
         <app-icon name="lucide-smartphone" cssClass="w-4 h-4 text-muted shrink-0 mt-0.5 sm:w-5 sm:h-5" />
