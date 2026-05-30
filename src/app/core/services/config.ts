@@ -1,4 +1,5 @@
-import { inject, Injectable, InjectionToken } from '@angular/core';
+import { inject, Injectable, InjectionToken, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, timeout } from 'rxjs';
 
@@ -14,10 +15,16 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 export class Config {
   private readonly http = inject(HttpClient);
   private readonly defaultApiUrl = inject(API_BASE_URL);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private config?: AppConfig;
 
   async loadConfig(): Promise<void> {
+    // Runtime config = navigateur uniquement. Côté SSR, fetch `/config.json`
+    // (URL relative) pollue le transfer cache d'hydratation avec le fallback,
+    // et le client réutilise cette valeur figée au lieu de la config runtime.
+    if (!this.isBrowser) return;
+
     try {
       this.config = await firstValueFrom(this.http.get<AppConfig>('/config.json').pipe(timeout(5000)));
     } catch {
