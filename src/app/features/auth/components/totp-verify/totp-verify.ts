@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef, OnInit } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef, OnInit } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
@@ -75,27 +75,35 @@ export class TotpVerify implements OnInit {
     this.recoveryForm.reset();
   }
 
-  submitLabel(): string {
-    return this.authService.isLoading() ? 'Vérification...' : 'Vérifier';
-  }
+  private readonly tokenEvents = toSignal(this.totpForm.controls.token.events);
+  private readonly recoveryEvents = toSignal(
+    this.recoveryForm.controls.recoveryCode.events,
+  );
+
+  protected readonly submitLabel = computed(() =>
+    this.authService.isLoading() ? 'Vérification...' : 'Vérifier',
+  );
 
   goBack(): void {
     this.authService.clearPending2FA();
     this.router.navigate(['/auth/signin']);
   }
 
-  tokenError(): string | null {
+  protected readonly tokenError = computed(() => {
+    this.tokenEvents();
     const ctrl = this.totpForm.controls.token;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le code est requis';
-    if (ctrl.errors['pattern']) return 'Le code doit contenir exactement 6 chiffres';
+    if (ctrl.errors['pattern'])
+      return 'Le code doit contenir exactement 6 chiffres';
     return null;
-  }
+  });
 
-  recoveryCodeError(): string | null {
+  protected readonly recoveryCodeError = computed(() => {
+    this.recoveryEvents();
     const ctrl = this.recoveryForm.controls.recoveryCode;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le code de récupération est requis';
     return null;
-  }
+  });
 }

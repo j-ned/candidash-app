@@ -1,5 +1,6 @@
-import { Injectable, signal, effect, DOCUMENT } from '@angular/core';
+import { Injectable, signal, effect, DOCUMENT, PLATFORM_ID } from '@angular/core';
 import { inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export type Theme = 'light' | 'dark';
 
@@ -8,6 +9,7 @@ export type Theme = 'light' | 'dark';
 })
 export class ThemeManager {
   private readonly document = inject(DOCUMENT);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly _theme = signal<Theme>('light');
 
   readonly theme = this._theme.asReadonly();
@@ -49,15 +51,16 @@ export class ThemeManager {
   }
 
   private saveTheme(theme: Theme): void {
+    if (!this.isBrowser) return; // SSR : pas de localStorage côté serveur
     try {
       localStorage.setItem('theme', theme);
-    } catch (error) {
-      // Gérer le cas où localStorage n'est pas disponible
-      console.warn('Unable to save theme to localStorage:', error);
+    } catch {
+      // localStorage indisponible (mode privé, quota) : on ignore.
     }
   }
 
   private getSavedTheme(): Theme | null {
+    if (!this.isBrowser) return null;
     try {
       const saved = localStorage.getItem('theme');
       return saved === 'dark' || saved === 'light' ? saved : null;

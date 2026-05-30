@@ -1,4 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  computed,
+  inject,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
 import { Icon } from '@shared/ui/icon/icon';
@@ -16,12 +21,14 @@ import { AuthState } from '@features/auth/application/auth-state';
 export class ProfileHeader {
   readonly authService = inject(AuthState);
 
-  formatDate(date: Date | undefined): string {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  }
+  protected readonly memberSince = computed(() => {
+    const date = this.authService.user()?.createdAt;
+    return date
+      ? new Date(date).toLocaleDateString('fr-FR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : '-';
+  });
 }

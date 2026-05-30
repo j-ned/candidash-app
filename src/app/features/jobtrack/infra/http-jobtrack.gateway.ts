@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Config } from '@core/services/config';
 import { JobtrackGateway } from '../domain/gateways/jobtrack.gateway';
+import type { JobTrackApi } from './jobtrack.types';
+import { toJobTrack } from './jobtrack.adapter';
 import type {
   CreateJobTrackWithReminderDto,
   DocumentType,
@@ -20,20 +22,36 @@ export class HttpJobtrackGateway extends JobtrackGateway {
     return `${this.configService.apiUrl.replace(/\/$/, '')}/jobtrack`;
   }
 
+  listUrl(): string {
+    return this.apiBase;
+  }
+
+  getUrl(id: string): string {
+    return `${this.apiBase}/${id}`;
+  }
+
   list(): Observable<JobTrack[]> {
-    return this.http.get<JobTrack[]>(this.apiBase);
+    return this.http
+      .get<JobTrackApi[]>(this.apiBase)
+      .pipe(map((items) => items.map(toJobTrack)));
   }
 
   listByStatus(status: JobStatus): Observable<JobTrack[]> {
-    return this.http.get<JobTrack[]>(`${this.apiBase}/status/${status}`);
+    return this.http
+      .get<JobTrackApi[]>(`${this.apiBase}/status/${status}`)
+      .pipe(map((items) => items.map(toJobTrack)));
   }
 
   get(id: string): Observable<JobTrack> {
-    return this.http.get<JobTrack>(`${this.apiBase}/${id}`);
+    return this.http
+      .get<JobTrackApi>(`${this.apiBase}/${id}`)
+      .pipe(map(toJobTrack));
   }
 
   createWithReminder(payload: CreateJobTrackWithReminderDto): Observable<JobTrack> {
-    return this.http.post<JobTrack>(`${this.apiBase}/with-reminder`, payload);
+    return this.http
+      .post<JobTrackApi>(`${this.apiBase}/with-reminder`, payload)
+      .pipe(map(toJobTrack));
   }
 
   updateWithReminder(
@@ -41,10 +59,12 @@ export class HttpJobtrackGateway extends JobtrackGateway {
     payload: UpdateJobTrackWithReminderDto,
     upsert: boolean,
   ): Observable<JobTrack> {
-    return this.http.put<JobTrack>(
-      `${this.apiBase}/${id}/with-reminder?upsert=${upsert}`,
-      payload,
-    );
+    return this.http
+      .put<JobTrackApi>(
+        `${this.apiBase}/${id}/with-reminder?upsert=${upsert}`,
+        payload,
+      )
+      .pipe(map(toJobTrack));
   }
 
   delete(id: string): Observable<void> {

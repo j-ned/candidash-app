@@ -1,16 +1,16 @@
 import { Injectable, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, startWith, switchMap } from 'rxjs';
-import { ListJobtracksUseCase } from '@features/jobtrack/domain/use-cases/list-jobtracks.use-case';
 import { Toaster } from '@shared/ui/toast/service/toast';
 import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
+import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
 
 const CHECK_INTERVAL_MS = 60_000;
 
 @Injectable({ providedIn: 'root' })
 export class ReminderChecker {
-  private readonly listJobtracksUseCase = inject(ListJobtracksUseCase);
   private readonly toast = inject(Toaster);
+  private readonly jobtrackGateway = inject(JobtrackGateway);
 
   private started = false;
   private readonly notifiedIds = new Set<string>();
@@ -22,7 +22,7 @@ export class ReminderChecker {
     interval(CHECK_INTERVAL_MS)
       .pipe(
         startWith(0),
-        switchMap(() => this.listJobtracksUseCase.execute()),
+        switchMap(() => this.jobtrackGateway.list()),
         takeUntilDestroyed(destroyRef),
       )
       .subscribe({

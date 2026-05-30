@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthState } from '@features/auth/application/auth-state';
-import { SimpleAvatar } from '@features/profile/application/components';
+import { SimpleAvatar } from '@features/profile/application/components/simple-avatar/simple-avatar';
 import { Icon } from '@shared/ui/icon/icon';
 
 @Component({
@@ -105,11 +105,7 @@ export class SimpleAvatarMenu {
   logout(): void {
     this.closeMenu();
     this.authService.signout().subscribe({
-      next: () => {},
-      error: () => {
-        console.error();
-        this.router.navigate(['/auth/signin']);
-      },
+      error: () => this.router.navigate(['/auth/signin']),
     });
   }
 }

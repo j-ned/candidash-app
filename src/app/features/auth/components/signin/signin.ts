@@ -1,12 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
 import { AuthState } from '@features/auth/application/auth-state';
 import type { LoginCredentials } from '@features/auth/domain/models/auth.model';
 
-import { ForgotPasswordModal } from '@shared/ui/forgot-password-modal';
+import { ForgotPasswordModal } from '@shared/ui/forgot-password-modal/service/forgot-password-modal';
 import { Icon } from '@shared/ui/icon/icon';
 
 type SigninForm = {
@@ -67,25 +67,49 @@ export class Signin {
     }),
   });
 
-  emailError(): string | null {
+  private readonly emailEvents = toSignal(this.signinForm.controls.email.events);
+  private readonly passwordEvents = toSignal(
+    this.signinForm.controls.password.events,
+  );
+  private readonly tokenEvents = toSignal(this.totpForm.controls.token.events);
+  private readonly recoveryEvents = toSignal(
+    this.recoveryForm.controls.recoveryCode.events,
+  );
+
+  protected readonly emailError = computed(() => {
+    this.emailEvents();
     const ctrl = this.signinForm.controls.email;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return "L'email est requis";
     if (ctrl.errors['email']) return 'Veuillez entrer un email valide';
     return null;
-  }
+  });
 
-  passwordError(): string | null {
+  protected readonly passwordError = computed(() => {
+    this.passwordEvents();
     const ctrl = this.signinForm.controls.password;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le mot de passe est requis';
-    if (ctrl.errors['minlength']) return 'Le mot de passe doit contenir au moins 6 caractères';
+    if (ctrl.errors['minlength'])
+      return 'Le mot de passe doit contenir au moins 6 caractères';
     return null;
-  }
+  });
 
-  submitLabel(): string {
-    return this.authService.isLoading() ? 'Connexion en cours...' : 'Se connecter';
-  }
+  protected readonly emailInvalid = computed(() => {
+    this.emailEvents();
+    const f = this.signinForm.controls.email;
+    return f.invalid && f.touched;
+  });
+
+  protected readonly passwordInvalid = computed(() => {
+    this.passwordEvents();
+    const f = this.signinForm.controls.password;
+    return f.invalid && f.touched;
+  });
+
+  protected readonly submitLabel = computed(() =>
+    this.authService.isLoading() ? 'Connexion en cours...' : 'Se connecter',
+  );
 
   onSubmit(): void {
     if (this.signinForm.valid) {
@@ -93,11 +117,6 @@ export class Signin {
 
       this.authService.signin(credentials).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
     }
-  }
-
-  isFieldInvalid(fieldName: keyof SigninForm): boolean {
-    const field = this.signinForm.controls[fieldName];
-    return field.invalid && field.touched;
   }
 
   togglePasswordVisibility(): void {
@@ -135,40 +154,33 @@ export class Signin {
     this.recoveryForm.reset();
   }
 
-  totpSubmitLabel(): string {
-    return this.authService.isLoading() ? 'Vérification...' : 'Vérifier';
-  }
+  protected readonly totpSubmitLabel = computed(() =>
+    this.authService.isLoading() ? 'Vérification...' : 'Vérifier',
+  );
 
-  tokenError(): string | null {
+  protected readonly tokenError = computed(() => {
+    this.tokenEvents();
     const ctrl = this.totpForm.controls.token;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le code est requis';
-    if (ctrl.errors['pattern']) return 'Le code doit contenir exactement 6 chiffres';
+    if (ctrl.errors['pattern'])
+      return 'Le code doit contenir exactement 6 chiffres';
     return null;
-  }
+  });
 
-  recoveryCodeError(): string | null {
+  protected readonly recoveryCodeError = computed(() => {
+    this.recoveryEvents();
     const ctrl = this.recoveryForm.controls.recoveryCode;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le code de récupération est requis';
     return null;
-  }
+  });
 
   async openForgotPasswordModal(): Promise<void> {
     const currentEmail = this.signinForm.controls.email.value;
 
-    try {
-      const result = await this.forgotPasswordModalService.showForgotPasswordModal({
-        email: currentEmail,
-      });
-
-      if (result.email) {
-        console.log('Email de réinitialisation envoyé à:', result.email);
-      } else if (result.cancelled) {
-        console.log('Modal annulé');
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'ouverture du modal:", error);
-    }
+    await this.forgotPasswordModalService.showForgotPasswordModal({
+      email: currentEmail,
+    });
   }
 }

@@ -1,4 +1,4 @@
-export interface DashboardStats {
+export type DashboardStats = {
   total: number;
   applied: number;
   interview: number;

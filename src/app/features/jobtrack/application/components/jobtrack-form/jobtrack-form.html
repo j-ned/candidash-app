@@ -122,7 +122,7 @@
                 <button
                   type="button"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
-                  [class]="getContractBadgeClass(ct)"
+                  [class]="contractBadgeClasses()[ct]"
                   (click)="toggleContractType(ct)"
                 >
                   {{ contractTypeConfig[ct].label }}
@@ -167,7 +167,7 @@
                 <button
                   type="button"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
-                  [class]="getStatusBadgeClass(s)"
+                  [class]="statusBadgeClasses()[s]"
                   (click)="form.get('status')!.setValue(s)"
                 >
                   <span aria-hidden="true">{{ statusConfig[s].emoji }}</span>

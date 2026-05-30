@@ -8,6 +8,10 @@ import type {
 } from '../models/jobtrack.model';
 
 export abstract class JobtrackGateway {
+  /** URLs des requêtes GET — consommées par des httpResource côté composant (full signal). */
+  abstract listUrl(): string;
+  abstract getUrl(id: string): string;
+  /** Variantes Observable — pour les vrais flux RxJS (polling reminder) et patch de form. */
   abstract list(): Observable<JobTrack[]>;
   abstract listByStatus(status: JobStatus): Observable<JobTrack[]>;
   abstract get(id: string): Observable<JobTrack>;

@@ -1,8 +1,7 @@
 import {
   Component,
-  OnInit,
-  OnDestroy,
-  Renderer2,
+  computed,
+  signal,
   inject,
   ChangeDetectionStrategy,
 } from '@angular/core';
@@ -14,6 +13,10 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-layout',
   imports: [ThemeToggle, SimpleAvatarMenu, RouterLink],
+  host: {
+    '(document:mousemove)': 'onPointerMove($event)',
+    '(document:mouseleave)': 'onPointerLeave()',
+  },
   template: `
     <div
       class="relative flex flex-col min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-surface"
@@ -21,7 +24,7 @@ import { RouterLink } from '@angular/router';
       <div class="absolute inset-0 z-0" aria-hidden="true">
         <div class="absolute inset-0 opacity-30 dark:opacity-20">
           <div
-            class="absolute inset-0 bg-[linear-gradient(90deg,transparent_93%,theme(colors.accent.950)_94%,theme(colors.accent.900)_95%,theme(colors.accent.950)_96%,transparent_97%),linear-gradient(0deg,transparent_93%,theme(colors.accent.950)_94%,theme(colors.accent.900)_95%,theme(colors.accent.950)_96%,transparent_97%)] bg-[length:60px_60px] animate-pulse"
+            class="absolute inset-0 bg-[linear-gradient(90deg,transparent_93%,var(--color-accent-950)_94%,var(--color-accent-900)_95%,var(--color-accent-950)_96%,transparent_97%),linear-gradient(0deg,transparent_93%,var(--color-accent-950)_94%,var(--color-accent-900)_95%,var(--color-accent-950)_96%,transparent_97%)] bg-[length:60px_60px] animate-pulse"
           ></div>
         </div>
 
@@ -94,8 +97,12 @@ import { RouterLink } from '@angular/router';
       </footer>
 
       <div
-        class="pointer-events-none fixed inset-0 z-50 transition-opacity duration-300 opacity-0 cursor-halo"
+        class="pointer-events-none fixed z-50 transition-opacity duration-300 cursor-halo"
         aria-hidden="true"
+        [style.left.px]="pointer()?.x ?? 0"
+        [style.top.px]="pointer()?.y ?? 0"
+        [style.opacity]="pointer() ? 1 : 0"
+        [style.transform]="haloTransform()"
       ></div>
     </div>
   `,
@@ -123,7 +130,7 @@ import { RouterLink } from '@angular/router';
       position: fixed;
       width: 20px;
       height: 20px;
-      background: radial-gradient(circle, theme(colors.accent.500/20%) 0%, transparent 70%);
+      background: radial-gradient(circle, color-mix(in oklch, var(--color-accent-500) 20%, transparent) 0%, transparent 70%);
       border-radius: 50%;
       pointer-events: none;
       z-index: 9999;
@@ -139,7 +146,7 @@ import { RouterLink } from '@angular/router';
       left: -5px;
       right: -5px;
       bottom: -5px;
-      background: radial-gradient(circle, theme(colors.primary.400/10%) 0%, transparent 60%);
+      background: radial-gradient(circle, color-mix(in oklch, var(--color-primary-400) 10%, transparent) 0%, transparent 60%);
       border-radius: 50%;
       animation: pulse 2s ease-in-out infinite;
     }
@@ -194,97 +201,41 @@ import { RouterLink } from '@angular/router';
 
     @media (prefers-color-scheme: dark) {
       .cursor-halo {
-        background: radial-gradient(circle, theme(colors.accent.400/15%) 0%, transparent 70%);
+        background: radial-gradient(circle, color-mix(in oklch, var(--color-accent-400) 15%, transparent) 0%, transparent 70%);
       }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Layout implements OnInit, OnDestroy {
-  private readonly renderer = inject(Renderer2);
+export class Layout {
   readonly authService = inject(AuthState);
-  private haloElement?: HTMLElement;
-  private mouseMoveListener?: (event: MouseEvent) => void;
-  private rafId: number | null = null;
-  private pendingEvent: MouseEvent | null = null;
-  private lastMoveTime = 0;
-  private readonly cleanupListeners: (() => void)[] = [];
 
-  ngOnInit(): void {
-    this.createCursorHalo();
-    this.setupMouseTracking();
-  }
+  // Position du curseur-halo en état signal ; le DOM est écrit par les
+  // bindings `[style.*]` du template (full signal, zéro Renderer2/rAF/lifecycle).
+  protected readonly pointer = signal<{
+    x: number;
+    y: number;
+    scale: number;
+  } | null>(null);
 
-  ngOnDestroy(): void {
-    if (this.mouseMoveListener) {
-      document.removeEventListener('mousemove', this.mouseMoveListener);
-    }
+  protected readonly haloTransform = computed(() => {
+    const p = this.pointer();
+    return `translate(-50%, -50%) scale(${p?.scale ?? 1})`;
+  });
 
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId);
-    }
-
-    this.cleanupListeners.forEach((cleanup) => cleanup());
-
-    if (this.haloElement && document.body.contains(this.haloElement)) {
-      document.body.removeChild(this.haloElement);
-    }
-  }
-
-  private createCursorHalo(): void {
-    this.haloElement = this.renderer.createElement('div');
-    this.renderer.addClass(this.haloElement, 'cursor-halo');
-    this.renderer.addClass(this.haloElement, 'fixed');
-    this.renderer.addClass(this.haloElement, 'pointer-events-none');
-    this.renderer.addClass(this.haloElement, 'z-50');
-    this.renderer.addClass(this.haloElement, 'transition-opacity');
-    this.renderer.addClass(this.haloElement, 'duration-300');
-    this.renderer.addClass(this.haloElement, 'opacity-0');
-    this.renderer.appendChild(document.body, this.haloElement);
-  }
-
-  private setupMouseTracking(): void {
-    this.mouseMoveListener = (event: MouseEvent) => {
-      this.pendingEvent = event;
-      this.rafId ??= requestAnimationFrame(() => this.updateHaloPosition());
-    };
-
-    const mouseLeaveListener = () => {
-      if (this.haloElement) {
-        this.renderer.removeClass(this.haloElement, 'opacity-100');
-        this.renderer.addClass(this.haloElement, 'opacity-0');
-      }
-    };
-
-    document.addEventListener('mousemove', this.mouseMoveListener, { passive: true });
-    document.addEventListener('mouseleave', mouseLeaveListener);
-
-    this.cleanupListeners.push(() =>
-      document.removeEventListener('mouseleave', mouseLeaveListener),
-    );
-  }
-
-  private updateHaloPosition(): void {
-    this.rafId = null;
-    const event = this.pendingEvent;
-    if (!event || !this.haloElement) return;
-
-    this.renderer.removeClass(this.haloElement, 'opacity-0');
-    this.renderer.addClass(this.haloElement, 'opacity-100');
-
-    this.haloElement.style.left = `${event.clientX}px`;
-    this.haloElement.style.top = `${event.clientY}px`;
-
-    const now = Date.now();
-    const timeDiff = now - (this.lastMoveTime || now);
+  onPointerMove(event: MouseEvent): void {
     const speed = Math.min(
-      (Math.sqrt((event.movementX || 0) ** 2 + (event.movementY || 0) ** 2) /
-        Math.max(timeDiff, 1)) *
-        10,
+      Math.sqrt((event.movementX || 0) ** 2 + (event.movementY || 0) ** 2) / 5,
       2,
     );
+    this.pointer.set({
+      x: event.clientX,
+      y: event.clientY,
+      scale: 1 + speed * 0.2,
+    });
+  }
 
-    this.haloElement.style.transform = `translate(-50%, -50%) scale(${1 + speed * 0.2})`;
-    this.lastMoveTime = now;
+  onPointerLeave(): void {
+    this.pointer.set(null);
   }
 }

@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Config } from '@core/services/config';
 import { AuthGateway } from '../domain/gateways/auth.gateway';
+import type { AuthResponseApi, LoginResponseApi } from './auth.types';
+import { toAuthResponse, toLoginResponse } from './auth.adapter';
 import type {
   AuthResponse,
   ForgotPasswordRequest,
@@ -31,7 +33,9 @@ export class HttpAuthGateway extends AuthGateway {
   }
 
   signin(credentials: LoginCredentials): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, credentials);
+    return this.http
+      .post<LoginResponseApi>(`${this.baseUrl}/auth/login`, credentials)
+      .pipe(map(toLoginResponse));
   }
 
   signup(data: RegisterData): Observable<RegistrationResponse> {
@@ -39,7 +43,9 @@ export class HttpAuthGateway extends AuthGateway {
   }
 
   verifyRegistration(data: VerifyRegistrationRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/verify-registration`, data);
+    return this.http
+      .post<AuthResponseApi>(`${this.baseUrl}/auth/verify-registration`, data)
+      .pipe(map(toAuthResponse));
   }
 
   resendVerificationCode(email: string): Observable<{ message: string }> {
@@ -85,10 +91,14 @@ export class HttpAuthGateway extends AuthGateway {
   }
 
   validateTotp(request: ValidateTotpRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/2fa/validate`, request);
+    return this.http
+      .post<AuthResponseApi>(`${this.baseUrl}/auth/2fa/validate`, request)
+      .pipe(map(toAuthResponse));
   }
 
   useRecoveryCode(request: TotpRecoveryRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/2fa/recovery`, request);
+    return this.http
+      .post<AuthResponseApi>(`${this.baseUrl}/auth/2fa/recovery`, request)
+      .pipe(map(toAuthResponse));
   }
 }

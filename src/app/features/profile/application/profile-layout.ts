@@ -1,6 +1,9 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { Layout } from '@shared/ui/layout/layout';
-import { ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa } from './components';
+import { ProfileHeader } from './components/profile-header/profile-header';
+import { ProfileInfo } from './components/profile-info/profile-info';
+import { ProfileSecurity } from './components/profile-security/profile-security';
+import { Profile2fa } from './components/profile-2fa/profile-2fa';
 
 @Component({
   selector: 'app-profile-layout',

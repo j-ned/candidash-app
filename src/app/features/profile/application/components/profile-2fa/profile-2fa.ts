@@ -1,12 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Button } from '@shared/ui/button/button';
 import { Icon } from '@shared/ui/icon/icon';
 import { AuthState } from '@features/auth/application/auth-state';
-import { SetupTotpUseCase } from '@features/auth/domain/use-cases/setup-totp.use-case';
-import { VerifyTotpSetupUseCase } from '@features/auth/domain/use-cases/verify-totp-setup.use-case';
-import { DisableTotpUseCase } from '@features/auth/domain/use-cases/disable-totp.use-case';
+import { AuthGateway } from '@features/auth/domain/gateways/auth.gateway';
 import { Toaster } from '@shared/ui/toast/service/toast';
 
 type TotpSetupState = 'idle' | 'qrcode' | 'verify' | 'recovery-codes';
@@ -24,9 +22,7 @@ type TotpSetupState = 'idle' | 'qrcode' | 'verify' | 'recovery-codes';
 })
 export class Profile2fa {
   private readonly authService = inject(AuthState);
-  private readonly setupTotpUseCase = inject(SetupTotpUseCase);
-  private readonly verifyTotpSetupUseCase = inject(VerifyTotpSetupUseCase);
-  private readonly disableTotpUseCase = inject(DisableTotpUseCase);
+  private readonly authGateway = inject(AuthGateway);
   private readonly toastService = inject(Toaster);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -52,14 +48,13 @@ export class Profile2fa {
     }),
   });
 
-  get isTotpEnabled(): boolean {
-    return this.authService.user()?.totpEnabled ?? false;
-  }
+  protected readonly isTotpEnabled = computed(
+    () => this.authService.user()?.totpEnabled ?? false,
+  );
 
   startSetup(): void {
     this.isLoading.set(true);
-    this.setupTotpUseCase
-      .execute()
+    this.authGateway.setupTotp()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -89,8 +84,7 @@ export class Profile2fa {
     if (this.verifyForm.valid) {
       this.isLoading.set(true);
       const { token } = this.verifyForm.getRawValue();
-      this.verifyTotpSetupUseCase
-        .execute(token)
+      this.authGateway.verifyTotpSetup(token)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (response) => {
@@ -125,8 +119,7 @@ export class Profile2fa {
     if (this.disableForm.valid) {
       this.isLoading.set(true);
       const { password } = this.disableForm.getRawValue();
-      this.disableTotpUseCase
-        .execute(password)
+      this.authGateway.disableTotp(password)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {

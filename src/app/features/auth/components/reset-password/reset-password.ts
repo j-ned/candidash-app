@@ -3,11 +3,12 @@ import {
   ChangeDetectionStrategy,
   inject,
   signal,
+  computed,
   input,
   OnInit,
   DestroyRef,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
@@ -89,10 +90,24 @@ export class ResetPassword implements OnInit {
     }
   }
 
-  isFieldInvalid(fieldName: keyof ResetPasswordForm): boolean {
-    const field = this.resetPasswordForm.controls[fieldName];
-    return field.invalid && field.touched;
-  }
+  private readonly newPasswordEvents = toSignal(
+    this.resetPasswordForm.controls.newPassword.events,
+  );
+  private readonly confirmPasswordEvents = toSignal(
+    this.resetPasswordForm.controls.confirmPassword.events,
+  );
+
+  protected readonly newPasswordInvalid = computed(() => {
+    this.newPasswordEvents();
+    const f = this.resetPasswordForm.controls.newPassword;
+    return f.invalid && f.touched;
+  });
+
+  protected readonly confirmPasswordInvalid = computed(() => {
+    this.confirmPasswordEvents();
+    const f = this.resetPasswordForm.controls.confirmPassword;
+    return f.invalid && f.touched;
+  });
 
   togglePasswordVisibility(): void {
     this.showPassword.update((show) => !show);
@@ -110,49 +125,49 @@ export class ResetPassword implements OnInit {
     this.currentPassword.set(this.resetPasswordForm.controls.newPassword.value);
   }
 
-  newPasswordError(): string | null {
+  protected readonly newPasswordError = computed(() => {
+    this.newPasswordEvents();
     const ctrl = this.resetPasswordForm.controls.newPassword;
     if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
     if (ctrl.errors['required']) return 'Le mot de passe est requis';
-    if (ctrl.errors['minlength']) return 'Le mot de passe doit contenir au moins 8 caractères';
+    if (ctrl.errors['minlength'])
+      return 'Le mot de passe doit contenir au moins 8 caractères';
     if (ctrl.errors['pattern'])
       return 'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial';
     return null;
-  }
+  });
 
-  confirmPasswordError(): string | null {
+  protected readonly confirmPasswordError = computed(() => {
+    this.confirmPasswordEvents();
+    this.newPasswordEvents(); // le mismatch dépend aussi de newPassword
     const ctrl = this.resetPasswordForm.controls.confirmPassword;
-    const touched = ctrl.touched || ctrl.dirty;
-    if (!touched) return null;
-    if (ctrl.errors?.['required']) return 'La confirmation du mot de passe est requise';
+    if (!(ctrl.touched || ctrl.dirty)) return null;
+    if (ctrl.errors?.['required'])
+      return 'La confirmation du mot de passe est requise';
     if (this.resetPasswordForm.errors?.['passwordMismatch'])
       return 'Les mots de passe ne correspondent pas';
     return null;
-  }
+  });
 
-  submitLabel(): string {
-    return this.authService.isLoading()
+  protected readonly submitLabel = computed(() =>
+    this.authService.isLoading()
       ? 'Réinitialisation en cours...'
-      : 'Réinitialiser le mot de passe';
-  }
+      : 'Réinitialiser le mot de passe',
+  );
 
-  hasMinLength(): boolean {
-    return this.currentPassword().length >= 8;
-  }
-
-  hasUppercase(): boolean {
-    return /[A-Z]/.test(this.currentPassword());
-  }
-
-  hasLowercase(): boolean {
-    return /[a-z]/.test(this.currentPassword());
-  }
-
-  hasNumber(): boolean {
-    return /\d/.test(this.currentPassword());
-  }
-
-  hasSpecialChar(): boolean {
-    return /[@$!%*?&]/.test(this.currentPassword());
-  }
+  protected readonly hasMinLength = computed(
+    () => this.currentPassword().length >= 8,
+  );
+  protected readonly hasUppercase = computed(() =>
+    /[A-Z]/.test(this.currentPassword()),
+  );
+  protected readonly hasLowercase = computed(() =>
+    /[a-z]/.test(this.currentPassword()),
+  );
+  protected readonly hasNumber = computed(() =>
+    /\d/.test(this.currentPassword()),
+  );
+  protected readonly hasSpecialChar = computed(() =>
+    /[@$!%*?&]/.test(this.currentPassword()),
+  );
 }

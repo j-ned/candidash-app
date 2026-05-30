@@ -13,7 +13,9 @@
     <br /><strong class="text-text">{{ email() }}</strong>
   </p>
 
-  <form [formGroup]="verificationForm" (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-6">
+  @let code = verificationForm.verificationCode();
+
+  <form (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-6">
     <fieldset>
       <legend class="sr-only">Code de validation</legend>
 
@@ -24,23 +26,23 @@
         <input
           id="verificationCode"
           type="text"
-          formControlName="verificationCode"
-          maxlength="6"
-          pattern="[0-9]{6}"
-          required
+          [formField]="verificationForm.verificationCode"
+          inputmode="numeric"
           aria-required="true"
           class="w-full px-3 py-2 border rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:rounded-lg text-center text-lg sm:text-xl font-mono tracking-widest"
-          [class.border-error]="isFieldInvalid('verificationCode')"
-          [class.border-input]="!isFieldInvalid('verificationCode')"
+          [class.border-error]="code.touched() && code.invalid()"
+          [class.border-input]="!(code.touched() && code.invalid())"
           placeholder="123456"
           autocomplete="one-time-code"
         />
-        @if (isFieldInvalid('verificationCode')) {
+        @if (code.touched() && code.invalid()) {
           <p class="text-error text-xs mt-1 sm:text-sm" role="alert">
-            @if (verificationForm.controls.verificationCode.errors?.['required']) {
-              Le code de validation est requis
-            } @else if (verificationForm.controls.verificationCode.errors?.['invalidCode']) {
-              Le code doit être composé de 6 chiffres
+            @for (e of code.errors(); track e.kind) {
+              @if (e.kind === 'required') {
+                Le code de validation est requis
+              } @else if (e.kind === 'pattern') {
+                Le code doit être composé de 6 chiffres
+              }
             }
           </p>
         }
@@ -50,7 +52,7 @@
     <app-button
       type="submit"
       color="primary"
-      [disabled]="verificationForm.invalid"
+      [disabled]="verificationForm().invalid()"
       [isLoading]="authService.isLoading()"
       customClass="w-full py-3 text-base font-semibold mt-4 sm:py-4 sm:text-lg sm:mt-8"
     >

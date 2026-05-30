@@ -43,3 +43,8 @@ Thumbs.db
 
 # Environments
 src/environments/environment.development.ts
+
+# Claude
+.claude/*
+.remember/*
+.superpowers/

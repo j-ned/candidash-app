@@ -30,18 +30,11 @@ describe('HttpProfileGateway', () => {
     httpController.verify();
   });
 
-  it('should GET /accounts/profile/:userId', async () => {
-    // Given
-    const expected = ProfileBuilder.default().build();
-
-    // When
-    const resultPromise = firstValueFrom(gateway.getProfile('user-1'));
-    httpController
-      .expectOne({ method: 'GET', url: `${API_URL}/accounts/profile/user-1` })
-      .flush(expected);
-
-    // Then
-    expect(await resultPromise).toEqual(expected);
+  it('should build the GET /accounts/profile/:userId URL (consommée par httpResource)', () => {
+    // When / Then
+    expect(gateway.getProfileUrl('user-1')).toBe(
+      `${API_URL}/accounts/profile/user-1`,
+    );
   });
 
   it('should PUT /accounts/profile-update/:userId', async () => {
