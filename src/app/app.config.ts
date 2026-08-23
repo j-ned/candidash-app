@@ -17,6 +17,8 @@ import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gat
 import { HttpJobtrackGateway } from '@features/jobtrack/infra/http-jobtrack.gateway';
 import { ProfileGateway } from '@features/profile/domain/gateways/profile.gateway';
 import { HttpProfileGateway } from '@features/profile/infra/http-profile.gateway';
+import { ApiTokenGateway } from '@features/profile/domain/gateways/api-token.gateway';
+import { HttpApiTokenGateway } from '@features/profile/infra/http-api-token.gateway';
 import {
   provideClientHydration,
   withEventReplay,
@@ -37,6 +39,7 @@ export const appConfig: ApplicationConfig = {
     { provide: AuthGateway, useClass: HttpAuthGateway },
     { provide: JobtrackGateway, useClass: HttpJobtrackGateway },
     { provide: ProfileGateway, useClass: HttpProfileGateway },
+    { provide: ApiTokenGateway, useClass: HttpApiTokenGateway },
     // Hydratation incrémentale (full hydration + event replay) — permet
     // `@defer (hydrate on ...)` : le contenu est prérendu puis hydraté à la demande.
     provideClientHydration(withIncrementalHydration(), withEventReplay()),
