@@ -28,6 +28,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Toaster } from '@shared/ui/toast/service/toast';
 import { Icon } from '@shared/ui/icon/icon';
 import { PdfViewerModal } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
+import { dateOnlyToIso } from '@shared/utils/date-only-to-iso';
 
 type JobtrackForm = {
   title: FormControl<string>;
@@ -493,7 +494,7 @@ export class JobtrackFormPage implements OnInit {
       if (value.company) updatePayload.company = value.company;
       if (value.jobUrl) updatePayload.jobUrl = value.jobUrl;
       if (value.contractType) updatePayload.contractType = value.contractType;
-      if (value.appliedAt) updatePayload.appliedAt = value.appliedAt;
+      if (value.appliedAt) updatePayload.appliedAt = dateOnlyToIso(value.appliedAt);
       if (value.notes) updatePayload.notes = value.notes;
 
       this.jobtrackGateway.updateWithReminder(jobId!, updatePayload, false).subscribe({
@@ -524,7 +525,7 @@ export class JobtrackFormPage implements OnInit {
       if (value.company) createPayload.company = value.company;
       if (value.jobUrl) createPayload.jobUrl = value.jobUrl;
       if (value.contractType) createPayload.contractType = value.contractType;
-      if (value.appliedAt) createPayload.appliedAt = value.appliedAt;
+      if (value.appliedAt) createPayload.appliedAt = dateOnlyToIso(value.appliedAt);
       if (value.notes) createPayload.notes = value.notes;
 
       this.jobtrackGateway.createWithReminder(createPayload).subscribe({
