@@ -57,6 +57,17 @@ import type { ApiToken, ApiTokenCreated } from '@features/profile/domain/models/
 
     @if (isLoading()) {
       <p class="text-sm text-muted" role="status">Chargement...</p>
+    } @else if (loadError()) {
+      <div class="text-sm text-error flex items-center gap-2 mb-4" role="alert">
+        <p>Échec du chargement des jetons.</p>
+        <button
+          type="button"
+          (click)="retryLoad()"
+          class="underline hover:no-underline"
+        >
+          Réessayer
+        </button>
+      </div>
     } @else if (tokens().length === 0) {
       <p class="text-sm text-muted">Aucun jeton actif.</p>
     } @else {
@@ -77,8 +88,9 @@ import type { ApiToken, ApiTokenCreated } from '@features/profile/domain/models/
             <button
               type="button"
               (click)="revoke(t)"
+              [disabled]="revokingTokenId() === t.id"
               [attr.aria-label]="'Révoquer le jeton ' + t.nomAffiche"
-              class="text-error hover:text-error/80 transition-colors"
+              class="text-error hover:text-error/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <app-icon name="lucide-trash-2" cssClass="w-4 h-4" />
             </button>
@@ -107,8 +119,10 @@ export class ProfileApiTokens {
 
   protected readonly tokens = signal<ApiToken[]>([]);
   protected readonly isLoading = signal(true);
+  protected readonly loadError = signal(false);
   protected readonly isGenerating = signal(false);
   protected readonly newlyCreatedToken = signal<ApiTokenCreated | null>(null);
+  protected readonly revokingTokenId = signal<string | null>(null);
 
   constructor() {
     this.loadTokens();
@@ -116,6 +130,7 @@ export class ProfileApiTokens {
 
   private loadTokens(): void {
     this.isLoading.set(true);
+    this.loadError.set(false);
     this.apiTokenGateway
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -126,9 +141,14 @@ export class ProfileApiTokens {
         },
         error: () => {
           this.isLoading.set(false);
+          this.loadError.set(true);
           this.toaster.show('danger', "Impossible de charger les jetons d'API");
         },
       });
+  }
+
+  retryLoad(): void {
+    this.loadTokens();
   }
 
   generate(): void {
@@ -140,7 +160,9 @@ export class ProfileApiTokens {
         next: (created) => {
           this.isGenerating.set(false);
           this.newlyCreatedToken.set(created);
-          this.tokens.update((tokens) => [created, ...tokens]);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructure to strip the plaintext secret before storing
+          const { token: _secret, ...listed } = created;
+          this.tokens.update((tokens) => [listed, ...tokens]);
           this.toaster.show('success', 'Jeton créé');
         },
         error: () => {
@@ -163,18 +185,23 @@ export class ProfileApiTokens {
     });
     if (!confirmed) return;
 
+    this.revokingTokenId.set(token.id);
     this.apiTokenGateway
       .revoke(token.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.revokingTokenId.set(null);
           this.tokens.update((tokens) => tokens.filter((t) => t.id !== token.id));
           if (this.newlyCreatedToken()?.id === token.id) {
             this.newlyCreatedToken.set(null);
           }
           this.toaster.show('success', 'Jeton révoqué');
         },
-        error: () => this.toaster.show('danger', 'Échec de la révocation'),
+        error: () => {
+          this.revokingTokenId.set(null);
+          this.toaster.show('danger', 'Échec de la révocation');
+        },
       });
   }
 
