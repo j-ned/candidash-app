@@ -90,6 +90,7 @@ import type { ApiToken, ApiTokenCreated } from '@features/profile/domain/models/
     <app-button
       (buttonClick)="generate()"
       [isLoading]="isGenerating()"
+      [disabled]="isGenerating()"
       customClass="w-full sm:w-auto px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
     >
       <app-icon name="lucide-plus" cssClass="w-4 h-4 mr-2" />
@@ -178,8 +179,13 @@ export class ProfileApiTokens {
   }
 
   copyToken(token: string): void {
-    void navigator.clipboard.writeText(token).then(() => {
-      this.toaster.show('success', 'Jeton copié');
-    });
+    navigator.clipboard
+      .writeText(token)
+      .then(() => {
+        this.toaster.show('success', 'Jeton copié');
+      })
+      .catch(() => {
+        this.toaster.show('danger', 'Échec de la copie du jeton');
+      });
   }
 }
