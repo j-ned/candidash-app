@@ -1,4 +1,4 @@
-export type JobStatus = 'APPLIED' | 'INTERVIEW' | 'REJECTED' | 'ACCEPTED';
+export type JobStatus = 'TO_APPLY' | 'APPLIED' | 'INTERVIEW' | 'REJECTED' | 'ACCEPTED';
 
 export type ContractType = 'CDI' | 'CDD' | 'INTERIM' | 'STAGE' | 'ALTERNANCE' | 'FREELANCE';
 
@@ -69,13 +69,14 @@ export type CreateJobTrackWithReminderDto = {
 export const STATUS_CONFIG: Record<JobStatus, {
   emoji: string; label: string; labelShort: string; badgeClass: string; hoverClass: string;
 }> = {
+  TO_APPLY:  { emoji: '🔖', label: 'Repérée',            labelShort: 'Repérée',        badgeClass: 'bg-muted/15 text-muted border-muted/30', hoverClass: 'hover:bg-muted/15 hover:text-muted hover:border-muted/40' },
   APPLIED:   { emoji: '📤', label: 'Candidature envoyée', labelShort: 'Envoyée',        badgeClass: 'bg-blue-500/15 text-blue-600 border-blue-500/30', hoverClass: 'hover:bg-blue-500/15 hover:text-blue-500 hover:border-blue-500/40' },
   INTERVIEW: { emoji: '🤝', label: 'Entretien prévu',     labelShort: 'Entretien prévu', badgeClass: 'bg-primary/15 text-primary border-primary/30', hoverClass: 'hover:bg-primary/15 hover:text-primary hover:border-primary/40' },
   ACCEPTED:  { emoji: '🎉', label: 'Acceptée',            labelShort: 'Acceptée',  badgeClass: 'bg-green-500/15 text-green-600 border-green-500/30', hoverClass: 'hover:bg-green-500/15 hover:text-green-500 hover:border-green-500/40' },
   REJECTED:  { emoji: '❌', label: 'Refusée',             labelShort: 'Refusée',   badgeClass: 'bg-error/15 text-error border-error/30', hoverClass: 'hover:bg-error/15 hover:text-error hover:border-error/40' },
 };
 
-export const ALL_STATUSES: JobStatus[] = ['APPLIED', 'INTERVIEW', 'ACCEPTED', 'REJECTED'];
+export const ALL_STATUSES: JobStatus[] = ['TO_APPLY', 'APPLIED', 'INTERVIEW', 'ACCEPTED', 'REJECTED'];
 
 export const CONTRACT_TYPE_CONFIG: Record<ContractType, {
   label: string; badgeClass: string; hoverClass: string;

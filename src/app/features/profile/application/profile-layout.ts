@@ -4,10 +4,11 @@ import { ProfileHeader } from './components/profile-header/profile-header';
 import { ProfileInfo } from './components/profile-info/profile-info';
 import { ProfileSecurity } from './components/profile-security/profile-security';
 import { Profile2fa } from './components/profile-2fa/profile-2fa';
+import { ProfileApiTokens } from './components/profile-api-tokens/profile-api-tokens';
 
 @Component({
   selector: 'app-profile-layout',
-  imports: [Layout, ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa],
+  imports: [Layout, ProfileHeader, ProfileInfo, ProfileSecurity, Profile2fa, ProfileApiTokens],
   template: `
     <app-layout>
       <div
@@ -24,6 +25,7 @@ import { Profile2fa } from './components/profile-2fa/profile-2fa';
             </div>
           </div>
           <app-profile-2fa />
+          <app-profile-api-tokens />
         </div>
       </div>
     </app-layout>
