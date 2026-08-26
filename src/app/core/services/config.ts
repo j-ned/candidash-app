@@ -5,6 +5,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 
 export type AppConfig = {
   apiUrl: string;
+  extensionId?: string;
 };
 
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
@@ -34,5 +35,9 @@ export class Config {
 
   get apiUrl(): string {
     return this.config?.apiUrl ?? this.defaultApiUrl;
+  }
+
+  get extensionId(): string | undefined {
+    return this.config?.extensionId;
   }
 }
