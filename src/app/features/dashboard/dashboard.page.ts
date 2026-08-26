@@ -9,6 +9,7 @@ import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Layout } from '@shared/ui/layout/layout';
 import { Button } from '@shared/ui/button/button';
+import { ExtensionBanner } from '@shared/ui/extension-banner/extension-banner';
 import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
 import { toJobTrack } from '@features/jobtrack/infra/jobtrack.adapter';
 import type { JobTrackApi } from '@features/jobtrack/infra/jobtrack.types';
@@ -19,9 +20,10 @@ import { ReminderChecker } from '@features/jobtrack/application/reminder-checker
 
 @Component({
   selector: 'app-dashboard',
-  imports: [Layout, Button, JobtrackList, Icon],
+  imports: [Layout, Button, ExtensionBanner, JobtrackList, Icon],
   template: `
     <app-layout>
+      <app-extension-banner />
       <div class="relative overflow-hidden">
         <div
           class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"

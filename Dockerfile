@@ -66,10 +66,14 @@ RUN printf 'server {\n\
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml application/wasm;\n\
 }\n' > /etc/nginx/conf.d/default.conf
 
-# Script d'entrypoint pour injecter API_URL au runtime
+# Script d'entrypoint pour injecter API_URL (et EXTENSION_ID si défini) au runtime
 RUN printf '#!/bin/sh\n\
 API_URL="${API_URL:-http://localhost:3000/api/v1}"\n\
-echo "{\"apiUrl\":\"${API_URL}\"}" > /usr/share/nginx/html/config.json\n\
+if [ -n "$EXTENSION_ID" ]; then\n\
+  echo "{\"apiUrl\":\"${API_URL}\",\"extensionId\":\"${EXTENSION_ID}\"}" > /usr/share/nginx/html/config.json\n\
+else\n\
+  echo "{\"apiUrl\":\"${API_URL}\"}" > /usr/share/nginx/html/config.json\n\
+fi\n\
 exec nginx -g "daemon off;"\n' > /docker-entrypoint-custom.sh && chmod +x /docker-entrypoint-custom.sh
 
 EXPOSE 80

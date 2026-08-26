@@ -3,14 +3,16 @@ import { Router, RouterLink } from '@angular/router';
 import { Button } from '@shared/ui/button/button';
 import { Icon } from '@shared/ui/icon/icon';
 import { Layout } from '@shared/ui/layout/layout';
+import { ExtensionBanner } from '@shared/ui/extension-banner/extension-banner';
 import { PageButton } from '@features/home/model/home-model';
 import { AuthState } from '@features/auth/application/auth-state';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Button, Layout, Icon],
+  imports: [RouterLink, Button, Layout, ExtensionBanner, Icon],
   template: `
     <app-layout>
+      <app-extension-banner />
       <div
         class="flex-1 flex flex-col justify-center w-full max-w-sm mx-auto px-4 py-8 space-y-6 text-center sm:max-w-md sm:py-12 sm:space-y-8 md:max-w-2xl md:py-16 md:space-y-10 lg:max-w-4xl lg:py-20 lg:space-y-12 xl:max-w-6xl"
       >

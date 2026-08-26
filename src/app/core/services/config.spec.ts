@@ -55,4 +55,29 @@ describe('Config', () => {
     // Given / When / Then
     expect(config.apiUrl).toBe(DEFAULT_URL);
   });
+
+  it('should load extensionId from /config.json', async () => {
+    // Given
+    const remoteId = 'abcdefghijklmnopabcdefghijklmnop';
+
+    // When
+    const loadPromise = config.loadConfig();
+    httpController
+      .expectOne({ method: 'GET', url: '/config.json' })
+      .flush({ apiUrl: DEFAULT_URL, extensionId: remoteId });
+    await loadPromise;
+
+    // Then
+    expect(config.extensionId).toBe(remoteId);
+  });
+
+  it('should return undefined extensionId when /config.json omits it', async () => {
+    // Given / When
+    const loadPromise = config.loadConfig();
+    httpController.expectOne({ method: 'GET', url: '/config.json' }).flush({ apiUrl: DEFAULT_URL });
+    await loadPromise;
+
+    // Then
+    expect(config.extensionId).toBeUndefined();
+  });
 });
