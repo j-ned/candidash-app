@@ -8,8 +8,10 @@ WORKDIR /app
 # Installer pnpm globalement
 RUN npm install -g pnpm
 
-# Copie les fichiers package.json et pnpm-lock.yaml
-COPY package*.json pnpm-lock.yaml* ./
+# Copie les fichiers package.json, pnpm-lock.yaml et pnpm-workspace.yaml
+# (ce dernier porte allowBuilds — sans lui, pnpm install bloque sur
+# ERR_PNPM_IGNORED_BUILDS pour esbuild/lmdb/etc.)
+COPY package*.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 
 # Installe les dépendances
 RUN pnpm install --frozen-lockfile
