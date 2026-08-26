@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Icon } from '@shared/ui/icon/icon';
-import { Config } from '@core/services/config';
 import { ExtensionDetection } from './service/extension-detection';
 
 const DISMISSED_KEY = 'extension-banner-dismissed';
@@ -29,15 +28,17 @@ const DISMISSED_KEY = 'extension-banner-dismissed';
             <span class="text-text">
               Ajoute une annonce en un clic pendant que tu navigues, avec l'extension Chrome Candidash.
             </span>
-            <a
-              [href]="webStoreUrl()"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="font-medium text-primary hover:underline shrink-0 inline-flex items-center gap-1"
-            >
-              Installer
-              <app-icon name="lucide-external-link" cssClass="w-3 h-3" />
-            </a>
+            @if (webStoreUrl(); as url) {
+              <a
+                [href]="url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-primary hover:underline shrink-0 inline-flex items-center gap-1"
+              >
+                Installer
+                <app-icon name="lucide-external-link" cssClass="w-3 h-3" />
+              </a>
+            }
           } @else {
             <span class="text-text">
               L'extension Chrome Candidash arrive bientôt — ajoute une annonce en un clic pendant que tu navigues.
@@ -59,18 +60,14 @@ const DISMISSED_KEY = 'extension-banner-dismissed';
 })
 export class ExtensionBanner {
   private readonly detection = inject(ExtensionDetection);
-  private readonly config = inject(Config);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   protected readonly status = this.detection.status;
+  protected readonly webStoreUrl = this.detection.webStoreUrl;
   private readonly dismissed = signal(this.readDismissed());
 
   protected readonly visible = computed(
     () => !this.dismissed() && (this.status() === 'not-installed' || this.status() === 'unavailable'),
-  );
-
-  protected readonly webStoreUrl = computed(
-    () => `https://chromewebstore.google.com/detail/${this.config.extensionId}`,
   );
 
   constructor() {

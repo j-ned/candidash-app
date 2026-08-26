@@ -53,10 +53,11 @@ describe('ExtensionDetection', () => {
 
     // When
     detection.check();
-    // Two microtask ticks: one for the sendMessage callback to resolve
-    // pingReply, one for Promise.race's own wrapping .then().
-    await Promise.resolve();
-    await Promise.resolve();
+    // A real macrotask boundary drains every pending microtask first (the
+    // sendMessage callback resolving pingReply, Promise.race's own .then(),
+    // and the .finally() that clears the pending timeout), regardless of how
+    // many ticks that chain happens to need.
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Then
     expect(detection.status()).toBe('installed');
@@ -77,8 +78,7 @@ describe('ExtensionDetection', () => {
 
     // When
     detection.check();
-    await Promise.resolve();
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Then
     expect(detection.status()).toBe('not-installed');
@@ -104,6 +104,29 @@ describe('ExtensionDetection', () => {
     expect(detection.status()).toBe('not-installed');
   });
 
+  it('clears the pending timeout once the extension replies before it fires', async () => {
+    // Given
+    vi.useFakeTimers();
+    vi.stubGlobal('chrome', {
+      runtime: {
+        sendMessage: (
+          _extensionId: string,
+          _message: unknown,
+          callback: (reply: unknown) => void,
+        ) => callback({ pong: true }),
+      },
+    });
+    const detection = setup('abcdefghijklmnopabcdefghijklmnop');
+
+    // When
+    detection.check();
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Then
+    expect(detection.status()).toBe('installed');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('does not re-check once a status has been resolved', async () => {
     // Given
     const sendMessage = vi.fn(
@@ -120,5 +143,25 @@ describe('ExtensionDetection', () => {
 
     // Then
     expect(sendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  describe('webStoreUrl', () => {
+    it('is null when no extensionId is configured', () => {
+      // Given
+      const detection = setup(undefined);
+
+      // Then
+      expect(detection.webStoreUrl()).toBeNull();
+    });
+
+    it('is the Chrome Web Store detail URL when extensionId is configured', () => {
+      // Given
+      const detection = setup('abcdefghijklmnopabcdefghijklmnop');
+
+      // Then
+      expect(detection.webStoreUrl()).toBe(
+        'https://chromewebstore.google.com/detail/abcdefghijklmnopabcdefghijklmnop',
+      );
+    });
   });
 });

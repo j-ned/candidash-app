@@ -1,4 +1,4 @@
-import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Config } from '@core/services/config';
 
@@ -36,6 +36,11 @@ export class ExtensionDetection {
   private readonly _status = signal<ExtensionStatus>('unknown');
   readonly status = this._status.asReadonly();
 
+  readonly webStoreUrl = computed(() => {
+    const extensionId = this.config.extensionId;
+    return extensionId ? `https://chromewebstore.google.com/detail/${extensionId}` : null;
+  });
+
   check(): void {
     if (this._status() !== 'unknown') return;
 
@@ -54,9 +59,15 @@ export class ExtensionDetection {
   }
 
   private ping(runtime: ChromeRuntime, extensionId: string): Promise<boolean> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
     const pingReply = new Promise<boolean>((resolve) => {
       try {
         runtime.sendMessage(extensionId, { type: 'PING' }, (reply) => {
+          // Reading chrome.runtime.lastError inside the callback is required to suppress
+          // Chrome's "Unchecked runtime.lastError" console warning when the target extension
+          // doesn't exist or doesn't respond — the failure is expected and already handled by
+          // resolving false below.
           void runtime.lastError;
           resolve(isPongReply(reply));
         });
@@ -66,9 +77,9 @@ export class ExtensionDetection {
     });
 
     const timeout = new Promise<boolean>((resolve) => {
-      setTimeout(() => resolve(false), PING_TIMEOUT_MS);
+      timeoutId = setTimeout(() => resolve(false), PING_TIMEOUT_MS);
     });
 
-    return Promise.race([pingReply, timeout]);
+    return Promise.race([pingReply, timeout]).finally(() => clearTimeout(timeoutId));
   }
 }

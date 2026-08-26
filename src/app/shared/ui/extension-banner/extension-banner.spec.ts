@@ -1,9 +1,8 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { signal, WritableSignal } from '@angular/core';
+import { computed, signal, WritableSignal } from '@angular/core';
 import { ExtensionBanner } from './extension-banner';
 import { ExtensionDetection } from './service/extension-detection';
 import type { ExtensionStatus } from './service/extension-detection';
-import { Config } from '@core/services/config';
 
 describe('ExtensionBanner', () => {
   let statusSignal: WritableSignal<ExtensionStatus>;
@@ -12,11 +11,16 @@ describe('ExtensionBanner', () => {
   function setup(extensionId: string | undefined): ComponentFixture<ExtensionBanner> {
     statusSignal = signal<ExtensionStatus>('unknown');
     checkSpy = vi.fn();
+    const webStoreUrl = computed(() =>
+      extensionId ? `https://chromewebstore.google.com/detail/${extensionId}` : null,
+    );
 
     TestBed.configureTestingModule({
       providers: [
-        { provide: ExtensionDetection, useValue: { status: statusSignal.asReadonly(), check: checkSpy } },
-        { provide: Config, useValue: { extensionId } },
+        {
+          provide: ExtensionDetection,
+          useValue: { status: statusSignal.asReadonly(), webStoreUrl, check: checkSpy },
+        },
       ],
     });
 
