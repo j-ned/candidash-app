@@ -74,7 +74,7 @@ const DISMISSED_KEY = 'extension-banner-dismissed';
             }
           } @else {
             <span class="text-text">
-              L'extension Chrome arrive bientôt — tu pourras ajouter tes candidatures en un clic, sans quitter ta page.
+              L'extension Chrome arrive bientôt !! tu pourras ajouter tes candidatures en un clic, sans quitter ta page.
             </span>
           }
         </div>
