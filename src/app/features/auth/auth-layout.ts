@@ -17,7 +17,7 @@ import { Signup } from './components/signup/signup';
         <div class="text-center mb-6 sm:mb-8 md:mb-12">
           <h1
             class="text-4xl font-bold mb-2 text-text transition-all duration-300 hover:scale-105 hover:brightness-110 sm:text-5xl sm:mb-3 md:text-6xl md:mb-4 lg:text-7xl"
-            style="-webkit-text-stroke: 1px #10b981; -webkit-text-fill-color: var(--color-background);"
+            style="-webkit-text-stroke: 1px var(--color-primary); -webkit-text-fill-color: var(--color-background);"
           >
             Candidash
           </h1>
