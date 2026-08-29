@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📊 Candidash — Frontend
+# 📊 Candidash - Frontend
 
 ### Tableau de bord personnel pour **piloter sa recherche d'emploi**
 
