@@ -1,15 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, throwError, firstValueFrom, defer } from 'rxjs';
+import { of, throwError, firstValueFrom, defer, defaultIfEmpty } from 'rxjs';
 import { AuthState } from './auth-state';
 import { AuthGateway } from '../domain/gateways/auth.gateway';
 import { TokenStore } from '@core/services/token';
 import { Toaster } from '@shared/ui/toast/service/toast';
-import type {
-  AuthResponse,
-  LoginResponse,
-  User,
-} from '../domain/models/auth.model';
+import type { AuthResponse, LoginResponse, User } from '../domain/models/auth.model';
 
 function buildUser(overrides: Partial<User> = {}): User {
   return {
@@ -65,9 +61,7 @@ describe('AuthState', () => {
 
   it('Given valid credentials, When signin succeeds, Then it authenticates and navigates to dashboard', async () => {
     // When
-    await firstValueFrom(
-      state.signin({ email: 'test@example.com', password: 'secret' }),
-    );
+    await firstValueFrom(state.signin({ email: 'test@example.com', password: 'secret' }));
 
     // Then
     expect(state.isAuthenticated()).toBe(true);
@@ -87,9 +81,7 @@ describe('AuthState', () => {
     );
 
     // When
-    await firstValueFrom(
-      state.signin({ email: 'test@example.com', password: 'secret' }),
-    );
+    await firstValueFrom(state.signin({ email: 'test@example.com', password: 'secret' }));
 
     // Then
     expect(state.hasPending2FA()).toBe(true);
@@ -99,15 +91,11 @@ describe('AuthState', () => {
 
   it('Given the server rejects, When signin fails, Then it surfaces the error and stays unauthenticated', async () => {
     // Given
-    gateway.signin.mockReturnValue(
-      defer(() => throwError(() => ({ status: 401 }))),
-    );
+    gateway.signin.mockReturnValue(defer(() => throwError(() => ({ status: 401 }))));
 
     // When / Then
     await expect(
-      firstValueFrom(
-        state.signin({ email: 'test@example.com', password: 'bad' }),
-      ),
+      firstValueFrom(state.signin({ email: 'test@example.com', password: 'bad' })),
     ).rejects.toBeDefined();
     expect(state.isAuthenticated()).toBe(false);
     expect(state.error()).toBe('Identifiants invalides');
@@ -124,5 +112,53 @@ describe('AuthState', () => {
     expect(state.isAuthenticated()).toBe(false);
     expect(localStorage.getItem('auth_user')).toBeNull();
     expect(gateway.signout).toHaveBeenCalled();
+  });
+
+  it('Given a protected page, When signout succeeds, Then it goes to the home page', async () => {
+    // Given
+    router.url = '/dashboard';
+
+    // When
+    await firstValueFrom(state.signout());
+
+    // Then
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('Given the server rejects the signout, When it fails, Then the session is still cleared and it goes home', async () => {
+    // Given
+    router.url = '/dashboard';
+    localStorage.setItem('auth_user', JSON.stringify(buildUser()));
+    gateway.signout.mockReturnValueOnce(throwError(() => new Error('réseau')));
+
+    // When
+    await firstValueFrom(state.signout().pipe(defaultIfEmpty(undefined)));
+
+    // Then
+    expect(state.isAuthenticated()).toBe(false);
+    expect(localStorage.getItem('auth_user')).toBeNull();
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('Given an expired session, When the data is cleared without a reason, Then it goes to the sign-in page', () => {
+    // Given
+    router.url = '/dashboard';
+
+    // When : chemin emprunté par l'expiration de session et l'auto-connexion ratée
+    state.clearAuthData();
+
+    // Then
+    expect(router.navigate).toHaveBeenCalledWith(['/auth/signin']);
+  });
+
+  it('Given an auth screen, When the data is cleared, Then it does not navigate', () => {
+    // Given : un parcours de vérification ou de réinitialisation est en cours
+    router.url = '/auth/verification';
+
+    // When
+    state.clearAuthData('/');
+
+    // Then
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });

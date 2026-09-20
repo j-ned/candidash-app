@@ -107,25 +107,23 @@ export class AuthState {
       return throwError(() => new Error('No pending 2FA token'));
     }
 
-    return this.authGateway
-      .useRecoveryCode({ tempToken, recoveryCode: code })
-      .pipe(
-        tap((response) => {
-          this.pendingTwoFactorToken.set(null);
-          this.handleAuthSuccess(response);
-          this.toastService.show(
-            'warning',
-            'Code de récupération utilisé',
-            'Pensez à vérifier vos codes de récupération restants dans votre profil.',
-            { duration: 6000, dismissible: true },
-          );
-          this.router.navigate(['/dashboard']);
-        }),
-        catchError((error) => {
-          this.handleAuthError(error);
-          return throwError(() => error);
-        }),
-      );
+    return this.authGateway.useRecoveryCode({ tempToken, recoveryCode: code }).pipe(
+      tap((response) => {
+        this.pendingTwoFactorToken.set(null);
+        this.handleAuthSuccess(response);
+        this.toastService.show(
+          'warning',
+          'Code de récupération utilisé',
+          'Pensez à vérifier vos codes de récupération restants dans votre profil.',
+          { duration: 6000, dismissible: true },
+        );
+        this.router.navigate(['/dashboard']);
+      }),
+      catchError((error) => {
+        this.handleAuthError(error);
+        return throwError(() => error);
+      }),
+    );
   }
 
   clearPending2FA(): void {
@@ -236,11 +234,14 @@ export class AuthState {
     );
   }
 
+  /** Déconnexion demandée par l'utilisateur : retour à la page d'accueil, pas à la connexion. */
   signout(): Observable<void> {
     return this.authGateway.signout().pipe(
-      tap(() => this.clearAuthData()),
+      tap(() => this.clearAuthData('/')),
+      // L'appel serveur peut échouer (réseau, jeton déjà expiré) : la session locale est vidée
+      // quand même, sinon l'utilisateur resterait connecté côté navigateur.
       catchError(() => {
-        this.clearAuthData();
+        this.clearAuthData('/');
         return EMPTY;
       }),
     );
@@ -394,7 +395,14 @@ export class AuthState {
     }
   }
 
-  clearAuthData(): void {
+  /**
+   * Vide la session et renvoie l'utilisateur ailleurs s'il est sur un écran protégé.
+   *
+   * La destination dépend de la raison : une déconnexion volontaire ramène à l'accueil, alors
+   * qu'une session expirée ou une auto-connexion ratée doit mener à la page de connexion, puisque
+   * l'utilisateur voulait rester dans l'application.
+   */
+  clearAuthData(redirectTo: string = '/auth/signin'): void {
     if (this.isBrowser) localStorage.removeItem('auth_user');
 
     this.authState.update((state) => ({
@@ -405,9 +413,10 @@ export class AuthState {
       error: null,
     }));
 
-    const currentUrl = this.router.url;
-    if (!currentUrl.includes('/auth/')) {
-      this.router.navigate(['/auth/signin']);
+    // Déjà sur un écran d'authentification : on ne bouge pas, sinon on casserait un parcours
+    // en cours (vérification d'e-mail, réinitialisation de mot de passe).
+    if (!this.router.url.includes('/auth/')) {
+      this.router.navigate([redirectTo]);
     }
   }
 
