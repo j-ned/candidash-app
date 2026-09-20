@@ -57,26 +57,26 @@ export class Button {
     if (color === 'primary') {
       classes.push(
         'bg-primary',
-        'hover:bg-primary/80',
-        'focus:bg-primary/70',
-        'active:bg-primary/90',
-        'text-text',
+        'hover:bg-primary/90',
+        'focus:bg-primary/90',
+        'active:bg-primary',
+        'text-on-primary',
       );
     } else if (color === 'secondary') {
       classes.push(
         'bg-secondary',
-        'hover:bg-secondary/80',
-        'focus:bg-secondary/70',
-        'active:bg-secondary/90',
-        'text-text',
+        'hover:bg-secondary/90',
+        'focus:bg-secondary/90',
+        'active:bg-secondary',
+        'text-on-secondary',
       );
     } else if (color === 'accent') {
       classes.push(
         'bg-accent',
-        'hover:bg-accent/80',
-        'focus:bg-accent/70',
-        'active:bg-accent/90',
-        'text-text',
+        'hover:bg-accent/90',
+        'focus:bg-accent/90',
+        'active:bg-accent',
+        'text-on-accent',
       );
     } else if (color === 'red') {
       classes.push(

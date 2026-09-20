@@ -92,15 +92,15 @@ export class ConfirmModalView {
   }
 
   protected readonly confirmButtonClasses = computed(() => {
-    const baseClasses = 'text-white border';
+    const baseClasses = 'border';
 
     switch (this.data().type) {
       case 'danger':
-        return `${baseClasses} bg-error border-error hover:bg-error-600 hover:border-error-600 focus:ring-error/50`;
+        return `${baseClasses} text-on-primary bg-error border-error hover:bg-error-600 hover:border-error-600 focus:ring-error/50`;
       case 'warning':
-        return `${baseClasses} bg-warning border-warning hover:bg-warning-600 hover:border-warning-600 focus:ring-warning/50 text-text`;
+        return `${baseClasses} text-on-secondary bg-warning border-warning hover:bg-warning-600 hover:border-warning-600 focus:ring-warning/50`;
       default:
-        return `${baseClasses} bg-primary border-primary hover:bg-primary-600 hover:border-primary-600 focus:ring-primary/50`;
+        return `${baseClasses} text-on-primary bg-primary border-primary hover:bg-primary-600 hover:border-primary-600 focus:ring-primary/50`;
     }
   });
 }

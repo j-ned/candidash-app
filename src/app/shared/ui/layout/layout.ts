@@ -1,241 +1,71 @@
-import {
-  Component,
-  computed,
-  signal,
-  inject,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 import { AuthState } from '@features/auth/application/auth-state';
 import { SimpleAvatarMenu } from '../simple-avatar-menu/simple-avatar-menu';
-import { RouterLink } from '@angular/router';
 
+/**
+ * Enveloppe des écrans applicatifs : barre du haut, carte de contenu, pied de page.
+ *
+ * Le décor d'origine a été retiré : halo de curseur suivi à chaque mousemove (un signal réécrit à
+ * chaque frame, donc une détection de changements par frame sur toute l'application), grille de
+ * fond en animate-pulse, trois points en animate-ping et un dégradé en boucle. Rien de tout cela
+ * ne portait d'information, et cela tournait sur chaque écran, y compris sur mobile.
+ *
+ * Reste une seule animation, l'entrée du contenu, neutralisée sous prefers-reduced-motion.
+ */
 @Component({
   selector: 'app-layout',
   imports: [ThemeToggle, SimpleAvatarMenu, RouterLink],
-  host: {
-    '(document:mousemove)': 'onPointerMove($event)',
-    '(document:mouseleave)': 'onPointerLeave()',
-  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block' },
   template: `
-    <div
-      class="relative flex flex-col min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-background via-background to-surface"
-    >
-      <div class="absolute inset-0 z-0" aria-hidden="true">
-        <div class="absolute inset-0 opacity-30 dark:opacity-20">
-          <div
-            class="absolute inset-0 bg-[linear-gradient(90deg,transparent_93%,var(--color-accent-950)_94%,var(--color-accent-900)_95%,var(--color-accent-950)_96%,transparent_97%),linear-gradient(0deg,transparent_93%,var(--color-accent-950)_94%,var(--color-accent-900)_95%,var(--color-accent-950)_96%,transparent_97%)] bg-[length:60px_60px] animate-pulse"
-          ></div>
-        </div>
-
-        <div
-          class="absolute inset-0 bg-gradient-to-r from-transparent via-accent/10 to-transparent animate-[shimmer_3s_ease-in-out_infinite] opacity-40"
-        ></div>
-
-        <div
-          class="absolute top-1/4 left-1/4 w-2 h-2 bg-accent rounded-full animate-ping opacity-60"
-        ></div>
-        <div
-          class="absolute top-3/4 right-1/4 w-1 h-1 bg-primary rounded-full animate-ping opacity-40 animation-delay-1000"
-        ></div>
-        <div
-          class="absolute top-1/2 left-3/4 w-1.5 h-1.5 bg-accent rounded-full animate-ping opacity-50 animation-delay-2000"
-        ></div>
-      </div>
-
-      <header class="absolute top-0 left-0 right-0 z-30 p-2 sm:p-6">
-        <div class="flex items-center justify-between">
-          <div class="opacity-0"></div>
-
-          <div
-            class="flex items-center gap-3 backdrop-blur-sm bg-card/80 border border-border/50 rounded-2xl px-4 py-2 shadow-lg"
-          >
-            @if (authService.isAuthenticated()) {
-              <div class="animate-in fade-in slide-in-from-right-5 duration-300">
-                <app-simple-avatar-menu />
-              </div>
-            }
-            <div class="animate-in fade-in slide-in-from-right-3 duration-500">
-              <app-theme-toggle></app-theme-toggle>
-            </div>
-          </div>
+    <div class="flex min-h-[100dvh] flex-col bg-background">
+      <header class="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
+        <div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-end gap-2 px-4 sm:px-6">
+          @if (authService.isAuthenticated()) {
+            <app-simple-avatar-menu />
+          }
+          <app-theme-toggle />
         </div>
       </header>
 
-      <main class="relative z-10 flex flex-1 items-stretch justify-center p-2 pt-20 pb-2 sm:p-6 sm:pt-24 sm:pb-4 lg:p-8 lg:pt-28 lg:pb-6">
-        <div class="w-full max-w-6xl mx-auto flex flex-col">
-          <div
-            class="relative flex-1 flex flex-col backdrop-blur-sm bg-card/50 border border-border/30 rounded-3xl shadow-2xl shadow-primary/5 overflow-hidden"
-          >
-            <div
-              class="absolute inset-0 rounded-3xl border border-accent/20 pointer-events-none"
-              aria-hidden="true"
-            ></div>
-
-            <div class="relative flex-1 flex flex-col p-4 sm:p-8 lg:p-12">
-              <div class="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                <ng-content></ng-content>
-              </div>
-            </div>
-          </div>
+      <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
+        <div class="content-enter h-full rounded-2xl border border-border bg-card p-4 sm:p-8">
+          <ng-content></ng-content>
         </div>
       </main>
 
-      <footer class="relative z-10 p-2 pb-3 sm:p-4">
-        <div class="flex items-center justify-center">
-          <div
-            class="backdrop-blur-sm bg-card/60 border border-border/40 rounded-full px-6 py-2 shadow-lg"
+      <footer class="border-t border-border">
+        <div class="mx-auto w-full max-w-6xl px-4 py-5 text-center sm:px-6">
+          <a
+            routerLink="/terms-of-service"
+            class="text-sm text-muted transition-colors hover:text-text"
+            >Conditions d'utilisation</a
           >
-            <a
-              routerLink="/terms-of-service"
-              class="text-xs sm:text-sm text-muted hover:text-text transition-all duration-300 hover:scale-105 font-medium group"
-            >
-              <span class="group-hover:underline">Conditions d'utilisation</span>
-            </a>
-          </div>
         </div>
       </footer>
-
-      <div
-        class="pointer-events-none fixed z-50 transition-opacity duration-300 cursor-halo"
-        aria-hidden="true"
-        [style.left.px]="pointer()?.x ?? 0"
-        [style.top.px]="pointer()?.y ?? 0"
-        [style.opacity]="pointer() ? 1 : 0"
-        [style.transform]="haloTransform()"
-      ></div>
     </div>
   `,
   styles: `
-    @keyframes shimmer {
-      0%,
-      100% {
-        transform: translateX(-100%);
-        opacity: 0.3;
+    @media (prefers-reduced-motion: no-preference) {
+      .content-enter {
+        animation: content-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
       }
-      50% {
-        transform: translateX(100%);
-        opacity: 0.6;
-      }
-    }
 
-    .animation-delay-1000 {
-      animation-delay: 1s;
-    }
-    .animation-delay-2000 {
-      animation-delay: 2s;
-    }
-
-    .cursor-halo {
-      position: fixed;
-      width: 20px;
-      height: 20px;
-      background: radial-gradient(circle, color-mix(in oklch, var(--color-accent-500) 20%, transparent) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translate(-50%, -50%);
-      transition: all 0.1s ease-out;
-      mix-blend-mode: screen;
-    }
-
-    .cursor-halo:before {
-      content: '';
-      position: absolute;
-      top: -5px;
-      left: -5px;
-      right: -5px;
-      bottom: -5px;
-      background: radial-gradient(circle, color-mix(in oklch, var(--color-primary-400) 10%, transparent) 0%, transparent 60%);
-      border-radius: 50%;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes slide-in-from-right-5 {
-      from {
-        transform: translateX(20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slide-in-from-right-3 {
-      from {
-        transform: translateX(12px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slide-in-from-bottom-8 {
-      from {
-        transform: translateY(32px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    @keyframes fade-in {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .cursor-halo {
-        display: none;
-      }
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .cursor-halo {
-        background: radial-gradient(circle, color-mix(in oklch, var(--color-accent-400) 15%, transparent) 0%, transparent 70%);
+      @keyframes content-enter {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
       }
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Layout {
   readonly authService = inject(AuthState);
-
-  // Position du curseur-halo en état signal ; le DOM est écrit par les
-  // bindings `[style.*]` du template (full signal, zéro Renderer2/rAF/lifecycle).
-  protected readonly pointer = signal<{
-    x: number;
-    y: number;
-    scale: number;
-  } | null>(null);
-
-  protected readonly haloTransform = computed(() => {
-    const p = this.pointer();
-    return `translate(-50%, -50%) scale(${p?.scale ?? 1})`;
-  });
-
-  onPointerMove(event: MouseEvent): void {
-    const speed = Math.min(
-      Math.sqrt((event.movementX || 0) ** 2 + (event.movementY || 0) ** 2) / 5,
-      2,
-    );
-    this.pointer.set({
-      x: event.clientX,
-      y: event.clientY,
-      scale: 1 + speed * 0.2,
-    });
-  }
-
-  onPointerLeave(): void {
-    this.pointer.set(null);
-  }
 }

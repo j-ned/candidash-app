@@ -53,11 +53,11 @@ const DATE_FMT_SHORT = new Intl.DateTimeFormat('fr-FR', {
   month: 'short',
 });
 const STATUS_FILTERS = [
-  { value: 'all', activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
-  { value: 'APPLIED', activeClass: 'bg-blue-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-blue-500 hover:border-blue-500/40 hover:bg-blue-500/15' },
-  { value: 'INTERVIEW', activeClass: 'bg-primary text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/15' },
-  { value: 'ACCEPTED', activeClass: 'bg-green-500 text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-green-500 hover:border-green-500/40 hover:bg-green-500/15' },
-  { value: 'REJECTED', activeClass: 'bg-error text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-error hover:border-error/40 hover:bg-error/15' },
+  { value: 'all', activeClass: 'bg-primary text-on-primary', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-accent/15' },
+  { value: 'APPLIED', activeClass: 'bg-info text-on-primary', inactiveClass: 'bg-card border border-border text-muted hover:text-info hover:border-info/40 hover:bg-info/15' },
+  { value: 'INTERVIEW', activeClass: 'bg-accent text-on-accent', inactiveClass: 'bg-card border border-border text-muted hover:text-accent hover:border-accent/40 hover:bg-accent/15' },
+  { value: 'ACCEPTED', activeClass: 'bg-success text-on-primary', inactiveClass: 'bg-card border border-border text-muted hover:text-success hover:border-success/40 hover:bg-success/15' },
+  { value: 'REJECTED', activeClass: 'bg-error text-on-primary', inactiveClass: 'bg-card border border-border text-muted hover:text-error hover:border-error/40 hover:bg-error/15' },
 ] as const satisfies readonly { value: StatusOrAll; activeClass: string; inactiveClass: string }[];
 
 export type JobView = JobTrack & {
