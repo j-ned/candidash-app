@@ -1,5 +1,32 @@
 @import 'tailwindcss';
 
+/* Outfit, auto-hébergée (OFL, licence dans public/fonts/OFL.txt). Police variable : un seul
+   fichier couvre toutes les graisses. font-display: swap affiche le texte immédiatement avec la
+   pile système puis le remplace, donc jamais de texte invisible. Le sous-ensemble latin-ext n'est
+   téléchargé que si la page contient les caractères concernés. */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('/fonts/outfit-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('/fonts/outfit-latin-ext.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
 /* Palette Candidash.
    Vert forêt = marque et actions principales. Terracotta = accent unique, conservé de l'ancienne
    identité : c'est lui qui relie la page d'accueil aux captures du produit. Neutres légèrement
@@ -8,6 +35,10 @@
    suffit de changer sa teinte dans scripts/, jamais les clartés. */
 
 @theme {
+  /* Police. La pile système reste en repli : si le woff2 ne charge pas, la mise en page tient. */
+  --font-sans:
+    'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
   /* Base */
   --color-text: oklch(21% 0.018 155);
   --color-background: oklch(97.5% 0.008 95);
@@ -29,95 +60,95 @@
   --color-info: oklch(45% 0.11 230);
 
   /* Primary */
-  --color-primary-50: oklch(95% 0.024 155);
-  --color-primary-100: oklch(90% 0.024 155);
-  --color-primary-200: oklch(85% 0.041 155);
-  --color-primary-300: oklch(80% 0.058 155);
+  --color-primary-50: oklch(95% 0.022 155);
+  --color-primary-100: oklch(90% 0.022 155);
+  --color-primary-200: oklch(85% 0.037 155);
+  --color-primary-300: oklch(80% 0.054 155);
   --color-primary-400: oklch(74% 0.068 155);
   --color-primary-500: oklch(68% 0.068 155); /* base */
   --color-primary-600: oklch(62% 0.068 155);
   --color-primary-700: oklch(56% 0.068 155);
   --color-primary-800: oklch(50% 0.068 155);
   --color-primary-900: oklch(44% 0.068 155);
-  --color-primary-950: oklch(38% 0.068 155);
+  --color-primary-950: oklch(38% 0.054 155);
 
   /* Secondary */
-  --color-secondary-50: oklch(95% 0.008 150);
-  --color-secondary-100: oklch(90% 0.008 150);
-  --color-secondary-200: oklch(85% 0.013 150);
-  --color-secondary-300: oklch(80% 0.019 150);
+  --color-secondary-50: oklch(95% 0.007 150);
+  --color-secondary-100: oklch(90% 0.007 150);
+  --color-secondary-200: oklch(85% 0.012 150);
+  --color-secondary-300: oklch(80% 0.018 150);
   --color-secondary-400: oklch(74% 0.022 150);
   --color-secondary-500: oklch(68% 0.022 150); /* base */
   --color-secondary-600: oklch(62% 0.022 150);
   --color-secondary-700: oklch(56% 0.022 150);
   --color-secondary-800: oklch(50% 0.022 150);
   --color-secondary-900: oklch(44% 0.022 150);
-  --color-secondary-950: oklch(38% 0.022 150);
+  --color-secondary-950: oklch(38% 0.018 150);
 
   /* Accent */
-  --color-accent-50: oklch(95% 0.04 38);
-  --color-accent-100: oklch(90% 0.04 38);
-  --color-accent-200: oklch(85% 0.069 38);
-  --color-accent-300: oklch(80% 0.098 38);
+  --color-accent-50: oklch(95% 0.037 38);
+  --color-accent-100: oklch(90% 0.037 38);
+  --color-accent-200: oklch(85% 0.063 38);
+  --color-accent-300: oklch(80% 0.092 38);
   --color-accent-400: oklch(74% 0.115 38);
   --color-accent-500: oklch(68% 0.115 38); /* base */
   --color-accent-600: oklch(62% 0.115 38);
   --color-accent-700: oklch(56% 0.115 38);
   --color-accent-800: oklch(50% 0.115 38);
   --color-accent-900: oklch(44% 0.115 38);
-  --color-accent-950: oklch(38% 0.115 38);
+  --color-accent-950: oklch(38% 0.092 38);
 
   /* Success */
-  --color-success-50: oklch(95% 0.044 142);
-  --color-success-100: oklch(90% 0.044 142);
-  --color-success-200: oklch(85% 0.075 142);
-  --color-success-300: oklch(80% 0.106 142);
+  --color-success-50: oklch(95% 0.04 142);
+  --color-success-100: oklch(90% 0.04 142);
+  --color-success-200: oklch(85% 0.069 142);
+  --color-success-300: oklch(80% 0.1 142);
   --color-success-400: oklch(74% 0.125 142);
   --color-success-500: oklch(68% 0.125 142); /* base */
   --color-success-600: oklch(62% 0.125 142);
   --color-success-700: oklch(56% 0.125 142);
   --color-success-800: oklch(50% 0.125 142);
   --color-success-900: oklch(44% 0.125 142);
-  --color-success-950: oklch(38% 0.125 142);
+  --color-success-950: oklch(38% 0.1 142);
 
   /* Warning */
-  --color-warning-50: oklch(95% 0.042 75);
-  --color-warning-100: oklch(90% 0.042 75);
-  --color-warning-200: oklch(85% 0.072 75);
-  --color-warning-300: oklch(80% 0.102 75);
+  --color-warning-50: oklch(95% 0.038 75);
+  --color-warning-100: oklch(90% 0.038 75);
+  --color-warning-200: oklch(85% 0.066 75);
+  --color-warning-300: oklch(80% 0.096 75);
   --color-warning-400: oklch(74% 0.12 75);
   --color-warning-500: oklch(68% 0.12 75); /* base */
   --color-warning-600: oklch(62% 0.12 75);
   --color-warning-700: oklch(56% 0.12 75);
   --color-warning-800: oklch(50% 0.12 75);
   --color-warning-900: oklch(44% 0.12 75);
-  --color-warning-950: oklch(38% 0.12 75);
+  --color-warning-950: oklch(38% 0.096 75);
 
   /* Error */
-  --color-error-50: oklch(95% 0.054 25);
-  --color-error-100: oklch(90% 0.054 25);
-  --color-error-200: oklch(85% 0.093 25);
-  --color-error-300: oklch(80% 0.132 25);
+  --color-error-50: oklch(95% 0.05 25);
+  --color-error-100: oklch(90% 0.05 25);
+  --color-error-200: oklch(85% 0.085 25);
+  --color-error-300: oklch(80% 0.124 25);
   --color-error-400: oklch(74% 0.155 25);
   --color-error-500: oklch(68% 0.155 25); /* base */
   --color-error-600: oklch(62% 0.155 25);
   --color-error-700: oklch(56% 0.155 25);
   --color-error-800: oklch(50% 0.155 25);
   --color-error-900: oklch(44% 0.155 25);
-  --color-error-950: oklch(38% 0.155 25);
+  --color-error-950: oklch(38% 0.124 25);
 
   /* Info */
-  --color-info-50: oklch(95% 0.038 230);
-  --color-info-100: oklch(90% 0.038 230);
-  --color-info-200: oklch(85% 0.066 230);
-  --color-info-300: oklch(80% 0.093 230);
+  --color-info-50: oklch(95% 0.035 230);
+  --color-info-100: oklch(90% 0.035 230);
+  --color-info-200: oklch(85% 0.061 230);
+  --color-info-300: oklch(80% 0.088 230);
   --color-info-400: oklch(74% 0.11 230);
   --color-info-500: oklch(68% 0.11 230); /* base */
   --color-info-600: oklch(62% 0.11 230);
   --color-info-700: oklch(56% 0.11 230);
   --color-info-800: oklch(50% 0.11 230);
   --color-info-900: oklch(44% 0.11 230);
-  --color-info-950: oklch(38% 0.11 230);
+  --color-info-950: oklch(38% 0.088 230);
 
   /* Neutres */
   --color-gray-50: oklch(98% 0.003 95);
@@ -178,95 +209,95 @@
   --color-info: oklch(72% 0.11 230);
 
   /* Primary */
-  --color-primary-50: oklch(38% 0.068 155);
-  --color-primary-100: oklch(44% 0.068 155);
-  --color-primary-200: oklch(50% 0.068 155);
-  --color-primary-300: oklch(56% 0.068 155);
-  --color-primary-400: oklch(62% 0.068 155);
+  --color-primary-50: oklch(25% 0.022 155);
+  --color-primary-100: oklch(30% 0.037 155);
+  --color-primary-200: oklch(36% 0.054 155);
+  --color-primary-300: oklch(45% 0.068 155);
+  --color-primary-400: oklch(55% 0.068 155);
   --color-primary-500: oklch(68% 0.068 155); /* base */
   --color-primary-600: oklch(74% 0.068 155);
-  --color-primary-700: oklch(80% 0.058 155);
-  --color-primary-800: oklch(85% 0.041 155);
-  --color-primary-900: oklch(90% 0.024 155);
-  --color-primary-950: oklch(95% 0.024 155);
+  --color-primary-700: oklch(80% 0.054 155);
+  --color-primary-800: oklch(85% 0.037 155);
+  --color-primary-900: oklch(90% 0.022 155);
+  --color-primary-950: oklch(95% 0.022 155);
 
   /* Secondary */
-  --color-secondary-50: oklch(38% 0.022 150);
-  --color-secondary-100: oklch(44% 0.022 150);
-  --color-secondary-200: oklch(50% 0.022 150);
-  --color-secondary-300: oklch(56% 0.022 150);
-  --color-secondary-400: oklch(62% 0.022 150);
+  --color-secondary-50: oklch(25% 0.007 150);
+  --color-secondary-100: oklch(30% 0.012 150);
+  --color-secondary-200: oklch(36% 0.018 150);
+  --color-secondary-300: oklch(45% 0.022 150);
+  --color-secondary-400: oklch(55% 0.022 150);
   --color-secondary-500: oklch(68% 0.022 150); /* base */
   --color-secondary-600: oklch(74% 0.022 150);
-  --color-secondary-700: oklch(80% 0.019 150);
-  --color-secondary-800: oklch(85% 0.013 150);
-  --color-secondary-900: oklch(90% 0.008 150);
-  --color-secondary-950: oklch(95% 0.008 150);
+  --color-secondary-700: oklch(80% 0.018 150);
+  --color-secondary-800: oklch(85% 0.012 150);
+  --color-secondary-900: oklch(90% 0.007 150);
+  --color-secondary-950: oklch(95% 0.007 150);
 
   /* Accent */
-  --color-accent-50: oklch(38% 0.115 38);
-  --color-accent-100: oklch(44% 0.115 38);
-  --color-accent-200: oklch(50% 0.115 38);
-  --color-accent-300: oklch(56% 0.115 38);
-  --color-accent-400: oklch(62% 0.115 38);
+  --color-accent-50: oklch(25% 0.037 38);
+  --color-accent-100: oklch(30% 0.063 38);
+  --color-accent-200: oklch(36% 0.092 38);
+  --color-accent-300: oklch(45% 0.115 38);
+  --color-accent-400: oklch(55% 0.115 38);
   --color-accent-500: oklch(68% 0.115 38); /* base */
   --color-accent-600: oklch(74% 0.115 38);
-  --color-accent-700: oklch(80% 0.098 38);
-  --color-accent-800: oklch(85% 0.069 38);
-  --color-accent-900: oklch(90% 0.04 38);
-  --color-accent-950: oklch(95% 0.04 38);
+  --color-accent-700: oklch(80% 0.092 38);
+  --color-accent-800: oklch(85% 0.063 38);
+  --color-accent-900: oklch(90% 0.037 38);
+  --color-accent-950: oklch(95% 0.037 38);
 
   /* Success */
-  --color-success-50: oklch(38% 0.125 142);
-  --color-success-100: oklch(44% 0.125 142);
-  --color-success-200: oklch(50% 0.125 142);
-  --color-success-300: oklch(56% 0.125 142);
-  --color-success-400: oklch(62% 0.125 142);
+  --color-success-50: oklch(25% 0.04 142);
+  --color-success-100: oklch(30% 0.069 142);
+  --color-success-200: oklch(36% 0.1 142);
+  --color-success-300: oklch(45% 0.125 142);
+  --color-success-400: oklch(55% 0.125 142);
   --color-success-500: oklch(68% 0.125 142); /* base */
   --color-success-600: oklch(74% 0.125 142);
-  --color-success-700: oklch(80% 0.106 142);
-  --color-success-800: oklch(85% 0.075 142);
-  --color-success-900: oklch(90% 0.044 142);
-  --color-success-950: oklch(95% 0.044 142);
+  --color-success-700: oklch(80% 0.1 142);
+  --color-success-800: oklch(85% 0.069 142);
+  --color-success-900: oklch(90% 0.04 142);
+  --color-success-950: oklch(95% 0.04 142);
 
   /* Warning */
-  --color-warning-50: oklch(38% 0.12 75);
-  --color-warning-100: oklch(44% 0.12 75);
-  --color-warning-200: oklch(50% 0.12 75);
-  --color-warning-300: oklch(56% 0.12 75);
-  --color-warning-400: oklch(62% 0.12 75);
+  --color-warning-50: oklch(25% 0.038 75);
+  --color-warning-100: oklch(30% 0.066 75);
+  --color-warning-200: oklch(36% 0.096 75);
+  --color-warning-300: oklch(45% 0.12 75);
+  --color-warning-400: oklch(55% 0.12 75);
   --color-warning-500: oklch(68% 0.12 75); /* base */
   --color-warning-600: oklch(74% 0.12 75);
-  --color-warning-700: oklch(80% 0.102 75);
-  --color-warning-800: oklch(85% 0.072 75);
-  --color-warning-900: oklch(90% 0.042 75);
-  --color-warning-950: oklch(95% 0.042 75);
+  --color-warning-700: oklch(80% 0.096 75);
+  --color-warning-800: oklch(85% 0.066 75);
+  --color-warning-900: oklch(90% 0.038 75);
+  --color-warning-950: oklch(95% 0.038 75);
 
   /* Error */
-  --color-error-50: oklch(38% 0.155 25);
-  --color-error-100: oklch(44% 0.155 25);
-  --color-error-200: oklch(50% 0.155 25);
-  --color-error-300: oklch(56% 0.155 25);
-  --color-error-400: oklch(62% 0.155 25);
+  --color-error-50: oklch(25% 0.05 25);
+  --color-error-100: oklch(30% 0.085 25);
+  --color-error-200: oklch(36% 0.124 25);
+  --color-error-300: oklch(45% 0.155 25);
+  --color-error-400: oklch(55% 0.155 25);
   --color-error-500: oklch(68% 0.155 25); /* base */
   --color-error-600: oklch(74% 0.155 25);
-  --color-error-700: oklch(80% 0.132 25);
-  --color-error-800: oklch(85% 0.093 25);
-  --color-error-900: oklch(90% 0.054 25);
-  --color-error-950: oklch(95% 0.054 25);
+  --color-error-700: oklch(80% 0.124 25);
+  --color-error-800: oklch(85% 0.085 25);
+  --color-error-900: oklch(90% 0.05 25);
+  --color-error-950: oklch(95% 0.05 25);
 
   /* Info */
-  --color-info-50: oklch(38% 0.11 230);
-  --color-info-100: oklch(44% 0.11 230);
-  --color-info-200: oklch(50% 0.11 230);
-  --color-info-300: oklch(56% 0.11 230);
-  --color-info-400: oklch(62% 0.11 230);
+  --color-info-50: oklch(25% 0.035 230);
+  --color-info-100: oklch(30% 0.061 230);
+  --color-info-200: oklch(36% 0.088 230);
+  --color-info-300: oklch(45% 0.11 230);
+  --color-info-400: oklch(55% 0.11 230);
   --color-info-500: oklch(68% 0.11 230); /* base */
   --color-info-600: oklch(74% 0.11 230);
-  --color-info-700: oklch(80% 0.093 230);
-  --color-info-800: oklch(85% 0.066 230);
-  --color-info-900: oklch(90% 0.038 230);
-  --color-info-950: oklch(95% 0.038 230);
+  --color-info-700: oklch(80% 0.088 230);
+  --color-info-800: oklch(85% 0.061 230);
+  --color-info-900: oklch(90% 0.035 230);
+  --color-info-950: oklch(95% 0.035 230);
 
   /* Neutres */
   --color-gray-50: oklch(15% 0.003 155);
