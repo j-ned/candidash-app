@@ -70,9 +70,9 @@ export const STATUS_CONFIG: Record<JobStatus, {
   emoji: string; label: string; labelShort: string; badgeClass: string; hoverClass: string;
 }> = {
   TO_APPLY:  { emoji: '🔖', label: 'Repérée',            labelShort: 'Repérée',        badgeClass: 'bg-muted/15 text-muted border-muted/30', hoverClass: 'hover:bg-muted/15 hover:text-muted hover:border-muted/40' },
-  APPLIED:   { emoji: '📤', label: 'Candidature envoyée', labelShort: 'Envoyée',        badgeClass: 'bg-blue-500/15 text-blue-600 border-blue-500/30', hoverClass: 'hover:bg-blue-500/15 hover:text-blue-500 hover:border-blue-500/40' },
-  INTERVIEW: { emoji: '🤝', label: 'Entretien prévu',     labelShort: 'Entretien prévu', badgeClass: 'bg-primary/15 text-primary border-primary/30', hoverClass: 'hover:bg-primary/15 hover:text-primary hover:border-primary/40' },
-  ACCEPTED:  { emoji: '🎉', label: 'Acceptée',            labelShort: 'Acceptée',  badgeClass: 'bg-green-500/15 text-green-600 border-green-500/30', hoverClass: 'hover:bg-green-500/15 hover:text-green-500 hover:border-green-500/40' },
+  APPLIED:   { emoji: '📤', label: 'Candidature envoyée', labelShort: 'Envoyée',        badgeClass: 'bg-info/15 text-info border-info/30', hoverClass: 'hover:bg-info/15 hover:text-info hover:border-info/40' },
+  INTERVIEW: { emoji: '🤝', label: 'Entretien prévu',     labelShort: 'Entretien prévu', badgeClass: 'bg-accent/15 text-accent border-accent/30', hoverClass: 'hover:bg-accent/15 hover:text-accent hover:border-accent/40' },
+  ACCEPTED:  { emoji: '🎉', label: 'Acceptée',            labelShort: 'Acceptée',  badgeClass: 'bg-success/15 text-success border-success/30', hoverClass: 'hover:bg-success/15 hover:text-success hover:border-success/40' },
   REJECTED:  { emoji: '❌', label: 'Refusée',             labelShort: 'Refusée',   badgeClass: 'bg-error/15 text-error border-error/30', hoverClass: 'hover:bg-error/15 hover:text-error hover:border-error/40' },
 };
 

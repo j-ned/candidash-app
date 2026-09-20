@@ -58,7 +58,7 @@ export type PdfViewerModalData = {
           <button
             type="button"
             (click)="onDownload()"
-            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary border border-primary rounded-lg hover:bg-primary-600 hover:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ease-in-out active:scale-95"
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-on-primary bg-primary border border-primary rounded-lg hover:bg-primary-600 hover:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ease-in-out active:scale-95"
           >
             <app-icon name="lucide-download" cssClass="w-4 h-4" />
             Telecharger

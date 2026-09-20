@@ -56,7 +56,7 @@ import { Icon } from '@shared/ui/icon/icon';
       <footer class="p-6 text-center">
         <button
           (click)="goToSignup()"
-          class="inline-flex items-center px-8 py-4 bg-primary text-white rounded-lg font-semibold text-lg hover:bg-primary/90 transition-colors shadow-lg"
+          class="inline-flex items-center px-8 py-4 bg-primary text-on-primary rounded-lg font-semibold text-lg hover:bg-primary/90 transition-colors shadow-lg"
         >
           <svg class="w-6 h-6 mr-2" aria-hidden="true" focusable="false" stroke="currentColor" viewBox="0 0 24 24">
             <path
