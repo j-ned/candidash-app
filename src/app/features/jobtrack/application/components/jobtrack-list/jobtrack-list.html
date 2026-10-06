@@ -17,6 +17,7 @@
     @for (status of statusFilters(); track status.value) {
       <button
         type="button"
+        [attr.data-testid]="'status-filter-' + status.value"
         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         [class]="selectedStatus() === status.value ? status.activeClass : status.inactiveClass"
         [attr.aria-pressed]="selectedStatus() === status.value"
@@ -134,7 +135,7 @@
                 >
                   <span aria-hidden="true">{{ job.statusEmoji }}</span>
                   <span class="hidden sm:inline">{{ job.statusLabelLong }}</span>
-                  <span class="sm:hidden">{{ job.statusLabelShort }}</span>
+                  <span class="sm:hidden" data-testid="job-status-short">{{ job.statusLabelShort }}</span>
                 </span>
                 <button
                   type="button"
