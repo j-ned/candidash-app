@@ -24,6 +24,7 @@ type StatusOrAll = JobStatus | 'all';
 
 const STATUS_LABELS: Record<string, string> = {
   all: 'toutes',
+  TO_APPLY: 'repérée',
   APPLIED: 'envoyée',
   INTERVIEW: 'entretien prévu',
   ACCEPTED: 'acceptée',
@@ -31,6 +32,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 const SHORT_LABELS: Record<string, string> = {
   all: 'Toutes',
+  TO_APPLY: 'Repérées',
   APPLIED: 'Envoyées',
   INTERVIEW: 'Entretiens prévus',
   ACCEPTED: 'Acceptées',
@@ -38,6 +40,7 @@ const SHORT_LABELS: Record<string, string> = {
 };
 const EMPTY_STATE_MESSAGES: Record<string, string> = {
   all: "Commencez par ajouter votre première candidature et organisez votre recherche d'emploi efficacement.",
+  TO_APPLY: "Aucune offre repérée pour l'instant. Notez celles qui vous intéressent avant de postuler !",
   APPLIED: "Vous n'avez pas encore de candidatures envoyées. C'est le moment de postuler !",
   INTERVIEW: "Pas d'entretiens prévus pour le moment. Continuez vos candidatures !",
   ACCEPTED: 'Aucune offre acceptée encore. Persévérez, le succès est proche !',
@@ -54,6 +57,7 @@ const DATE_FMT_SHORT = new Intl.DateTimeFormat('fr-FR', {
 });
 const STATUS_FILTERS = [
   { value: 'all', activeClass: 'bg-primary text-on-primary', inactiveClass: 'bg-card border border-border text-muted hover:text-primary hover:border-primary/40 hover:bg-accent/15' },
+  { value: 'TO_APPLY', activeClass: 'bg-muted text-background', inactiveClass: 'bg-card border border-border text-muted hover:text-text hover:border-muted/40 hover:bg-muted/15' },
   { value: 'APPLIED', activeClass: 'bg-info text-on-primary', inactiveClass: 'bg-card border border-border text-muted hover:text-info hover:border-info/40 hover:bg-info/15' },
   { value: 'INTERVIEW', activeClass: 'bg-accent text-on-accent', inactiveClass: 'bg-card border border-border text-muted hover:text-accent hover:border-accent/40 hover:bg-accent/15' },
   { value: 'ACCEPTED', activeClass: 'bg-success text-on-primary', inactiveClass: 'bg-card border border-border text-muted hover:text-success hover:border-success/40 hover:bg-success/15' },
@@ -165,7 +169,7 @@ export class JobtrackList {
   }
 
   private reminderStatusLabel(job: JobTrack): string {
-    if (!job.reminder || !job.reminder.isActive) return '';
+    if (!job.reminder?.isActive) return '';
     const next = new Date(job.reminder.nextReminderAt);
     const now = new Date();
     if (next < now) return 'En retard';
