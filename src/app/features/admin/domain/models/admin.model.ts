@@ -22,13 +22,19 @@ export type RankedEntry = {
   count: number;
 };
 
+/** label null = accès direct ou origine masquée (applis, messageries, favoris). */
+export type SourceEntry = {
+  label: string | null;
+  count: number;
+};
+
 export type AnalyticsStats = {
   days: number;
   visitors: number;
   pageviews: number;
   daily: DailyVisits[];
   topPages: RankedEntry[];
-  topReferrers: RankedEntry[];
+  topSources: SourceEntry[];
 };
 
 export type AnalyticsPeriod = 7 | 30 | 90;

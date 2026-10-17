@@ -3,6 +3,12 @@ import type { AnalyticsStats, RankedEntry } from '../../domain/models/admin.mode
 
 const CHART_HEIGHT = 160;
 const DAY_FORMAT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+const DIRECT_LABEL = 'Accès direct ou origine masquée';
+const TAG_EXAMPLES = [
+  'https://candidash.nedellec-julien.fr/?utm_source=linkedin',
+  'https://candidash.nedellec-julien.fr/?utm_source=whatsapp',
+  'https://candidash.nedellec-julien.fr/?utm_source=cv',
+];
 
 /** Histogramme en SVG fait main : une barre par jour, doublé d'un tableau pour les lecteurs d'écran. */
 @Component({
@@ -100,27 +106,47 @@ const DAY_FORMAT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'sh
         </ol>
       </section>
 
-      <section aria-labelledby="admin-top-referrers-title">
-        <h3 id="admin-top-referrers-title" class="mb-3 text-sm font-medium text-text">
-          Sources (visiteurs)
+      <section aria-labelledby="admin-sources-title">
+        <h3 id="admin-sources-title" class="mb-3 text-sm font-medium text-text">
+          D'où viennent les visiteurs
         </h3>
-        <ol class="space-y-2" data-testid="admin-top-referrers">
-          @for (entry of topReferrers(); track entry.label) {
+        <ol class="space-y-2" data-testid="admin-sources">
+          @for (entry of sources(); track entry.name) {
             <li class="relative overflow-hidden rounded-lg border border-border px-3 py-2 text-sm">
               <span
-                class="absolute inset-y-0 left-0 bg-accent/10"
+                class="absolute inset-y-0 left-0"
+                [class]="entry.direct ? 'bg-border/40' : 'bg-accent/10'"
                 [style.width.%]="entry.share"
                 aria-hidden="true"
               ></span>
               <span class="relative flex justify-between gap-3">
-                <span class="truncate">{{ entry.label }}</span>
+                <span class="truncate" [class.text-muted]="entry.direct">{{ entry.name }}</span>
                 <span class="tabular-nums text-muted">{{ entry.count }}</span>
               </span>
             </li>
           } @empty {
-            <li class="text-sm text-muted">Pas de source externe : accès direct uniquement.</li>
+            <li class="text-sm text-muted">Aucun visiteur sur la période.</li>
           }
         </ol>
+        <details class="mt-3 text-sm text-muted">
+          <summary class="cursor-pointer hover:text-text">Pourquoi « accès direct » ?</summary>
+          <div class="mt-2 space-y-2 leading-relaxed">
+            <p>
+              Les applis (LinkedIn, Gmail, WhatsApp…), les favoris et les adresses tapées à la main
+              ne transmettent pas leur origine. Pour la connaître, ajoute un tag aux liens que tu
+              partages :
+            </p>
+            <ul class="space-y-1">
+              @for (example of tagExamples; track example) {
+                <li>
+                  <code class="rounded bg-surface-100 px-1.5 py-0.5 text-xs text-text">{{
+                    example
+                  }}</code>
+                </li>
+              }
+            </ul>
+          </div>
+        </details>
       </section>
     </div>
   `,
@@ -159,7 +185,17 @@ export class AdminTraffic {
   });
 
   protected readonly topPages = computed(() => withShare(this.stats().topPages));
-  protected readonly topReferrers = computed(() => withShare(this.stats().topReferrers));
+  protected readonly sources = computed(() => {
+    const max = Math.max(1, ...this.stats().topSources.map((entry) => entry.count));
+    return this.stats().topSources.map((entry) => ({
+      name: entry.label ?? DIRECT_LABEL,
+      direct: entry.label === null,
+      count: entry.count,
+      share: Math.round((entry.count / max) * 100),
+    }));
+  });
+
+  protected readonly tagExamples = TAG_EXAMPLES;
 }
 
 function withShare(entries: RankedEntry[]): (RankedEntry & { share: number })[] {
