@@ -40,7 +40,10 @@ describe('AdminDashboard', () => {
       { date: '2026-10-17', visitors: 3, pageviews: 8 },
     ],
     topPages: [{ label: '/', count: 7 }],
-    topReferrers: [{ label: 'www.google.com', count: 2 }],
+    topSources: [
+      { label: 'Google', count: 2 },
+      { label: null, count: 1 },
+    ],
   };
 
   async function setup(): Promise<ComponentFixture<AdminDashboard>> {
@@ -103,7 +106,9 @@ describe('AdminDashboard', () => {
     expect(byTestId(fixture, 'admin-visitors').textContent).toContain('5');
     expect(byTestId(fixture, 'admin-pageviews').textContent).toContain('12');
     expect(fixture.nativeElement.querySelectorAll('[data-testid="admin-day-row"]').length).toBe(2);
-    expect(byTestId(fixture, 'admin-top-referrers').textContent).toContain('www.google.com');
+    const sources = byTestId(fixture, 'admin-sources').textContent;
+    expect(sources).toContain('Google');
+    expect(sources).toContain('Accès direct ou origine masquée');
   });
 
   it('reloads the statistics for another period', async () => {
