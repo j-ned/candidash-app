@@ -142,7 +142,7 @@ describe('JobtrackFormPage', () => {
   });
 
   describe('invalid submit', () => {
-    it('calls nothing', async () => {
+    it('calls nothing and reveals the title error', async () => {
       // Given
       const fixture = await setup();
 
@@ -151,6 +151,16 @@ describe('JobtrackFormPage', () => {
 
       // Then
       expect(gateway.createWithReminder).not.toHaveBeenCalled();
+      expect(byTestId(fixture, 'jobtrack-title-error')).not.toBeNull();
+      expect(byTestId(fixture, 'jobtrack-title').getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('keeps the submit button enabled while the form is invalid', async () => {
+      // Given / When
+      const fixture = await setup();
+
+      // Then
+      expect(submitButton(fixture).disabled).toBe(false);
     });
   });
 
