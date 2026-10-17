@@ -7,23 +7,26 @@ import {
   signal,
   OnDestroy,
 } from '@angular/core';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormField, FormRoot, form, maxLength, pattern, required } from '@angular/forms/signals';
 import { Button } from '@shared/ui/button/button';
+import { FieldError } from '@shared/ui/field-error/field-error';
+import { focusFirstInvalid } from '@shared/forms/focus-first-invalid';
 import { AuthState } from '@features/auth/application/auth-state';
 import { startCooldownTimer, clearCooldownTimer } from '@shared/utils/cooldown';
 import type { VerificationModalData } from './verification-modal';
 import { Icon } from '@shared/ui/icon/icon';
-import { verificationCodeValidator } from '@shared/validators/verification-code.validator';
 
-type VerificationModalForm = {
-  verificationCode: FormControl<string>;
-};
+const CODE_LENGTH = 6;
 
 @Component({
   selector: 'app-verification-modal-view',
-  imports: [ReactiveFormsModule, Button, Icon],
+  imports: [FormRoot, FormField, FieldError, Button, Icon],
   template: `
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" (click)="onCancel()" aria-hidden="true"></div>
+    <div
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+      (click)="onCancel()"
+      aria-hidden="true"
+    ></div>
 
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -35,10 +38,13 @@ type VerificationModalForm = {
         class="relative bg-background border border-border rounded-xl shadow-2xl max-w-md w-full mx-auto overflow-hidden"
       >
         <header class="flex items-center justify-between p-6 pb-0">
-          <h2 id="verification-modal-title" class="text-xl font-bold text-text">Validation de l'inscription</h2>
+          <h2 id="verification-modal-title" class="text-xl font-bold text-text">
+            Validation de l'inscription
+          </h2>
           <button
             type="button"
             class="p-2 text-muted hover:text-text hover:bg-surface rounded-md transition-colors duration-200"
+            data-testid="verification-modal-close"
             (click)="onCancel()"
             aria-label="Fermer"
           >
@@ -53,40 +59,38 @@ type VerificationModalForm = {
             <strong class="text-text font-semibold">{{ data().email }}</strong>
           </p>
 
-          <form [formGroup]="verificationForm" (ngSubmit)="onSubmit()" class="mb-6">
+          <form data-testid="verification-modal-form" [formRoot]="verificationForm" class="mb-6">
             <div class="mb-4">
+              @let codeInError =
+                verificationForm.verificationCode().touched() &&
+                verificationForm.verificationCode().invalid();
               <label for="verificationCode" class="block text-sm font-medium text-text mb-2">
-                Code de validation <span class="text-error">*</span>
+                Code de validation <span aria-hidden="true" class="text-error">*</span>
               </label>
               <input
                 id="verificationCode"
+                data-testid="verification-modal-code"
                 type="text"
-                formControlName="verificationCode"
-                maxlength="6"
-                pattern="[0-9]{6}"
-                class="w-full px-4 py-3 border rounded-lg bg-background text-text text-center text-lg font-mono tracking-widest transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                [class.border-error]="isFieldInvalid('verificationCode')"
-                [class.border-input]="!isFieldInvalid('verificationCode')"
+                [formField]="verificationForm.verificationCode"
+                aria-required="true"
+                [attr.aria-invalid]="codeInError"
+                [attr.aria-describedby]="codeInError ? 'verification-modal-code-error' : null"
+                class="w-full px-4 py-3 border border-input rounded-lg bg-background text-text text-center text-lg font-mono tracking-widest transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary aria-invalid:border-error"
                 placeholder="123456"
                 autocomplete="one-time-code"
               />
-              @if (isFieldInvalid('verificationCode')) {
-                <p class="text-error text-xs mt-1" role="alert">
-                  @if (verificationForm.controls.verificationCode.errors?.['required']) {
-                    Le code de validation est requis
-                  } @else if (
-                    verificationForm.controls.verificationCode.errors?.['invalidCode']
-                  ) {
-                    Le code doit être composé de 6 chiffres
-                  }
-                </p>
-              }
+              <app-field-error
+                [field]="verificationForm.verificationCode"
+                errorId="verification-modal-code-error"
+                testId="verification-modal-code-error"
+              />
             </div>
 
             <app-button
+              data-testid="verification-modal-submit"
               type="submit"
               color="primary"
-              [disabled]="verificationForm.invalid"
+              [disabled]="authService.isLoading() || verificationForm().submitting()"
               [isLoading]="authService.isLoading()"
               customClass="w-full py-3 text-base font-semibold"
             >
@@ -103,6 +107,7 @@ type VerificationModalForm = {
 
             <button
               type="button"
+              data-testid="verification-modal-resend"
               (click)="onResend()"
               [disabled]="authService.isLoading() || resendCooldown() > 0"
               class="text-primary-800 hover:text-primary-900 font-medium text-sm underline underline-offset-4 hover:no-underline px-4 py-2 rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline hover:bg-primary/10"
@@ -136,22 +141,32 @@ export class VerificationModalView implements OnDestroy {
   readonly resendCooldown = signal<number>(0);
   private cooldownInterval: ReturnType<typeof setInterval> | null = null;
 
-  readonly verificationForm = new FormGroup<VerificationModalForm>({
-    verificationCode: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, verificationCodeValidator],
-    }),
-  });
+  private readonly model = signal({ verificationCode: '' });
+
+  readonly verificationForm = form(
+    this.model,
+    (path) => {
+      required(path.verificationCode, { message: 'Le code de validation est requis' });
+      pattern(path.verificationCode, /^\d{6}$/, {
+        message: 'Le code doit être composé de 6 chiffres',
+      });
+      // Pose l'attribut natif maxlength : la saisie s'arrête à 6 caractères
+      maxLength(path.verificationCode, CODE_LENGTH, {
+        message: 'Le code doit être composé de 6 chiffres',
+      });
+    },
+    {
+      submission: {
+        action: async () => {
+          this.verificationSubmitted.emit(this.model().verificationCode);
+        },
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
+  );
 
   ngOnDestroy(): void {
     clearCooldownTimer(this.cooldownInterval);
-  }
-
-  onSubmit(): void {
-    if (this.verificationForm.valid) {
-      const { verificationCode } = this.verificationForm.getRawValue();
-      this.verificationSubmitted.emit(verificationCode);
-    }
   }
 
   onResend(): void {
@@ -165,10 +180,5 @@ export class VerificationModalView implements OnDestroy {
 
   private startCooldown(): void {
     this.cooldownInterval = startCooldownTimer(this.resendCooldown, 60);
-  }
-
-  isFieldInvalid(fieldName: keyof VerificationModalForm): boolean {
-    const field = this.verificationForm.controls[fieldName];
-    return field.invalid && field.touched;
   }
 }

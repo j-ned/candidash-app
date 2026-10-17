@@ -1,27 +1,41 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  computed,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import {
+  FormField,
+  FormRoot,
+  email,
+  form,
+  minLength,
+  pattern,
+  required,
+  validate,
+} from '@angular/forms/signals';
 import { Button } from '@shared/ui/button/button';
+import { FieldError } from '@shared/ui/field-error/field-error';
+import { focusFirstInvalid } from '@shared/forms/focus-first-invalid';
 import { AuthState } from '@features/auth/application/auth-state';
 import type { RegisterData } from '@features/auth/domain/models/auth.model';
 import { VerificationModal } from '@shared/ui/verification-modal/verification-modal';
 import { Icon } from '@shared/ui/icon/icon';
-import { passwordMatchValidator } from '@shared/validators/password-match.validator';
 
-type SignupForm = {
-  email: FormControl<string>;
-  username: FormControl<string>;
-  password: FormControl<string>;
-  confirmPassword: FormControl<string>;
-};
+const EMPTY_SIGNUP = { email: '', username: '', password: '', confirmPassword: '' };
 
 @Component({
   selector: 'app-signup',
-  imports: [ReactiveFormsModule, Button, Icon, RouterLink],
+  imports: [FormRoot, FormField, FieldError, Button, Icon, RouterLink],
   templateUrl: './signup.html',
   host: {
-    class: 'block w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
+    class:
+      'block w-full max-w-sm mx-auto px-4 py-3 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
     role: 'region',
     '[attr.aria-labelledby]': '"signup-title"',
   },
@@ -36,125 +50,61 @@ export class Signup {
   readonly showPassword = signal(false);
   readonly showConfirmPassword = signal(false);
 
-  readonly signupForm = new FormGroup<SignupForm>(
-    {
-      email: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required, Validators.email],
-      }),
-      username: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9_]+$/)],
-      }),
-      password: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required, Validators.minLength(6)],
-      }),
-      confirmPassword: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required],
-      }),
+  private readonly model = signal({ ...EMPTY_SIGNUP });
+
+  readonly signupForm = form(
+    this.model,
+    (path) => {
+      required(path.email, { message: "L'email est requis" });
+      email(path.email, { message: 'Veuillez entrer un email valide' });
+      // Nom d'utilisateur optionnel : minLength et pattern ignorent la valeur vide
+      minLength(path.username, 3, {
+        message: "Le nom d'utilisateur doit contenir au moins 3 caractères",
+      });
+      pattern(path.username, /^[a-zA-Z0-9_]+$/, {
+        message: "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
+      });
+      required(path.password, { message: 'Le mot de passe est requis' });
+      minLength(path.password, 6, {
+        message: 'Le mot de passe doit contenir au moins 6 caractères',
+      });
+      required(path.confirmPassword, {
+        message: 'La confirmation du mot de passe est requise',
+      });
+      // Validation croisée : l'erreur vit sur la confirmation, le champ que l'utilisateur corrige
+      validate(path.confirmPassword, ({ value, valueOf }) =>
+        value() === valueOf(path.password)
+          ? null
+          : { kind: 'passwordMismatch', message: 'Les mots de passe ne correspondent pas' },
+      );
     },
-    { validators: passwordMatchValidator('password', 'confirmPassword') },
+    {
+      submission: {
+        action: () => this.createAccount(),
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
   );
-
-  private readonly emailEvents = toSignal(this.signupForm.controls.email.events);
-  private readonly usernameEvents = toSignal(
-    this.signupForm.controls.username.events,
-  );
-  private readonly passwordEvents = toSignal(
-    this.signupForm.controls.password.events,
-  );
-  private readonly confirmEvents = toSignal(
-    this.signupForm.controls.confirmPassword.events,
-  );
-
-  protected readonly emailError = computed(() => {
-    this.emailEvents();
-    const ctrl = this.signupForm.controls.email;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return "L'email est requis";
-    if (ctrl.errors['email']) return 'Veuillez entrer un email valide';
-    return null;
-  });
-
-  protected readonly usernameError = computed(() => {
-    this.usernameEvents();
-    const ctrl = this.signupForm.controls.username;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['minlength'])
-      return "Le nom d'utilisateur doit contenir au moins 3 caractères";
-    if (ctrl.errors['pattern'])
-      return "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores";
-    return null;
-  });
-
-  protected readonly passwordError = computed(() => {
-    this.passwordEvents();
-    const ctrl = this.signupForm.controls.password;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return 'Le mot de passe est requis';
-    if (ctrl.errors['minlength'])
-      return 'Le mot de passe doit contenir au moins 6 caractères';
-    return null;
-  });
-
-  protected readonly confirmPasswordError = computed(() => {
-    this.confirmEvents();
-    this.passwordEvents(); // le mismatch dépend aussi de password
-    const ctrl = this.signupForm.controls.confirmPassword;
-    const groupMismatch = this.signupForm.errors?.['passwordMismatch'];
-    const touched = ctrl.touched || ctrl.dirty;
-    if (!touched && !groupMismatch) return null;
-    if (ctrl.errors?.['required'])
-      return 'La confirmation du mot de passe est requise';
-    if (groupMismatch) return 'Les mots de passe ne correspondent pas';
-    return null;
-  });
-
-  protected readonly emailInvalid = computed(() => {
-    this.emailEvents();
-    const f = this.signupForm.controls.email;
-    return f.invalid && f.touched;
-  });
-  protected readonly usernameInvalid = computed(() => {
-    this.usernameEvents();
-    const f = this.signupForm.controls.username;
-    return f.invalid && f.touched;
-  });
-  protected readonly passwordInvalid = computed(() => {
-    this.passwordEvents();
-    const f = this.signupForm.controls.password;
-    return f.invalid && f.touched;
-  });
-  protected readonly confirmPasswordInvalid = computed(() => {
-    this.confirmEvents();
-    const f = this.signupForm.controls.confirmPassword;
-    return f.invalid && f.touched;
-  });
 
   protected readonly submitLabel = computed(() =>
     this.authService.isLoading() ? 'Création en cours...' : 'Créer le compte',
   );
 
-  onSubmit(): void {
-    if (this.signupForm.valid) {
-      const { email, password, username } = this.signupForm.getRawValue();
-      const userData: RegisterData = {
-        email,
-        password,
-        username: username || undefined,
-      };
-
-      this.authService
-        .signup(userData)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: () => {
-            this.showVerificationModal(userData.email);
-          },
-        });
+  private async createAccount(): Promise<void> {
+    const { email, password, username } = this.model();
+    const userData: RegisterData = {
+      email,
+      password,
+      username: username || undefined,
+    };
+    try {
+      await firstValueFrom(this.authService.signup(userData));
+    } catch {
+      // Erreur déjà signalée par AuthState (toast)
+      return;
     }
+    // Non attendu : la soumission se termine, la modale de vérification prend le relais
+    void this.showVerificationModal(userData.email);
   }
 
   private async showVerificationModal(email: string): Promise<void> {
