@@ -139,6 +139,35 @@ describe('ProfileInfo', () => {
     expect(profileState.updateProfile).not.toHaveBeenCalled();
   });
 
+  it('reveals the email error and saves nothing when submitted invalid', async () => {
+    // Given
+    const fixture = setup();
+    const email = byTestId<HTMLInputElement>(fixture, 'profile-email');
+    email.value = '';
+    email.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    // When
+    await submit(fixture);
+
+    // Then
+    expect(profileState.updateProfile).not.toHaveBeenCalled();
+    expect(byTestId(fixture, 'profile-email-error').textContent).toContain('Email invalide');
+    expect(email.getAttribute('aria-invalid')).toBe('true');
+    expect(email.getAttribute('aria-describedby')).toBe('profile-email-error');
+  });
+
+  it('keeps the button enabled while the form is invalid', () => {
+    // Given
+    const fixture = setup();
+
+    // When
+    type(fixture, 'profile-email', 'pas-un-email');
+
+    // Then
+    expect(submitButton(fixture).disabled).toBe(false);
+  });
+
   it('disables the button while the profile is saving', () => {
     // Given
     const fixture = setup();
