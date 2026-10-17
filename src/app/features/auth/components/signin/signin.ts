@@ -1,33 +1,37 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom, type Observable } from 'rxjs';
+import {
+  FormField,
+  FormRoot,
+  email,
+  form,
+  maxLength,
+  minLength,
+  pattern,
+  required,
+} from '@angular/forms/signals';
 import { Button } from '@shared/ui/button/button';
+import { FieldError } from '@shared/ui/field-error/field-error';
+import { focusFirstInvalid } from '@shared/forms/focus-first-invalid';
 import { AuthState } from '@features/auth/application/auth-state';
 import type { LoginCredentials } from '@features/auth/domain/models/auth.model';
 
 import { ForgotPasswordModal } from '@shared/ui/forgot-password-modal/service/forgot-password-modal';
 import { Icon } from '@shared/ui/icon/icon';
 
-type SigninForm = {
-  email: FormControl<string>;
-  password: FormControl<string>;
-};
-
-type TotpForm = {
-  token: FormControl<string>;
-};
-
-type RecoveryForm = {
-  recoveryCode: FormControl<string>;
-};
+const TOTP_LENGTH = 6;
+const EMPTY_CREDENTIALS: LoginCredentials = { email: '', password: '' };
+const EMPTY_TOTP = { token: '' };
+const EMPTY_RECOVERY = { recoveryCode: '' };
 
 @Component({
   selector: 'app-signin',
-  imports: [ReactiveFormsModule, Button, Icon, RouterLink],
+  imports: [FormRoot, FormField, FieldError, Button, Icon, RouterLink],
   templateUrl: './signin.html',
   host: {
-    class: 'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
+    class:
+      'block w-full max-w-sm mx-auto px-4 py-6 sm:max-w-md sm:px-6 sm:py-8 md:max-w-lg lg:max-w-xl xl:max-w-2xl',
     role: 'region',
     '[attr.aria-labelledby]': '"signin-title"',
   },
@@ -36,88 +40,76 @@ type RecoveryForm = {
 export class Signin {
   private readonly router = inject(Router);
   private readonly forgotPasswordModalService = inject(ForgotPasswordModal);
-  private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthState);
 
   readonly showPassword = signal(false);
   readonly useRecoveryMode = signal(false);
 
-  readonly totpForm = new FormGroup<TotpForm>({
-    token: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.pattern(/^\d{6}$/)],
-    }),
-  });
+  private readonly credentials = signal<LoginCredentials>({ ...EMPTY_CREDENTIALS });
+  private readonly totpModel = signal({ ...EMPTY_TOTP });
+  private readonly recoveryModel = signal({ ...EMPTY_RECOVERY });
 
-  readonly recoveryForm = new FormGroup<RecoveryForm>({
-    recoveryCode: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-  });
-
-  readonly signinForm = new FormGroup<SigninForm>({
-    email: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-    password: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.minLength(6)],
-    }),
-  });
-
-  private readonly emailEvents = toSignal(this.signinForm.controls.email.events);
-  private readonly passwordEvents = toSignal(
-    this.signinForm.controls.password.events,
-  );
-  private readonly tokenEvents = toSignal(this.totpForm.controls.token.events);
-  private readonly recoveryEvents = toSignal(
-    this.recoveryForm.controls.recoveryCode.events,
+  readonly signinForm = form(
+    this.credentials,
+    (path) => {
+      required(path.email, { message: "L'email est requis" });
+      email(path.email, { message: 'Veuillez entrer un email valide' });
+      required(path.password, { message: 'Le mot de passe est requis' });
+      minLength(path.password, 6, {
+        message: 'Le mot de passe doit contenir au moins 6 caractères',
+      });
+    },
+    {
+      submission: {
+        // Navigation (succès) ou ouverture de la modale 2FA gérées par AuthState
+        action: () => {
+          const { email, password } = this.credentials();
+          return this.settle(this.authService.signin({ email, password }));
+        },
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
   );
 
-  protected readonly emailError = computed(() => {
-    this.emailEvents();
-    const ctrl = this.signinForm.controls.email;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return "L'email est requis";
-    if (ctrl.errors['email']) return 'Veuillez entrer un email valide';
-    return null;
-  });
+  readonly totpForm = form(
+    this.totpModel,
+    (path) => {
+      required(path.token, { message: 'Le code est requis' });
+      pattern(path.token, /^\d{6}$/, { message: 'Le code doit contenir exactement 6 chiffres' });
+      // Pose l'attribut natif maxlength : la saisie s'arrête à 6 caractères
+      maxLength(path.token, TOTP_LENGTH, {
+        message: 'Le code doit contenir exactement 6 chiffres',
+      });
+    },
+    {
+      submission: {
+        action: () => this.settle(this.authService.validateTotp(this.totpModel().token)),
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
+  );
 
-  protected readonly passwordError = computed(() => {
-    this.passwordEvents();
-    const ctrl = this.signinForm.controls.password;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return 'Le mot de passe est requis';
-    if (ctrl.errors['minlength'])
-      return 'Le mot de passe doit contenir au moins 6 caractères';
-    return null;
-  });
-
-  protected readonly emailInvalid = computed(() => {
-    this.emailEvents();
-    const f = this.signinForm.controls.email;
-    return f.invalid && f.touched;
-  });
-
-  protected readonly passwordInvalid = computed(() => {
-    this.passwordEvents();
-    const f = this.signinForm.controls.password;
-    return f.invalid && f.touched;
-  });
+  readonly recoveryForm = form(
+    this.recoveryModel,
+    (path) => {
+      required(path.recoveryCode, { message: 'Le code de récupération est requis' });
+    },
+    {
+      submission: {
+        action: () =>
+          this.settle(this.authService.useRecoveryCode(this.recoveryModel().recoveryCode)),
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
+  );
 
   protected readonly submitLabel = computed(() =>
     this.authService.isLoading() ? 'Connexion en cours...' : 'Se connecter',
   );
 
-  onSubmit(): void {
-    if (this.signinForm.valid) {
-      const credentials: LoginCredentials = this.signinForm.getRawValue();
-
-      this.authService.signin(credentials).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
-    }
-  }
+  protected readonly totpSubmitLabel = computed(() =>
+    this.authService.isLoading() ? 'Vérification...' : 'Vérifier',
+  );
 
   togglePasswordVisibility(): void {
     this.showPassword.update((show) => !show);
@@ -127,60 +119,33 @@ export class Signin {
     this.router.navigate(['/auth/signup']);
   }
 
-  onSubmitTotp(): void {
-    if (this.totpForm.valid) {
-      const { token } = this.totpForm.getRawValue();
-      this.authService.validateTotp(token).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
-    }
-  }
-
-  onSubmitRecovery(): void {
-    if (this.recoveryForm.valid) {
-      const { recoveryCode } = this.recoveryForm.getRawValue();
-      this.authService.useRecoveryCode(recoveryCode).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
-    }
-  }
-
   toggleRecoveryMode(): void {
     this.useRecoveryMode.update((v) => !v);
-    this.totpForm.reset();
-    this.recoveryForm.reset();
+    this.resetTwoFactorForms();
   }
 
   cancelTotp(): void {
     this.authService.clearPending2FA();
     this.useRecoveryMode.set(false);
-    this.totpForm.reset();
-    this.recoveryForm.reset();
+    this.resetTwoFactorForms();
   }
 
-  protected readonly totpSubmitLabel = computed(() =>
-    this.authService.isLoading() ? 'Vérification...' : 'Vérifier',
-  );
-
-  protected readonly tokenError = computed(() => {
-    this.tokenEvents();
-    const ctrl = this.totpForm.controls.token;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return 'Le code est requis';
-    if (ctrl.errors['pattern'])
-      return 'Le code doit contenir exactement 6 chiffres';
-    return null;
-  });
-
-  protected readonly recoveryCodeError = computed(() => {
-    this.recoveryEvents();
-    const ctrl = this.recoveryForm.controls.recoveryCode;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return 'Le code de récupération est requis';
-    return null;
-  });
-
   async openForgotPasswordModal(): Promise<void> {
-    const currentEmail = this.signinForm.controls.email.value;
-
     await this.forgotPasswordModalService.showForgotPasswordModal({
-      email: currentEmail,
+      email: this.credentials().email,
     });
+  }
+
+  private resetTwoFactorForms(): void {
+    this.totpForm().reset({ ...EMPTY_TOTP });
+    this.recoveryForm().reset({ ...EMPTY_RECOVERY });
+  }
+
+  private async settle(request: Observable<unknown>): Promise<void> {
+    try {
+      await firstValueFrom(request);
+    } catch {
+      // Erreur déjà signalée par AuthState (toast)
+    }
   }
 }
