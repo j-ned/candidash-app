@@ -37,13 +37,19 @@ import { SimpleAvatarMenu } from '../simple-avatar-menu/simple-avatar-menu';
       </main>
 
       <footer class="border-t border-border">
-        <div class="mx-auto w-full max-w-6xl px-4 py-5 text-center sm:px-6">
+        <nav
+          aria-label="Informations légales"
+          class="mx-auto flex w-full max-w-6xl justify-center gap-6 px-4 py-5 sm:px-6"
+        >
           <a
             routerLink="/terms-of-service"
             class="text-sm text-muted transition-colors hover:text-text"
             >Conditions d'utilisation</a
           >
-        </div>
+          <a routerLink="/contact" class="text-sm text-muted transition-colors hover:text-text"
+            >Contact</a
+          >
+        </nav>
       </footer>
     </div>
   `,
