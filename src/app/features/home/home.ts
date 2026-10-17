@@ -258,9 +258,14 @@ import { Reveal } from '@features/home/reveal';
         class="mx-auto flex max-w-[1180px] flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6"
       >
         <p>Candidash, {{ annee }}</p>
-        <a routerLink="/terms-of-service" class="transition-colors hover:text-text"
-          >Conditions d'utilisation</a
-        >
+        <nav aria-label="Informations légales" class="flex flex-col gap-3 sm:flex-row sm:gap-6">
+          <a routerLink="/terms-of-service" class="transition-colors hover:text-text"
+            >Conditions d'utilisation</a
+          >
+          <a routerLink="/extension-privacy" class="transition-colors hover:text-text"
+            >Confidentialité de l'extension</a
+          >
+        </nav>
       </div>
     </footer>
   `,

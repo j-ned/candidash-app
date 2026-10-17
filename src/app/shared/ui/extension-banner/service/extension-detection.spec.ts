@@ -1,19 +1,87 @@
 import { TestBed } from '@angular/core/testing';
-import { ExtensionDetection } from './extension-detection';
+import { EXTENSION_MARKER_ATTRIBUTE, ExtensionDetection } from './extension-detection';
 import { Config } from '@core/services/config';
 
 describe('ExtensionDetection', () => {
+  const FIREFOX_UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0';
+  const ADDON_URL = 'https://addons.mozilla.org/fr/firefox/addon/candidash/';
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     vi.useRealTimers();
+    document.documentElement.removeAttribute(EXTENSION_MARKER_ATTRIBUTE);
   });
 
-  function setup(extensionId: string | undefined): ExtensionDetection {
+  function setup(extensionId: string | undefined, firefoxAddonUrl?: string): ExtensionDetection {
     TestBed.configureTestingModule({
-      providers: [ExtensionDetection, { provide: Config, useValue: { extensionId } }],
+      providers: [
+        ExtensionDetection,
+        { provide: Config, useValue: { extensionId, firefoxAddonUrl } },
+      ],
     });
     return TestBed.inject(ExtensionDetection);
   }
+
+  function useFirefox(): void {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(FIREFOX_UA);
+  }
+
+  it('is installed as soon as the extension marker is on <html>, without pinging', () => {
+    // Given
+    const sendMessage = vi.fn();
+    vi.stubGlobal('chrome', { runtime: { sendMessage } });
+    document.documentElement.setAttribute(EXTENSION_MARKER_ATTRIBUTE, '1.0.0');
+    const detection = setup('abcdefghijklmnopabcdefghijklmnop');
+
+    // When
+    detection.check();
+
+    // Then
+    expect(detection.status()).toBe('installed');
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  describe('on Firefox', () => {
+    it('is installed when the marker is present', () => {
+      // Given
+      useFirefox();
+      document.documentElement.setAttribute(EXTENSION_MARKER_ATTRIBUTE, '1.0.0');
+      const detection = setup(undefined, ADDON_URL);
+
+      // When
+      detection.check();
+
+      // Then
+      expect(detection.status()).toBe('installed');
+    });
+
+    it('is not-installed without the marker when the add-on URL is configured', () => {
+      // Given
+      useFirefox();
+      const detection = setup('abcdefghijklmnopabcdefghijklmnop', ADDON_URL);
+
+      // When
+      detection.check();
+
+      // Then
+      expect(detection.status()).toBe('not-installed');
+      expect(detection.installUrl()).toBe(ADDON_URL);
+    });
+
+    it('is unavailable without the marker when no add-on URL is configured', () => {
+      // Given
+      useFirefox();
+      const detection = setup('abcdefghijklmnopabcdefghijklmnop');
+
+      // When
+      detection.check();
+
+      // Then
+      expect(detection.status()).toBe('unavailable');
+      expect(detection.installUrl()).toBeNull();
+    });
+  });
 
   it('is unavailable when no extensionId is configured', () => {
     // Given
@@ -129,8 +197,8 @@ describe('ExtensionDetection', () => {
 
   it('does not re-check once a status has been resolved', async () => {
     // Given
-    const sendMessage = vi.fn(
-      (_id: string, _msg: unknown, cb: (reply: unknown) => void) => cb({ pong: true }),
+    const sendMessage = vi.fn((_id: string, _msg: unknown, cb: (reply: unknown) => void) =>
+      cb({ pong: true }),
     );
     vi.stubGlobal('chrome', { runtime: { sendMessage } });
     const detection = setup('abcdefghijklmnopabcdefghijklmnop');
@@ -145,13 +213,13 @@ describe('ExtensionDetection', () => {
     expect(sendMessage).toHaveBeenCalledTimes(1);
   });
 
-  describe('webStoreUrl', () => {
+  describe('installUrl outside Firefox', () => {
     it('is null when no extensionId is configured', () => {
       // Given
       const detection = setup(undefined);
 
       // Then
-      expect(detection.webStoreUrl()).toBeNull();
+      expect(detection.installUrl()).toBeNull();
     });
 
     it('is the Chrome Web Store detail URL when extensionId is configured', () => {
@@ -159,7 +227,7 @@ describe('ExtensionDetection', () => {
       const detection = setup('abcdefghijklmnopabcdefghijklmnop');
 
       // Then
-      expect(detection.webStoreUrl()).toBe(
+      expect(detection.installUrl()).toBe(
         'https://chromewebstore.google.com/detail/abcdefghijklmnopabcdefghijklmnop',
       );
     });

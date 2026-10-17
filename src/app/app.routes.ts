@@ -19,7 +19,16 @@ export const routes: Routes = [
   },
   {
     path: 'terms-of-service',
-    loadComponent: () => import('./features/legal/terms-of-service/terms-of-service').then((m) => m.TermsOfService),
+    loadComponent: () =>
+      import('./features/legal/terms-of-service/terms-of-service').then((m) => m.TermsOfService),
+  },
+  {
+    path: 'extension-privacy',
+    title: "Confidentialité de l'extension — Candidash",
+    loadComponent: () =>
+      import('./features/legal/extension-privacy/extension-privacy').then(
+        (m) => m.ExtensionPrivacy,
+      ),
   },
   {
     path: 'features',

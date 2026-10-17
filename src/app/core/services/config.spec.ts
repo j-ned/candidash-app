@@ -80,4 +80,19 @@ describe('Config', () => {
     // Then
     expect(config.extensionId).toBeUndefined();
   });
+
+  it('should load firefoxAddonUrl from /config.json', async () => {
+    // Given
+    const addonUrl = 'https://addons.mozilla.org/fr/firefox/addon/candidash/';
+
+    // When
+    const loadPromise = config.loadConfig();
+    httpController
+      .expectOne({ method: 'GET', url: '/config.json' })
+      .flush({ apiUrl: DEFAULT_URL, firefoxAddonUrl: addonUrl });
+    await loadPromise;
+
+    // Then
+    expect(config.firefoxAddonUrl).toBe(addonUrl);
+  });
 });
