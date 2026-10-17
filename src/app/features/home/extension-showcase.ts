@@ -154,7 +154,7 @@ const STEPS = [
           loading="lazy"
           decoding="async"
           alt="Le popup de l'extension Candidash ouvert sur une offre : titre, entreprise et lien pré-remplis, prêt à être ajouté."
-          class="absolute top-14 right-3 w-[46%] max-w-[300px] rounded-xl border border-border shadow-[0_28px_60px_-20px_rgb(0_0_0/0.55)] sm:-right-4 lg:-right-8"
+          class="absolute top-14 right-3 w-[46%] max-w-[300px] rounded-xl border border-border shadow-[0_28px_60px_-20px_rgb(0_0_0/0.55)] sm:-right-4 xl:-right-8"
         />
       </figure>
     </div>
