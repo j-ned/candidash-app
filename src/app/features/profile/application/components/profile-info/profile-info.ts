@@ -1,21 +1,24 @@
-import { Component, ChangeDetectionStrategy, inject, computed, OnInit, signal, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, DestroyRef, linkedSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormField, FormRoot, email, form, required, type FieldTree } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { Button } from '@shared/ui/button/button';
+import { FieldError } from '@shared/ui/field-error/field-error';
+import { focusFirstInvalid } from '@shared/forms/focus-first-invalid';
 import { ProfileState } from '@features/profile/application/profile-state';
 import { AuthState } from '@features/auth/application/auth-state';
 import type { UpdateProfileRequest } from '@features/profile/domain/models/profile.model';
 import { Router } from '@angular/router';
 import { Icon } from '@shared/ui/icon/icon';
 
-type ProfileInfoForm = {
-  email: FormControl<string>;
-  username: FormControl<string>;
+type ProfileInfoModel = {
+  email: string;
+  username: string;
 };
 
 @Component({
   selector: 'app-profile-info',
-  imports: [ReactiveFormsModule, Button, Icon],
+  imports: [FormRoot, FormField, FieldError, Button, Icon],
   templateUrl: './profile-info.html',
   host: {
     class: 'block space-y-4 sm:space-y-6',
@@ -24,7 +27,7 @@ type ProfileInfoForm = {
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProfileInfo implements OnInit {
+export class ProfileInfo {
   readonly profileService = inject(ProfileState);
   readonly authService = inject(AuthState);
   private readonly router = inject(Router);
@@ -32,36 +35,36 @@ export class ProfileInfo implements OnInit {
 
   readonly showConfirm = signal(false);
 
-  readonly profileForm = new FormGroup<ProfileInfoForm>({
-    email: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-    username: new FormControl('', { nonNullable: true }),
+  // Brouillon lié à l'utilisateur connecté : repart de ses valeurs quand il change (ex. après sauvegarde)
+  private readonly model = linkedSignal<ProfileInfoModel>(() => {
+    const user = this.authService.user();
+    return { email: user?.email ?? '', username: user?.username ?? '' };
   });
 
-  ngOnInit(): void {
-    const user = this.authService.user();
-    if (user) {
-      this.profileForm.patchValue({
-        email: user.email,
-        username: user.username ?? '',
-      });
-    }
-  }
+  protected readonly profileForm = form(
+    this.model,
+    (path) => {
+      required(path.email, { message: 'Email invalide' });
+      email(path.email, { message: 'Email invalide' });
+    },
+    {
+      submission: {
+        action: (field) => this.save(field),
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
+  );
 
-  onUpdateProfile(): void {
-    if (this.profileForm.valid) {
-      const { email, username } = this.profileForm.getRawValue();
-      const updateData: UpdateProfileRequest = {
-        email,
-        username: username || undefined,
-      };
-
-      this.profileService
-        .updateProfile(updateData)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe();
+  private async save(field: FieldTree<ProfileInfoModel>): Promise<void> {
+    const { email, username } = field().value();
+    const updateData: UpdateProfileRequest = {
+      email,
+      username: username || undefined,
+    };
+    try {
+      await firstValueFrom(this.profileService.updateProfile(updateData));
+    } catch {
+      // ProfileState affiche déjà l'erreur (toast) ; la saisie reste en place
     }
   }
 
@@ -81,11 +84,6 @@ export class ProfileInfo implements OnInit {
             .subscribe(() => this.router.navigate(['/']));
         },
       });
-  }
-
-  isFieldInvalid(fieldName: keyof ProfileInfoForm): boolean {
-    const field = this.profileForm.controls[fieldName];
-    return field.invalid && field.touched;
   }
 
   protected readonly lastUpdated = computed(() => {

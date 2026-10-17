@@ -36,18 +36,21 @@ describe('Contact', () => {
     type(fixture, 'contact-message', 'Bonjour, une question sur Candidash.');
   }
 
-  function submit(fixture: ComponentFixture<Contact>): void {
-    byTestId<HTMLFormElement>(fixture, 'contact-form').dispatchEvent(new Event('submit'));
+  async function submit(fixture: ComponentFixture<Contact>): Promise<void> {
+    byTestId<HTMLFormElement>(fixture, 'contact-form').dispatchEvent(
+      new Event('submit', { cancelable: true }),
+    );
+    await fixture.whenStable();
     fixture.detectChanges();
   }
 
-  it('sends a valid message and confirms it', () => {
+  it('sends a valid message and confirms it', async () => {
     // Given
     const fixture = setup();
     fillValidForm(fixture);
 
     // When
-    submit(fixture);
+    await submit(fixture);
 
     // Then
     expect(gateway.send).toHaveBeenCalledWith({
@@ -61,12 +64,12 @@ describe('Contact', () => {
     expect(byTestId(fixture, 'contact-form')).toBeNull();
   });
 
-  it('reveals every error and sends nothing when the form is invalid', () => {
+  it('reveals every error and sends nothing when the form is invalid', async () => {
     // Given
     const fixture = setup();
 
     // When
-    submit(fixture);
+    await submit(fixture);
 
     // Then
     expect(gateway.send).not.toHaveBeenCalled();
@@ -86,7 +89,7 @@ describe('Contact', () => {
     expect(byTestId(fixture, 'contact-email-error').textContent).toContain('email valide');
   });
 
-  it('keeps the button enabled while invalid, disabled only while sending', () => {
+  it('keeps the button enabled while invalid, disabled only while sending', async () => {
     // Given
     const fixture = setup();
     const pending = new Subject<void>();
@@ -96,7 +99,7 @@ describe('Contact', () => {
 
     // When
     fillValidForm(fixture);
-    submit(fixture);
+    await submit(fixture);
 
     // Then
     expect(byTestId<HTMLButtonElement>(fixture, 'contact-submit').disabled).toBe(true);
@@ -105,14 +108,14 @@ describe('Contact', () => {
   it.each([
     [429, 'Trop de messages'],
     [503, 'pas pu être envoyé'],
-  ])('shows an error and keeps the input when the API answers %i', (status, expected) => {
+  ])('shows an error and keeps the input when the API answers %i', async (status, expected) => {
     // Given
     const fixture = setup();
     gateway.send.mockReturnValue(throwError(() => new HttpErrorResponse({ status })));
     fillValidForm(fixture);
 
     // When
-    submit(fixture);
+    await submit(fixture);
 
     // Then
     expect(byTestId(fixture, 'contact-error').textContent).toContain(expected);

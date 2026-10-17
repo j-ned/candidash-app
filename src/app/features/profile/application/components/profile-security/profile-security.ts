@@ -1,21 +1,38 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import {
+  FormField,
+  FormRoot,
+  form,
+  minLength,
+  required,
+  validate,
+  type FieldTree,
+} from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { Button } from '@shared/ui/button/button';
 import { Icon } from '@shared/ui/icon/icon';
+import { FieldError } from '@shared/ui/field-error/field-error';
+import { focusFirstInvalid } from '@shared/forms/focus-first-invalid';
 import { ProfileState } from '@features/profile/application/profile-state';
 import type { ChangePasswordRequest } from '@features/profile/domain/models/profile.model';
-import { passwordMatchValidator } from '@shared/validators/password-match.validator';
 
-type PasswordChangeForm = {
-  currentPassword: FormControl<string>;
-  newPassword: FormControl<string>;
-  confirmPassword: FormControl<string>;
+type PasswordChangeModel = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 };
+
+const EMPTY_PASSWORDS: PasswordChangeModel = {
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+};
+
+const PASSWORD_MIN_LENGTH = 8;
 
 @Component({
   selector: 'app-profile-security',
-  imports: [ReactiveFormsModule, Icon, Button],
+  imports: [FormRoot, FormField, FieldError, Icon, Button],
   templateUrl: './profile-security.html',
   host: {
     class: 'block bg-card border border-border rounded-md p-4 sm:rounded-lg sm:p-6',
@@ -26,103 +43,47 @@ type PasswordChangeForm = {
 })
 export class ProfileSecurity {
   readonly profileService = inject(ProfileState);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly showCurrentPassword = signal(false);
   readonly showNewPassword = signal(false);
   readonly showConfirmPassword = signal(false);
 
-  readonly passwordForm = new FormGroup<PasswordChangeForm>(
-    {
-      currentPassword: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required],
-      }),
-      newPassword: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required, Validators.minLength(8)],
-      }),
-      confirmPassword: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required],
-      }),
+  private readonly model = signal<PasswordChangeModel>({ ...EMPTY_PASSWORDS });
+
+  protected readonly passwordForm = form(
+    this.model,
+    (path) => {
+      required(path.currentPassword, { message: 'Mot de passe actuel requis' });
+      required(path.newPassword, { message: 'Nouveau mot de passe requis' });
+      minLength(path.newPassword, PASSWORD_MIN_LENGTH, {
+        message: 'Le mot de passe doit contenir au moins 8 caractères',
+      });
+      required(path.confirmPassword, { message: 'Confirmation du mot de passe requise' });
+      // Validation croisée : l'erreur vit sur la confirmation, le champ que l'utilisateur corrige
+      validate(path.confirmPassword, ({ value, valueOf }) =>
+        value() === valueOf(path.newPassword)
+          ? null
+          : { kind: 'passwordMismatch', message: 'Les mots de passe ne correspondent pas' },
+      );
     },
-    { validators: passwordMatchValidator('newPassword', 'confirmPassword') },
+    {
+      submission: {
+        action: (field) => this.changePassword(field),
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
   );
 
-  onChangePassword(): void {
-    if (this.passwordForm.valid) {
-      const { currentPassword, newPassword } = this.passwordForm.getRawValue();
-      const passwordData: ChangePasswordRequest = {
-        currentPassword,
-        newPassword,
-      };
-
-      this.profileService
-        .changePassword(passwordData)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: () => {
-            this.passwordForm.reset();
-          },
-        });
+  private async changePassword(field: FieldTree<PasswordChangeModel>): Promise<void> {
+    const { currentPassword, newPassword } = field().value();
+    const passwordData: ChangePasswordRequest = { currentPassword, newPassword };
+    try {
+      await firstValueFrom(this.profileService.changePassword(passwordData));
+      field().reset({ ...EMPTY_PASSWORDS });
+    } catch {
+      // ProfileState affiche déjà l'erreur (toast) ; la saisie reste en place
     }
   }
-
-  private readonly currentEvents = toSignal(
-    this.passwordForm.controls.currentPassword.events,
-  );
-  private readonly newEvents = toSignal(
-    this.passwordForm.controls.newPassword.events,
-  );
-  private readonly confirmEvents = toSignal(
-    this.passwordForm.controls.confirmPassword.events,
-  );
-
-  protected readonly currentPasswordInvalid = computed(() => {
-    this.currentEvents();
-    const f = this.passwordForm.controls.currentPassword;
-    return f.invalid && f.touched;
-  });
-  protected readonly newPasswordInvalid = computed(() => {
-    this.newEvents();
-    const f = this.passwordForm.controls.newPassword;
-    return f.invalid && f.touched;
-  });
-  protected readonly confirmPasswordInvalid = computed(() => {
-    this.confirmEvents();
-    const f = this.passwordForm.controls.confirmPassword;
-    return f.invalid && f.touched;
-  });
-
-  protected readonly currentPasswordError = computed(() => {
-    this.currentEvents();
-    const ctrl = this.passwordForm.controls.currentPassword;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return 'Mot de passe actuel requis';
-    return null;
-  });
-
-  protected readonly newPasswordError = computed(() => {
-    this.newEvents();
-    const ctrl = this.passwordForm.controls.newPassword;
-    if (!(ctrl.touched || ctrl.dirty) || !ctrl.errors) return null;
-    if (ctrl.errors['required']) return 'Nouveau mot de passe requis';
-    if (ctrl.errors['minlength'])
-      return 'Le mot de passe doit contenir au moins 8 caractères';
-    return null;
-  });
-
-  protected readonly confirmPasswordError = computed(() => {
-    this.confirmEvents();
-    this.newEvents(); // le mismatch dépend aussi de newPassword
-    const ctrl = this.passwordForm.controls.confirmPassword;
-    if (!(ctrl.touched || ctrl.dirty)) return null;
-    if (ctrl.errors?.['required']) return 'Confirmation du mot de passe requise';
-    if (this.passwordForm.errors?.['passwordMismatch'])
-      return 'Les mots de passe ne correspondent pas';
-    return null;
-  });
 
   protected readonly submitLabel = computed(() =>
     this.profileService.isLoading()

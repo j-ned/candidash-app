@@ -3,21 +3,27 @@
   Sécurité du compte
 </h2>
 
-<form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="space-y-3 sm:space-y-4">
+<form data-testid="password-form" [formRoot]="passwordForm" class="space-y-3 sm:space-y-4">
   <fieldset>
     <legend class="sr-only">Changement de mot de passe</legend>
 
     <div class="space-y-3 sm:space-y-4">
       <div class="space-y-1 sm:space-y-2">
+        @let currentPasswordInError = passwordForm.currentPassword().touched() && passwordForm.currentPassword().invalid();
         <label for="currentPassword" class="block text-sm font-medium text-text sm:text-base">Mot de passe actuel</label>
         <div class="relative">
           <input
             id="currentPassword"
+            data-testid="current-password"
             [type]="showCurrentPassword() ? 'text' : 'password'"
-            formControlName="currentPassword"
+            [formField]="passwordForm.currentPassword"
+            autocomplete="current-password"
+            aria-required="true"
+            [attr.aria-invalid]="currentPasswordInError"
+            [attr.aria-describedby]="currentPasswordInError ? 'current-password-error' : null"
             class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
-            [class.border-error]="currentPasswordInvalid()"
-            [class.border-border]="!currentPasswordInvalid()"
+            [class.border-error]="currentPasswordInError"
+            [class.border-border]="!currentPasswordInError"
             placeholder="Mot de passe actuel"
           />
           <button
@@ -30,21 +36,29 @@
             <app-icon [name]="showCurrentPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
-        @if (currentPasswordError()) {
-          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ currentPasswordError() }}</p>
-        }
+        <app-field-error
+          [field]="passwordForm.currentPassword"
+          errorId="current-password-error"
+          testId="current-password-error"
+        />
       </div>
 
       <div class="space-y-1 sm:space-y-2">
+        @let newPasswordInError = passwordForm.newPassword().touched() && passwordForm.newPassword().invalid();
         <label for="newPassword" class="block text-sm font-medium text-text sm:text-base">Nouveau mot de passe</label>
         <div class="relative">
           <input
             id="newPassword"
+            data-testid="new-password"
             [type]="showNewPassword() ? 'text' : 'password'"
-            formControlName="newPassword"
+            [formField]="passwordForm.newPassword"
+            autocomplete="new-password"
+            aria-required="true"
+            [attr.aria-invalid]="newPasswordInError"
+            [attr.aria-describedby]="newPasswordInError ? 'new-password-error' : null"
             class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
-            [class.border-error]="newPasswordInvalid()"
-            [class.border-border]="!newPasswordInvalid()"
+            [class.border-error]="newPasswordInError"
+            [class.border-border]="!newPasswordInError"
             placeholder="Nouveau mot de passe"
           />
           <button
@@ -57,25 +71,29 @@
             <app-icon [name]="showNewPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
-        @if (newPasswordError()) {
-          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ newPasswordError() }}</p>
-        }
+        <app-field-error
+          [field]="passwordForm.newPassword"
+          errorId="new-password-error"
+          testId="new-password-error"
+        />
       </div>
 
       <div class="space-y-1 sm:space-y-2">
+        @let confirmPasswordInError = passwordForm.confirmPassword().touched() && passwordForm.confirmPassword().invalid();
         <label for="confirmPassword" class="block text-sm font-medium text-text sm:text-base">Confirmer le nouveau mot de passe</label>
         <div class="relative">
           <input
             id="confirmPassword"
+            data-testid="confirm-password"
             [type]="showConfirmPassword() ? 'text' : 'password'"
-            formControlName="confirmPassword"
+            [formField]="passwordForm.confirmPassword"
+            autocomplete="new-password"
+            aria-required="true"
+            [attr.aria-invalid]="confirmPasswordInError"
+            [attr.aria-describedby]="confirmPasswordInError ? 'confirm-password-error' : null"
             class="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:pr-12 sm:rounded-md sm:text-base"
-            [class.border-error]="
-              confirmPasswordInvalid() || confirmPasswordError()
-            "
-            [class.border-border]="
-              !confirmPasswordInvalid() && !confirmPasswordError()
-            "
+            [class.border-error]="confirmPasswordInError"
+            [class.border-border]="!confirmPasswordInError"
             placeholder="Confirmer le nouveau mot de passe"
           />
           <button
@@ -88,18 +106,21 @@
             <app-icon [name]="showConfirmPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
-        @if (confirmPasswordError()) {
-          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ confirmPasswordError() }}</p>
-        }
+        <app-field-error
+          [field]="passwordForm.confirmPassword"
+          errorId="confirm-password-error"
+          testId="confirm-password-error"
+        />
       </div>
     </div>
   </fieldset>
 
   <div class="pt-2 sm:pt-3">
     <app-button
+      data-testid="password-submit"
       type="submit"
       color="red"
-      [disabled]="passwordForm.invalid || profileService.isLoading()"
+      [disabled]="profileService.isLoading()"
       [isLoading]="profileService.isLoading()"
       customClass="w-full px-4 py-2 text-sm sm:w-auto sm:px-6 sm:py-3 sm:text-base"
     >
