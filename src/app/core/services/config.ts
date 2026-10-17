@@ -6,6 +6,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 export type AppConfig = {
   apiUrl: string;
   extensionId?: string;
+  firefoxAddonUrl?: string;
 };
 
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
@@ -27,7 +28,9 @@ export class Config {
     if (!this.isBrowser) return;
 
     try {
-      this.config = await firstValueFrom(this.http.get<AppConfig>('/config.json').pipe(timeout(5000)));
+      this.config = await firstValueFrom(
+        this.http.get<AppConfig>('/config.json').pipe(timeout(5000)),
+      );
     } catch {
       this.config = { apiUrl: this.defaultApiUrl };
     }
@@ -39,5 +42,9 @@ export class Config {
 
   get extensionId(): string | undefined {
     return this.config?.extensionId;
+  }
+
+  get firefoxAddonUrl(): string | undefined {
+    return this.config?.firefoxAddonUrl;
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Config } from '@core/services/config';
+import { toBrowserFamily, type BrowserFamily } from './browser-family';
 
 export type ExtensionStatus =
   | 'unknown'
@@ -11,12 +12,11 @@ export type ExtensionStatus =
 
 export const PING_TIMEOUT_MS = 500;
 
+// Set on <html> at document_start by the extension's content script (Chrome and Firefox).
+export const EXTENSION_MARKER_ATTRIBUTE = 'data-candidash-extension';
+
 type ChromeRuntime = {
-  sendMessage: (
-    extensionId: string,
-    message: unknown,
-    callback: (reply: unknown) => void,
-  ) => void;
+  sendMessage: (extensionId: string, message: unknown, callback: (reply: unknown) => void) => void;
   readonly lastError?: { message?: string };
 };
 
@@ -31,21 +31,42 @@ function isPongReply(reply: unknown): boolean {
 @Injectable({ providedIn: 'root' })
 export class ExtensionDetection {
   private readonly config = inject(Config);
+  private readonly document = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  readonly browserFamily: BrowserFamily = this.isBrowser
+    ? toBrowserFamily(navigator.userAgent)
+    : 'other';
 
   private readonly _status = signal<ExtensionStatus>('unknown');
   readonly status = this._status.asReadonly();
 
-  readonly webStoreUrl = computed(() => {
+  readonly installUrl = computed(() => {
+    if (this.browserFamily === 'firefox') return this.config.firefoxAddonUrl ?? null;
     const extensionId = this.config.extensionId;
     return extensionId ? `https://chromewebstore.google.com/detail/${extensionId}` : null;
   });
 
   check(): void {
     if (this._status() !== 'unknown') return;
+    if (!this.isBrowser) {
+      this._status.set('unavailable');
+      return;
+    }
+
+    if (this.document.documentElement.hasAttribute(EXTENSION_MARKER_ATTRIBUTE)) {
+      this._status.set('installed');
+      return;
+    }
+
+    // Firefox has no externally_connectable: without the marker, the add-on is absent.
+    if (this.browserFamily === 'firefox') {
+      this._status.set(this.config.firefoxAddonUrl ? 'not-installed' : 'unavailable');
+      return;
+    }
 
     const extensionId = this.config.extensionId;
-    const runtime = this.isBrowser ? getChromeRuntime() : undefined;
+    const runtime = getChromeRuntime();
 
     if (!extensionId || !runtime) {
       this._status.set('unavailable');

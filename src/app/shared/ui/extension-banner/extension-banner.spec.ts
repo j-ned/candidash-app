@@ -3,15 +3,19 @@ import { computed, signal, WritableSignal } from '@angular/core';
 import { ExtensionBanner } from './extension-banner';
 import { ExtensionDetection } from './service/extension-detection';
 import type { ExtensionStatus } from './service/extension-detection';
+import type { BrowserFamily } from './service/browser-family';
 
 describe('ExtensionBanner', () => {
   let statusSignal: WritableSignal<ExtensionStatus>;
   let checkSpy: ReturnType<typeof vi.fn>;
 
-  function setup(extensionId: string | undefined): ComponentFixture<ExtensionBanner> {
+  function setup(
+    extensionId: string | undefined,
+    browserFamily: BrowserFamily = 'chromium',
+  ): ComponentFixture<ExtensionBanner> {
     statusSignal = signal<ExtensionStatus>('unknown');
     checkSpy = vi.fn();
-    const webStoreUrl = computed(() =>
+    const installUrl = computed(() =>
       extensionId ? `https://chromewebstore.google.com/detail/${extensionId}` : null,
     );
 
@@ -19,7 +23,12 @@ describe('ExtensionBanner', () => {
       providers: [
         {
           provide: ExtensionDetection,
-          useValue: { status: statusSignal.asReadonly(), webStoreUrl, check: checkSpy },
+          useValue: {
+            status: statusSignal.asReadonly(),
+            installUrl,
+            browserFamily,
+            check: checkSpy,
+          },
         },
       ],
     });
@@ -82,7 +91,9 @@ describe('ExtensionBanner', () => {
 
     // Then
     const link: HTMLAnchorElement = fixture.nativeElement.querySelector('a');
-    expect(link.href).toBe('https://chromewebstore.google.com/detail/abcdefghijklmnopabcdefghijklmnop');
+    expect(link.href).toBe(
+      'https://chromewebstore.google.com/detail/abcdefghijklmnopabcdefghijklmnop',
+    );
   });
 
   it('hides the banner when installed', () => {
@@ -126,5 +137,21 @@ describe('ExtensionBanner', () => {
 
     // Then
     expect(fixture.nativeElement.querySelector('[role="status"]')).toBeNull();
+  });
+
+  it.each([
+    ['chromium', 'extension Chrome'],
+    ['firefox', 'extension Firefox'],
+  ] as const)('names the %s extension in the install message', (browserFamily, expected) => {
+    // Given
+    const fixture = setup('abcdefghijklmnopabcdefghijklmnop', browserFamily);
+
+    // When
+    statusSignal.set('not-installed');
+    fixture.detectChanges();
+
+    // Then
+    const el = fixture.nativeElement.querySelector('[role="status"]');
+    expect(el.textContent).toContain(expected);
   });
 });
