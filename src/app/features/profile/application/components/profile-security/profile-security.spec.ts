@@ -136,6 +136,7 @@ describe('ProfileSecurity', () => {
     });
     expect(byTestId<HTMLInputElement>(fixture, 'current-password').value).toBe('');
     expect(byTestId<HTMLInputElement>(fixture, 'confirm-password').value).toBe('');
+    expect(byTestId(fixture, 'current-password-error')).toBeNull();
   });
 
   it('changes nothing when the confirmation differs', async () => {
@@ -149,6 +150,33 @@ describe('ProfileSecurity', () => {
 
     // Then
     expect(profileState.changePassword).not.toHaveBeenCalled();
+  });
+
+  it('reveals every error and changes nothing when submitted empty', async () => {
+    // Given
+    const fixture = setup();
+
+    // When
+    await submit(fixture);
+
+    // Then
+    expect(profileState.changePassword).not.toHaveBeenCalled();
+    expect(byTestId(fixture, 'current-password-error')).not.toBeNull();
+    expect(byTestId(fixture, 'new-password-error')).not.toBeNull();
+    expect(byTestId(fixture, 'confirm-password-error')).not.toBeNull();
+    expect(byTestId(fixture, 'confirm-password').getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('keeps the button enabled while the form is invalid', () => {
+    // Given
+    const fixture = setup();
+
+    // When
+    type(fixture, 'new-password', 'court');
+
+    // Then
+    const button = byTestId(fixture, 'password-submit').querySelector('button');
+    expect(button?.disabled).toBe(false);
   });
 
   it('disables the button while the password is changing', () => {
