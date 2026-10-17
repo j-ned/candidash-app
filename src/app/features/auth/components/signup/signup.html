@@ -8,68 +8,82 @@
     Créer un compte
   </h2>
 
-  <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-6">
+  <form data-testid="signup-form" [formRoot]="signupForm" class="space-y-4 sm:space-y-6">
     <fieldset>
       <legend class="sr-only">Informations d'inscription</legend>
 
       <div class="space-y-4 sm:space-y-6">
         <div class="space-y-1 sm:space-y-2">
+          @let emailInError = signupForm.email().touched() && signupForm.email().invalid();
           <label for="email" class="block text-sm font-medium text-text sm:text-base">
             Email <span aria-hidden="true" class="text-error">*</span>
           </label>
           <input
             id="email"
+            data-testid="signup-email"
             type="email"
-            formControlName="email"
-            required
+            [formField]="signupForm.email"
+            autocomplete="email"
             aria-required="true"
-            class="w-full px-3 py-2 border rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:rounded-lg"
-            [class.border-error]="emailInvalid()"
-            [class.border-input]="!emailInvalid()"
+            [attr.aria-invalid]="emailInError"
+            [attr.aria-describedby]="emailInError ? 'signup-email-error' : null"
+            class="w-full px-3 py-2 border border-input rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:rounded-lg aria-invalid:border-error"
             placeholder="votre@email.com"
           />
-          @if (emailError()) {
-            <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ emailError() }}</p>
-          }
+          <app-field-error
+            [field]="signupForm.email"
+            errorId="signup-email-error"
+            testId="signup-email-error"
+          />
         </div>
 
         <div class="space-y-1 sm:space-y-2">
+          @let usernameInError =
+            signupForm.username().touched() && signupForm.username().invalid();
           <label for="username" class="block text-sm font-medium text-text sm:text-base">
             Nom d'utilisateur
             <span class="text-muted text-xs sm:text-sm">(optionnel)</span>
           </label>
           <input
             id="username"
+            data-testid="signup-username"
             type="text"
-            formControlName="username"
-            class="w-full px-3 py-2 border rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:rounded-lg"
-            [class.border-error]="usernameInvalid()"
-            [class.border-input]="!usernameInvalid()"
+            [formField]="signupForm.username"
+            autocomplete="username"
+            [attr.aria-invalid]="usernameInError"
+            [attr.aria-describedby]="usernameInError ? 'signup-username-error' : null"
+            class="w-full px-3 py-2 border border-input rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:rounded-lg aria-invalid:border-error"
             placeholder="john_doe"
           />
-          @if (usernameError()) {
-            <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ usernameError() }}</p>
-          }
+          <app-field-error
+            [field]="signupForm.username"
+            errorId="signup-username-error"
+            testId="signup-username-error"
+          />
         </div>
 
         <div class="space-y-1 sm:space-y-2">
+          @let passwordInError =
+            signupForm.password().touched() && signupForm.password().invalid();
           <label for="password" class="block text-sm font-medium text-text sm:text-base">
             Mot de passe <span aria-hidden="true" class="text-error">*</span>
           </label>
           <div class="relative">
             <input
               id="password"
+              data-testid="signup-password"
               [type]="showPassword() ? 'text' : 'password'"
-              formControlName="password"
-              required
+              [formField]="signupForm.password"
+              autocomplete="new-password"
               aria-required="true"
-              class="w-full px-3 py-2 pr-10 border rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:pr-12 sm:rounded-lg"
-              [class.border-error]="passwordInvalid()"
-              [class.border-input]="!passwordInvalid()"
+              [attr.aria-invalid]="passwordInError"
+              [attr.aria-describedby]="passwordInError ? 'signup-password-error' : null"
+              class="w-full px-3 py-2 pr-10 border border-input rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:pr-12 sm:rounded-lg aria-invalid:border-error"
               placeholder="••••••••"
             />
             <button
               type="button"
+              data-testid="signup-password-toggle"
               (click)="togglePasswordVisibility()"
               [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
               class="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 hover:scale-110 sm:right-3"
@@ -78,33 +92,35 @@
               <app-icon [name]="showPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
-          @if (passwordError()) {
-            <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ passwordError() }}</p>
-          }
+          <app-field-error
+            [field]="signupForm.password"
+            errorId="signup-password-error"
+            testId="signup-password-error"
+          />
         </div>
 
         <div class="space-y-1 sm:space-y-2">
+          @let confirmInError =
+            signupForm.confirmPassword().touched() && signupForm.confirmPassword().invalid();
           <label for="confirmPassword" class="block text-sm font-medium text-text sm:text-base">
             Confirmer le mot de passe <span aria-hidden="true" class="text-error">*</span>
           </label>
           <div class="relative">
             <input
               id="confirmPassword"
+              data-testid="signup-confirm"
               [type]="showConfirmPassword() ? 'text' : 'password'"
-              formControlName="confirmPassword"
-              required
+              [formField]="signupForm.confirmPassword"
+              autocomplete="new-password"
               aria-required="true"
-              class="w-full px-3 py-2 pr-10 border rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:pr-12 sm:rounded-lg"
-              [class.border-error]="
-                confirmPasswordInvalid() || signupForm.errors?.['passwordMismatch']
-              "
-              [class.border-input]="
-                !confirmPasswordInvalid() && !signupForm.errors?.['passwordMismatch']
-              "
+              [attr.aria-invalid]="confirmInError"
+              [attr.aria-describedby]="confirmInError ? 'signup-confirm-error' : null"
+              class="w-full px-3 py-2 pr-10 border border-input rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:pr-12 sm:rounded-lg aria-invalid:border-error"
               placeholder="••••••••"
             />
             <button
               type="button"
+              data-testid="signup-confirm-toggle"
               (click)="toggleConfirmPasswordVisibility()"
               [attr.aria-label]="showConfirmPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
               class="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 hover:scale-110 sm:right-3"
@@ -113,17 +129,20 @@
               <app-icon [name]="showConfirmPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
-          @if (confirmPasswordError()) {
-            <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ confirmPasswordError() }}</p>
-          }
+          <app-field-error
+            [field]="signupForm.confirmPassword"
+            errorId="signup-confirm-error"
+            testId="signup-confirm-error"
+          />
         </div>
       </div>
     </fieldset>
 
     <app-button
+      data-testid="signup-submit"
       type="submit"
       color="primary"
-      [disabled]="signupForm.invalid"
+      [disabled]="authService.isLoading() || signupForm().submitting()"
       [isLoading]="authService.isLoading()"
       customClass="w-full py-3 text-base font-semibold mt-4 sm:py-4 sm:text-lg sm:mt-8"
     >
