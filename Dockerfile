@@ -32,6 +32,8 @@ COPY --from=build /app/dist/ng-candidash-app/browser/ /usr/share/nginx/html/
 # Configuration Nginx optimisée (gzip + cache + security headers)
 RUN printf 'server {\n\
     listen 80;\n\
+    # Redirections relatives : le proxy TLS en amont garde le schéma https\n\
+    absolute_redirect off;\n\
     server_name localhost;\n\
     root /usr/share/nginx/html;\n\
     index index.html;\n\

@@ -5,12 +5,13 @@ import {
   provideAppInitializer,
   inject,
 } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { TitleStrategy, provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { authInterceptor } from '@core/interceptors/auth';
 import { API_BASE_URL, Config } from '@core/services/config';
+import { AppTitleStrategy } from '@core/services/app-title-strategy';
 import { AuthGateway } from '@features/auth/domain/gateways/auth.gateway';
 import { HttpAuthGateway } from '@features/auth/infra/http-auth.gateway';
 import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
@@ -30,6 +31,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
+    { provide: TitleStrategy, useClass: AppTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     // Backend API
     { provide: API_BASE_URL, useValue: 'http://localhost:3000/api/v1' },
