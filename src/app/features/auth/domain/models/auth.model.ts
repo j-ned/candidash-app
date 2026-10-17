@@ -95,6 +95,3 @@ export type TotpRecoveryRequest = {
   recoveryCode: string;
 };
 
-export type DisableTotpRequest = {
-  password: string;
-};

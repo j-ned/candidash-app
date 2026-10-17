@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs';
 import type {
   AuthResponse,
-  DisableTotpRequest,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   LoginCredentials,

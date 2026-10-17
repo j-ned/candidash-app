@@ -1,12 +1,12 @@
 # ---- Étape de build ----
-# Utilise Node.js 20 avec Alpine comme image de base pour le build
-FROM node:20-alpine AS build
+# Node.js 24 (LTS active) sur Alpine pour le build
+FROM node:24-alpine AS build
 
 # Définit le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# Installer pnpm globalement
-RUN npm install -g pnpm
+# pnpm à la version du champ packageManager (corepack), pas « la dernière » publiée
+RUN corepack enable
 
 # Copie les fichiers package.json, pnpm-lock.yaml et pnpm-workspace.yaml
 # (ce dernier porte allowBuilds — sans lui, pnpm install bloque sur
