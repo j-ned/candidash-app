@@ -46,6 +46,7 @@ export class AuthState {
 
   readonly isAuthenticated = computed(() => this.authState().isAuthenticated);
   readonly user = computed(() => this.authState().user);
+  readonly isAdmin = computed(() => this.authState().user?.role === 'ADMIN');
   readonly isLoading = computed(() => this.authState().isLoading);
   readonly error = computed(() => this.authState().error);
 

@@ -12,6 +12,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from '@core/interceptors/auth';
 import { API_BASE_URL, Config } from '@core/services/config';
 import { AppTitleStrategy } from '@core/services/app-title-strategy';
+import { startPageTracking } from '@core/analytics/page-tracking';
 import { AuthGateway } from '@features/auth/domain/gateways/auth.gateway';
 import { HttpAuthGateway } from '@features/auth/infra/http-auth.gateway';
 import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
@@ -36,6 +37,7 @@ export const appConfig: ApplicationConfig = {
     // Backend API
     { provide: API_BASE_URL, useValue: 'http://localhost:3000/api/v1' },
     provideAppInitializer(() => inject(Config).loadConfig()),
+    provideAppInitializer(() => startPageTracking()),
 
     // Clean Architecture: Gateway → HTTP implementation
     { provide: AuthGateway, useClass: HttpAuthGateway },

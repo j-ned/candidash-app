@@ -56,6 +56,19 @@ import { Icon } from '@shared/ui/icon/icon';
             </button>
           </li>
 
+          @if (authService.isAdmin()) {
+            <li>
+              <button
+                type="button"
+                (click)="goToAdmin()"
+                class="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface/80 transition-colors"
+              >
+                <app-icon name="lucide-shield-check" cssClass="w-4 h-4 mr-3" />
+                Administration
+              </button>
+            </li>
+          }
+
           <li aria-hidden="true"><hr class="border-t border-border my-1" /></li>
 
           <li>
@@ -100,6 +113,11 @@ export class SimpleAvatarMenu {
   goToDashboard(): void {
     this.closeMenu();
     this.router.navigate(['/dashboard']);
+  }
+
+  goToAdmin(): void {
+    this.closeMenu();
+    this.router.navigate(['/dashboard/admin']);
   }
 
   logout(): void {

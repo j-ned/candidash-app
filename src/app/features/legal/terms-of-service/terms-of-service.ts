@@ -83,6 +83,14 @@ import { Router } from '@angular/router';
                   RGPD.
                 </p>
                 <p>
+                  <strong>Mesure d'audience :</strong> Chaque page consultée est comptée pour
+                  connaître la fréquentation du site, sans cookie ni traceur tiers. Ni votre adresse
+                  IP ni votre navigateur ne sont conservés : seul un identifiant chiffré, renouvelé
+                  chaque jour, permet de compter les visiteurs uniques. Les données brutes sont
+                  supprimées après 90 jours. Rien n'est envoyé si votre navigateur active « Global
+                  Privacy Control » ou « Do Not Track ».
+                </p>
+                <p>
                   <strong>Données personnelles :</strong> Vos données sont traitées conformément au
                   RGPD. Elles ne sont jamais partagées avec des tiers à des fins commerciales.
                 </p>
@@ -167,7 +175,7 @@ import { Router } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TermsOfService {
-  readonly lastUpdated = new Date('2026-02-22').toLocaleDateString('fr-FR', {
+  readonly lastUpdated = new Date('2026-10-17').toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
