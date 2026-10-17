@@ -20,6 +20,10 @@ type ChromeRuntime = {
   readonly lastError?: { message?: string };
 };
 
+export function toChromeWebStoreUrl(extensionId: string): string {
+  return `https://chromewebstore.google.com/detail/${extensionId}`;
+}
+
 function getChromeRuntime(): ChromeRuntime | undefined {
   return (window as unknown as { chrome?: { runtime?: ChromeRuntime } }).chrome?.runtime;
 }
@@ -44,7 +48,7 @@ export class ExtensionDetection {
   readonly installUrl = computed(() => {
     if (this.browserFamily === 'firefox') return this.config.firefoxAddonUrl ?? null;
     const extensionId = this.config.extensionId;
-    return extensionId ? `https://chromewebstore.google.com/detail/${extensionId}` : null;
+    return extensionId ? toChromeWebStoreUrl(extensionId) : null;
   });
 
   check(): void {

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Icon } from '@shared/ui/icon/icon';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 import { Reveal } from '@features/home/reveal';
+import { ExtensionShowcase } from '@features/home/extension-showcase';
 
 /**
  * Page d'accueil publique.
@@ -20,7 +21,7 @@ import { Reveal } from '@features/home/reveal';
  */
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Icon, Reveal, ThemeToggle],
+  imports: [RouterLink, Icon, Reveal, ThemeToggle, ExtensionShowcase],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block min-h-[100dvh] bg-background text-text' },
   template: `
@@ -200,39 +201,9 @@ import { Reveal } from '@features/home/reveal';
         </div>
       </section>
 
-      <!-- Extension : split inversé, annoncée comme à venir. -->
-      <section class="border-y border-border bg-surface-100">
-        <div
-          class="mx-auto grid max-w-[1180px] items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,4fr)_minmax(0,6fr)] lg:gap-14 lg:py-24"
-        >
-          <div appReveal class="order-2 lg:order-1">
-            <span
-              class="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm text-muted"
-            >
-              <app-icon name="lucide-timer" cssClass="h-3.5 w-3.5" />
-              En préparation
-            </span>
-            <h2 class="mt-4 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Bientôt, sans quitter l'offre.
-            </h2>
-            <p class="mt-4 max-w-[48ch] text-base leading-relaxed text-muted sm:text-lg">
-              Une extension Chrome pour envoyer l'annonce dans Candidash depuis la page où tu l'as
-              trouvée. Elle n'est pas encore disponible.
-            </p>
-          </div>
-          <div appReveal="100" class="order-1 lg:order-2">
-            <div class="rounded-2xl border border-border bg-background p-6 sm:p-8">
-              <ol class="grid gap-4 sm:grid-cols-3">
-                @for (etape of etapes; track etape.texte) {
-                  <li class="flex gap-3 sm:flex-col sm:gap-2">
-                    <app-icon [name]="etape.icone" cssClass="h-5 w-5 shrink-0 text-accent" />
-                    <p class="text-sm leading-relaxed text-muted">{{ etape.texte }}</p>
-                  </li>
-                }
-              </ol>
-            </div>
-          </div>
-        </div>
+      <!-- Extension : navigateur dessiné, vrai popup, liens vers les stores. -->
+      <section class="border-y border-border bg-surface-100" aria-labelledby="extension-titre">
+        <app-extension-showcase appReveal />
       </section>
 
       <!-- Appel final : bande centrée, un seul geste. -->
@@ -297,11 +268,5 @@ export class Home {
     'Entretien prévu',
     'Acceptée',
     'Refusée',
-  ];
-
-  protected readonly etapes = [
-    { icone: 'lucide-external-link', texte: "Tu es sur l'offre, tu cliques sur l'extension." },
-    { icone: 'lucide-file-text', texte: "Le titre, l'entreprise et le lien sont repris." },
-    { icone: 'lucide-check', texte: 'La candidature apparaît dans ton tableau de bord.' },
   ];
 }
