@@ -132,9 +132,10 @@ const TAG_EXAMPLES = [
           <summary class="cursor-pointer hover:text-text">Pourquoi « accès direct » ?</summary>
           <div class="mt-2 space-y-2 leading-relaxed">
             <p>
-              Les applis (LinkedIn, Gmail, WhatsApp…), les favoris et les adresses tapées à la main
-              ne transmettent pas leur origine. Pour la connaître, ajoute un tag aux liens que tu
-              partages :
+              Les sites, les applis LinkedIn, Facebook, Instagram, TikTok et les liens sponsorisés
+              sont reconnus automatiquement. Les mails et messageries (Gmail, WhatsApp, SMS), les
+              favoris, les QR codes et les PDF comme ton CV ne transmettent aucune origine : ajoute
+              un tag aux liens que tu y partages :
             </p>
             <ul class="space-y-1">
               @for (example of tagExamples; track example) {
