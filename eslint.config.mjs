@@ -1,158 +1,73 @@
-// eslint.config.mjs
+// @ts-check
 import js from '@eslint/js';
-import typescript from '@typescript-eslint/eslint-plugin';
-import typescriptParser from '@typescript-eslint/parser';
-import angular from '@angular-eslint/eslint-plugin';
-import angularTemplate from '@angular-eslint/eslint-plugin-template';
-import angularTemplateParser from '@angular-eslint/template-parser';
+import tseslint from 'typescript-eslint';
+import angular from 'angular-eslint';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 
-export default [
-  // Ignorer les fichiers
-  {
-    ignores: [
-      'dist/**/*',
-      'node_modules/**/*',
-      '.angular/**/*',
-      'coverage/**/*',
-      '*.js',
-      '*.mjs'
-    ]
-  },
+const sharedTsRules = {
+  '@typescript-eslint/explicit-function-return-type': 'off',
+  '@typescript-eslint/explicit-module-boundary-types': 'off',
+  '@typescript-eslint/no-explicit-any': 'warn',
+  '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+  '@typescript-eslint/prefer-readonly': 'error',
+  '@typescript-eslint/prefer-nullish-coalescing': 'error',
+  '@typescript-eslint/prefer-optional-chain': 'error',
+  'prefer-const': 'error',
+  'no-var': 'error',
+  'object-shorthand': 'error',
+  'prefer-arrow-callback': 'error',
+};
 
-  // Configuration pour les fichiers TypeScript
+export default tseslint.config(
+  { ignores: ['dist/**', 'node_modules/**', '.angular/**', 'coverage/**', '*.js', '*.mjs'] },
+
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.spec.ts'],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended, ...angular.configs.tsRecommended],
+    // Les templates inline sont extraits et passés aux règles de template ci-dessous
+    processor: angular.processInlineTemplates,
     languageOptions: {
-      parser: typescriptParser,
       parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        project: ['./tsconfig.json', './tsconfig.app.json', './tsconfig.spec.json'],
-        createDefaultProgram: true
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-        ...globals.es2022
-      }
-    },
-    plugins: {
-      '@typescript-eslint': typescript,
-      '@angular-eslint': angular
+      globals: { ...globals.browser, ...globals.node, ...globals.es2022 },
     },
     rules: {
-      ...js.configs.recommended.rules,
-      ...typescript.configs.recommended.rules,
-      ...angular.configs.recommended.rules,
-
-      // Règles Angular spécifiques
       '@angular-eslint/directive-selector': [
         'error',
-        {
-          type: 'attribute',
-          prefix: 'app',
-          style: 'camelCase'
-        }
+        { type: 'attribute', prefix: 'app', style: 'camelCase' },
       ],
       '@angular-eslint/component-selector': [
         'error',
-        {
-          type: 'element',
-          prefix: 'app',
-          style: 'kebab-case'
-        }
+        { type: 'element', prefix: 'app', style: 'kebab-case' },
       ],
-
-      // Règles TypeScript optimisées
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/prefer-readonly': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
-
-      // Règles modernes
-      'prefer-const': 'error',
-      'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-arrow-callback': 'error'
-    }
+      ...sharedTsRules,
+    },
   },
 
-  // Configuration pour les fichiers de test TypeScript
+  // Tests : globals Vitest (vitest.config.ts: globals: true), règles de sélecteur non pertinentes
   {
     files: ['**/*.spec.ts'],
-    languageOptions: {
-      parser: typescriptParser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        project: ['./tsconfig.json', './tsconfig.app.json', './tsconfig.spec.json'],
-        createDefaultProgram: true
-      },
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-        ...globals.es2022,
-        // Vitest globals (vitest.config.ts: globals: true)
-        vi: 'readonly',
-        describe: 'readonly',
-        it: 'readonly',
-        expect: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly',
-      }
-    },
-    plugins: {
-      '@typescript-eslint': typescript,
-      '@angular-eslint': angular
-    },
+    languageOptions: { globals: { ...globals.vitest } },
     rules: {
-      ...js.configs.recommended.rules,
-      ...typescript.configs.recommended.rules,
-      ...angular.configs.recommended.rules,
-
-      // Règles TypeScript optimisées
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/prefer-readonly': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
-
-      // Règles modernes
-      'prefer-const': 'error',
-      'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-arrow-callback': 'error'
-    }
+      '@angular-eslint/component-selector': 'off',
+      '@angular-eslint/directive-selector': 'off',
+    },
   },
 
-  // Configuration pour les templates HTML
   {
     files: ['**/*.html'],
-    languageOptions: {
-      parser: angularTemplateParser
-    },
-    plugins: {
-      '@angular-eslint/template': angularTemplate
-    },
+    extends: [...angular.configs.templateRecommended],
     rules: {
-      ...angularTemplate.configs.recommended.rules,
       '@angular-eslint/template/eqeqeq': 'error',
       '@angular-eslint/template/no-negated-async': 'error',
       '@angular-eslint/template/conditional-complexity': ['error', { maxComplexity: 3 }],
-      '@angular-eslint/template/cyclomatic-complexity': ['error', { maxComplexity: 20 }]
-    }
+      '@angular-eslint/template/cyclomatic-complexity': ['error', { maxComplexity: 20 }],
+    },
   },
 
-  // Configuration Prettier (doit être en dernier)
-  prettier
-];
+  // Prettier en dernier : coupe les règles de mise en forme
+  prettier,
+);

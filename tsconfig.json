@@ -14,19 +14,18 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
-    "baseUrl": "./src",
     "paths": {
       "@app/*": [
-        "app/*"
+        "./src/app/*"
       ],
 "@shared/*": [
-        "app/shared/*"
+        "./src/app/shared/*"
       ],
       "@core/*": [
-        "app/core/*"
+        "./src/app/core/*"
       ],
       "@features/*": [
-        "app/features/*"
+        "./src/app/features/*"
       ]
     }
   },

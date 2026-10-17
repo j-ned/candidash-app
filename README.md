@@ -4,7 +4,7 @@
 
 ### Tableau de bord personnel pour **piloter sa recherche d'emploi**
 
-**Angular 21 · Signals · Clean Architecture · Rappels automatisés**
+**Angular 22 · Signals · Clean Architecture · Rappels automatisés**
 
 [![Angular](https://img.shields.io/badge/Angular-21-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -212,7 +212,7 @@ sequenceDiagram
 
 ### Frontend
 
-- **Angular 21** — standalone components, Signals, `inject()` partout
+- **Angular 22** — standalone components, Signals, `inject()` partout
 - **TailwindCSS v4** — thème custom via `@theme` dans `styles.css` (PostCSS plugin)
 - **PostCSS** + `@tailwindcss/postcss`
 - **RxJS 7.8** — combiné avec signals via `toSignal()` / `toObservable()`
@@ -342,7 +342,7 @@ docker run --rm -p 8080:80 candidash-frontend
 
 ## 🔗 Écosystème Candidash
 
-- **Frontend (ce dépôt)** — Angular 21
+- **Frontend (ce dépôt)** — Angular 22
 - **Backend** — [nest-candidash-app](https://github.com/djoudj-dev/nest-candidash-app) · NestJS 11 + Prisma 7 + PostgreSQL
 
 ---
