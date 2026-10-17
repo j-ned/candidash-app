@@ -151,6 +151,36 @@ describe('Profile2fa', () => {
       expect(gateway.verifyTotpSetup).not.toHaveBeenCalled();
     });
 
+    it('reveals the code error when submitted empty, with the button still enabled', async () => {
+      // Given
+      const fixture = setup();
+      openVerifyStep(fixture);
+      expect(buttonOf(fixture, 'totp-verify-submit').disabled).toBe(false);
+
+      // When
+      await submit(fixture, 'totp-verify-form');
+
+      // Then
+      expect(gateway.verifyTotpSetup).not.toHaveBeenCalled();
+      expect(byTestId(fixture, 'totp-token-error').textContent).toContain('Le code est requis');
+      expect(byTestId(fixture, 'totp-token').getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('starts the code step afresh after a cancellation', () => {
+      // Given
+      const fixture = setup();
+      openVerifyStep(fixture);
+      type(fixture, 'totp-token', '12');
+      click(fixture, 'totp-verify-cancel');
+
+      // When
+      openVerifyStep(fixture);
+
+      // Then
+      expect(byTestId<HTMLInputElement>(fixture, 'totp-token').value).toBe('');
+      expect(byTestId(fixture, 'totp-token-error')).toBeNull();
+    });
+
     it('warns and stays on the code step when the API rejects the code', async () => {
       // Given
       const fixture = setup();
@@ -201,6 +231,22 @@ describe('Profile2fa', () => {
 
       // Then
       expect(gateway.disableTotp).not.toHaveBeenCalled();
+    });
+
+    it('reveals the password error when submitted empty, with the button still enabled', async () => {
+      // Given
+      const fixture = setup(true);
+      click(fixture, 'totp-disable-open');
+      expect(buttonOf(fixture, 'totp-disable-submit').disabled).toBe(false);
+
+      // When
+      await submit(fixture, 'totp-disable-form');
+
+      // Then
+      expect(gateway.disableTotp).not.toHaveBeenCalled();
+      expect(byTestId(fixture, 'totp-disable-password-error').textContent).toContain(
+        'Mot de passe requis',
+      );
     });
 
     it('warns and keeps the form open when the password is wrong', async () => {

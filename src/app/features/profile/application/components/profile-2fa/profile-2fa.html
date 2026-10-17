@@ -53,8 +53,9 @@
           </span>
         </app-button>
       } @else {
-        <form data-testid="totp-disable-form" [formGroup]="disableForm" (ngSubmit)="onDisableTotp()" class="space-y-3 sm:space-y-4">
+        <form data-testid="totp-disable-form" [formRoot]="disableForm" class="space-y-3 sm:space-y-4">
           <div class="space-y-1 sm:space-y-2">
+            @let passwordInError = disableForm.password().touched() && disableForm.password().invalid();
             <label for="disable-password" class="flex items-center gap-1.5 text-sm font-medium text-text sm:text-base">
               <app-icon name="lucide-lock-keyhole" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
               Confirmez votre mot de passe
@@ -63,10 +64,20 @@
               id="disable-password"
               data-testid="totp-disable-password"
               type="password"
-              formControlName="password"
+              [formField]="disableForm.password"
+              autocomplete="current-password"
+              aria-required="true"
+              [attr.aria-invalid]="passwordInError"
+              [attr.aria-describedby]="passwordInError ? 'disable-password-error' : null"
               class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-background text-text placeholder:text-muted text-sm sm:px-4 sm:py-3 sm:rounded-md sm:text-base"
-              [class.border-border]="true"
+              [class.border-error]="passwordInError"
+              [class.border-border]="!passwordInError"
               placeholder="Votre mot de passe"
+            />
+            <app-field-error
+              [field]="disableForm.password"
+              errorId="disable-password-error"
+              testId="totp-disable-password-error"
             />
           </div>
           <div class="flex gap-2">
@@ -74,7 +85,7 @@
               data-testid="totp-disable-submit"
               type="submit"
               color="red"
-              [disabled]="disableForm.invalid || isLoading()"
+              [disabled]="isLoading()"
               [isLoading]="isLoading()"
               customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
             >
@@ -175,8 +186,9 @@
       Entrez le code à 6 chiffres affiché dans votre application d'authentification pour confirmer la configuration.
     </p>
 
-    <form data-testid="totp-verify-form" [formGroup]="verifyForm" (ngSubmit)="onVerifySetup()" class="space-y-4 sm:space-y-6">
+    <form data-testid="totp-verify-form" [formRoot]="verifyForm" class="space-y-4 sm:space-y-6">
       <div class="space-y-1 sm:space-y-2">
+        @let tokenInError = verifyForm.token().touched() && verifyForm.token().invalid();
         <label for="setup-token" class="block text-sm font-medium text-text sm:text-base">
           Code TOTP
         </label>
@@ -186,16 +198,20 @@
           type="text"
           inputmode="numeric"
           autocomplete="one-time-code"
-          formControlName="token"
-          maxlength="6"
+          [formField]="verifyForm.token"
+          aria-required="true"
+          [attr.aria-invalid]="tokenInError"
+          [attr.aria-describedby]="tokenInError ? 'setup-token-error' : null"
           class="w-full px-3 py-3 border rounded bg-background text-text text-center text-2xl font-mono tracking-widest placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all sm:px-4 sm:py-4 sm:rounded-md sm:text-3xl"
-          [class.border-error]="tokenError()"
-          [class.border-border]="!tokenError()"
+          [class.border-error]="tokenInError"
+          [class.border-border]="!tokenInError"
           placeholder="000000"
         />
-        @if (tokenError()) {
-          <p data-testid="totp-token-error" class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ tokenError() }}</p>
-        }
+        <app-field-error
+          [field]="verifyForm.token"
+          errorId="setup-token-error"
+          testId="totp-token-error"
+        />
       </div>
 
       <div class="flex gap-2">
@@ -203,7 +219,7 @@
           data-testid="totp-verify-submit"
           type="submit"
           color="primary"
-          [disabled]="verifyForm.invalid || isLoading()"
+          [disabled]="isLoading()"
           [isLoading]="isLoading()"
           customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
         >
@@ -213,6 +229,7 @@
           </span>
         </app-button>
         <app-button
+          data-testid="totp-verify-cancel"
           color="secondary"
           (buttonClick)="cancelSetup()"
           customClass="px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
