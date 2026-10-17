@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CandiDash is an Angular 20 job application tracker with a dashboard. The frontend communicates with a separate NestJS backend (`nest-candidash-app`) via REST API at `/api/v1/...`.
+CandiDash is an Angular 22 job application tracker with a dashboard. The frontend communicates with a separate NestJS backend (`nest-candidash-app`) via REST API at `/api/v1/...`.
 
 ## Commands
 
@@ -27,7 +27,7 @@ docker run --rm -p 8080:80 candidash-frontend
 ## Architecture
 
 ### Stack
-- **Angular 20** with standalone components (no NgModules), **Tailwind CSS 4** (PostCSS plugin, CSS-based config via `@theme` in `styles.css`), **Vitest** with jsdom + `@analogjs/vite-plugin-angular`.
+- **Angular 22** (zoneless, OnPush by default) with standalone components (no NgModules), **Tailwind CSS 4** (PostCSS plugin, CSS-based config via `@theme` in `styles.css`), **Vitest** with jsdom + `@analogjs/vite-plugin-angular`.
 
 ### Clean Architecture (Hexagonal / Ports & Adapters)
 
