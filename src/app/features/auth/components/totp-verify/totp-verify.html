@@ -22,32 +22,37 @@
   </p>
 
   @if (!useRecoveryMode()) {
-    <form [formGroup]="totpForm" (ngSubmit)="onSubmitTotp()" class="space-y-4 sm:space-y-6">
+    <form data-testid="totp-form" [formRoot]="totpForm" class="space-y-4 sm:space-y-6">
       <div class="space-y-1 sm:space-y-2">
+        @let tokenInError = totpForm.token().touched() && totpForm.token().invalid();
         <label for="totp-token" class="block text-sm font-medium text-text sm:text-base">
           Code TOTP
         </label>
         <input
           id="totp-token"
+          data-testid="totp-token"
           type="text"
           inputmode="numeric"
           autocomplete="one-time-code"
-          formControlName="token"
-          maxlength="6"
-          class="w-full px-3 py-3 border rounded-md bg-background text-text text-center text-2xl font-mono tracking-widest placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-3xl"
-          [class.border-error]="tokenError()"
-          [class.border-input]="!tokenError()"
+          [formField]="totpForm.token"
+          aria-required="true"
+          [attr.aria-invalid]="tokenInError"
+          [attr.aria-describedby]="tokenInError ? 'totp-token-error' : null"
+          class="w-full px-3 py-3 border border-input rounded-md bg-background text-text text-center text-2xl font-mono tracking-widest placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-3xl aria-invalid:border-error"
           placeholder="000000"
         />
-        @if (tokenError()) {
-          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ tokenError() }}</p>
-        }
+        <app-field-error
+          [field]="totpForm.token"
+          errorId="totp-token-error"
+          testId="totp-token-error"
+        />
       </div>
 
       <app-button
+        data-testid="totp-submit"
         type="submit"
         color="primary"
-        [disabled]="totpForm.invalid"
+        [disabled]="authService.isLoading() || totpForm().submitting()"
         [isLoading]="authService.isLoading()"
         customClass="w-full py-3 text-base font-semibold sm:py-4 sm:text-lg"
       >
@@ -55,29 +60,36 @@
       </app-button>
     </form>
   } @else {
-    <form [formGroup]="recoveryForm" (ngSubmit)="onSubmitRecovery()" class="space-y-4 sm:space-y-6">
+    <form data-testid="recovery-form" [formRoot]="recoveryForm" class="space-y-4 sm:space-y-6">
       <div class="space-y-1 sm:space-y-2">
+        @let recoveryCodeInError =
+          recoveryForm.recoveryCode().touched() && recoveryForm.recoveryCode().invalid();
         <label for="recovery-code" class="block text-sm font-medium text-text sm:text-base">
           Code de récupération
         </label>
         <input
           id="recovery-code"
+          data-testid="recovery-code"
           type="text"
-          formControlName="recoveryCode"
-          class="w-full px-3 py-3 border rounded-md bg-background text-text text-center text-lg font-mono tracking-wider placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-xl"
-          [class.border-error]="recoveryCodeError()"
-          [class.border-input]="!recoveryCodeError()"
+          [formField]="recoveryForm.recoveryCode"
+          aria-required="true"
+          [attr.aria-invalid]="recoveryCodeInError"
+          [attr.aria-describedby]="recoveryCodeInError ? 'recovery-code-error' : null"
+          class="w-full px-3 py-3 border border-input rounded-md bg-background text-text text-center text-lg font-mono tracking-wider placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-xl aria-invalid:border-error"
           placeholder="xxxx-xxxx-xxxx"
         />
-        @if (recoveryCodeError()) {
-          <p class="text-error text-xs mt-1 sm:text-sm" role="alert">{{ recoveryCodeError() }}</p>
-        }
+        <app-field-error
+          [field]="recoveryForm.recoveryCode"
+          errorId="recovery-code-error"
+          testId="recovery-code-error"
+        />
       </div>
 
       <app-button
+        data-testid="recovery-submit"
         type="submit"
         color="primary"
-        [disabled]="recoveryForm.invalid"
+        [disabled]="authService.isLoading() || recoveryForm().submitting()"
         [isLoading]="authService.isLoading()"
         customClass="w-full py-3 text-base font-semibold sm:py-4 sm:text-lg"
       >
@@ -90,6 +102,7 @@
     <p>
       <button
         type="button"
+        data-testid="totp-toggle-recovery"
         (click)="toggleRecoveryMode()"
         class="text-primary-800 hover:text-primary-900 text-sm font-medium transition-colors duration-200 underline-offset-4 hover:underline sm:text-base"
       >
@@ -103,6 +116,7 @@
     <p>
       <button
         type="button"
+        data-testid="totp-back"
         (click)="goBack()"
         class="text-muted hover:text-text text-sm transition-colors duration-200 sm:text-base"
       >
