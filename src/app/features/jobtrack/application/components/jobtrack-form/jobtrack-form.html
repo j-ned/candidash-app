@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <form class="space-y-6 sm:space-y-8" [formGroup]="form" (ngSubmit)="submit()">
+    <form data-testid="jobtrack-form" class="space-y-6 sm:space-y-8" [formRoot]="jobForm">
       <!-- Section 1: Informations générales -->
       <fieldset
         class="bg-card/60 border border-border/40 rounded-2xl p-5 space-y-5 sm:p-6 sm:space-y-6"
@@ -60,20 +60,22 @@
               Titre du poste recherché
               <span class="text-error">*</span>
             </label>
+            @let titleInError = jobForm.title().touched() && jobForm.title().invalid();
             <input
               id="title"
-              class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
-              formControlName="title"
-              required
+              data-testid="jobtrack-title"
+              class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base aria-invalid:border-error"
+              [formField]="jobForm.title"
               aria-required="true"
+              [attr.aria-invalid]="titleInError"
+              [attr.aria-describedby]="titleInError ? 'title-error' : null"
               placeholder="Ex: Développeur Full-Stack React/Node.js"
             />
-            @if (form.get('title')?.errors && form.get('title')?.touched) {
-              <p class="text-xs text-error mt-1 flex items-center gap-1" role="alert">
-                <app-icon name="lucide-circle-alert" cssClass="w-3.5 h-3.5" />
-                Le titre du poste est requis (minimum 2 caractères)
-              </p>
-            }
+            <app-field-error
+              [field]="jobForm.title"
+              errorId="title-error"
+              testId="jobtrack-title-error"
+            />
           </div>
 
           <!-- Nom de l'entreprise -->
@@ -83,8 +85,9 @@
             </label>
             <input
               id="company"
+              data-testid="jobtrack-company"
               class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
-              formControlName="company"
+              [formField]="jobForm.company"
               placeholder="Ex: Google, Airbnb, startup locale..."
             />
             <p class="text-xs text-muted flex items-center gap-1">
@@ -101,8 +104,9 @@
             <div class="relative">
               <input
                 id="jobUrl"
+                data-testid="jobtrack-url"
                 class="w-full pl-10 pr-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:pl-11 sm:pr-4 sm:py-3 sm:text-base"
-                formControlName="jobUrl"
+                [formField]="jobForm.jobUrl"
                 placeholder="https://linkedin.com/jobs/..."
               />
               <app-icon
@@ -122,6 +126,7 @@
                 <button
                   type="button"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                  [attr.data-testid]="'jobtrack-contract-' + ct"
                   [class]="contractBadgeClasses()[ct]"
                   (click)="toggleContractType(ct)"
                 >
@@ -167,8 +172,9 @@
                 <button
                   type="button"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                  [attr.data-testid]="'jobtrack-status-' + s"
                   [class]="statusBadgeClasses()[s]"
-                  (click)="form.get('status')!.setValue(s)"
+                  (click)="selectStatus(s)"
                 >
                   <span aria-hidden="true">{{ statusConfig[s].emoji }}</span>
                   <span class="hidden sm:inline">{{ statusConfig[s].label }}</span>
@@ -179,7 +185,7 @@
 
             <!-- Terminal status warning -->
             @if (isTerminalStatus()) {
-              <p class="text-xs text-muted flex items-center gap-1 mt-1">
+              <p data-testid="jobtrack-terminal-notice" class="text-xs text-muted flex items-center gap-1 mt-1">
                 <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
                 Les rappels seront désactivés automatiquement pour ce statut
               </p>
@@ -193,9 +199,10 @@
             </label>
             <input
               id="appliedAt"
+              data-testid="jobtrack-applied-at"
               type="date"
               class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base"
-              formControlName="appliedAt"
+              [formField]="jobForm.appliedAt"
             />
             <p class="text-xs text-muted flex items-center gap-1">
               <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
@@ -216,15 +223,16 @@
               <h3 class="text-sm font-semibold text-text">Rappels automatiques</h3>
             </div>
 
-            @if (!isTerminalStatus()) {
+            @if (!jobForm.isReminderActive().hidden()) {
               <label class="relative inline-flex items-center cursor-pointer gap-2">
                 <span class="text-xs font-medium text-muted">
-                  {{ form.get('isReminderActive')?.value ? 'Actif' : 'Désactivé' }}
+                  {{ model().isReminderActive ? 'Actif' : 'Désactivé' }}
                 </span>
                 <div class="relative">
                   <input
                     type="checkbox"
-                    formControlName="isReminderActive"
+                    data-testid="jobtrack-reminder-toggle"
+                    [formField]="jobForm.isReminderActive"
                     class="sr-only peer"
                   />
                   <div
@@ -276,7 +284,7 @@
           }
 
           <!-- Frequency options (hidden when terminal or disabled) -->
-          @if (!isTerminalStatus() && form.get('isReminderActive')?.value) {
+          @if (!jobForm.frequency().hidden()) {
             <p class="text-xs text-muted">
               Choisissez la fréquence de vos rappels de suivi :
             </p>
@@ -285,12 +293,13 @@
               @for (option of reminderOptions; track option.value) {
                 <label
                   class="relative flex items-start gap-2.5 p-3 border rounded-xl cursor-pointer hover:bg-card/80 transition-all"
-                  [class]="form.get('frequency')?.value === option.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50'"
+                  [class]="model().frequency === option.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50'"
                 >
                   <input
                     type="radio"
+                    [attr.data-testid]="'jobtrack-frequency-' + option.value"
                     [value]="option.value"
-                    formControlName="frequency"
+                    [formField]="jobForm.frequency"
                     class="mt-0.5 accent-primary"
                   />
                   <div>
@@ -350,7 +359,7 @@
           }
 
           <!-- Disabled state message -->
-          @if (!isTerminalStatus() && !form.get('isReminderActive')?.value) {
+          @if (!jobForm.isReminderActive().hidden() && !model().isReminderActive) {
             <p class="text-xs text-muted flex items-center gap-1.5">
               <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
               Activez les rappels pour recevoir des notifications de suivi par email.
@@ -384,9 +393,10 @@
           </label>
           <textarea
             id="notes"
+            data-testid="jobtrack-notes"
             rows="4"
             class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:rows-5 sm:px-4 sm:py-3 sm:text-base resize-y"
-            formControlName="notes"
+            [formField]="jobForm.notes"
             placeholder="Ex: Salaire discuté 45-50k, contact RH sympathique, télétravail possible 2j/semaine, équipe de 8 développeurs..."
           ></textarea>
           <p class="text-xs text-muted flex items-center gap-1">
@@ -424,6 +434,7 @@
             <div class="relative">
               <input
                 type="checkbox"
+                data-testid="jobtrack-documents-toggle"
                 [checked]="showDocuments()"
                 (change)="toggleDocuments()"
                 class="sr-only peer"
@@ -509,6 +520,7 @@
                   }
                   <input
                     #cvInput
+                    data-testid="jobtrack-cv-input"
                     type="file"
                     accept="application/pdf"
                     class="hidden"
@@ -586,6 +598,7 @@
                   }
                   <input
                     #lmInput
+                    data-testid="jobtrack-lm-input"
                     type="file"
                     accept="application/pdf"
                     class="hidden"
@@ -606,10 +619,11 @@
         <div class="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <app-button
             [customClass]="'w-full sm:w-auto px-6 py-2.5 text-sm font-semibold sm:px-8 sm:py-3 sm:text-base'"
+            data-testid="jobtrack-submit"
             type="submit"
             color="primary"
-            [isLoading]="submitting()"
-            [disabled]="form.invalid || submitting()"
+            [isLoading]="jobForm().submitting()"
+            [disabled]="jobForm().submitting()"
           >
             <app-icon name="lucide-check" cssClass="w-4 h-4 mr-1.5 sm:w-5 sm:h-5" />
             {{ isEdit() ? 'Mettre à jour' : 'Enregistrer' }}

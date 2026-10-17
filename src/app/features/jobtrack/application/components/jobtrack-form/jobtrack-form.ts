@@ -5,12 +5,13 @@ import {
   signal,
   input,
   computed,
-  OnInit,
+  linkedSignal,
   DestroyRef,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
+import { FormField, FormRoot, form, hidden, minLength, required } from '@angular/forms/signals';
 import { Layout } from '@shared/ui/layout/layout';
 import { Button } from '@shared/ui/button/button';
 import { STATUS_CONFIG, ALL_STATUSES, CONTRACT_TYPE_CONFIG, ALL_CONTRACT_TYPES } from '@features/jobtrack/domain/models/jobtrack.model';
@@ -21,39 +22,60 @@ import type {
   JobTrack,
   JobStatus,
   ContractType,
-  Reminder,
   UpdateJobTrackWithReminderDto,
 } from '@features/jobtrack/domain/models/jobtrack.model';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Toaster } from '@shared/ui/toast/service/toast';
 import { Icon } from '@shared/ui/icon/icon';
 import { PdfViewerModal } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
+import { FieldError } from '@shared/ui/field-error/field-error';
+import { focusFirstInvalid } from '@shared/forms/focus-first-invalid';
 import { dateOnlyToIso } from '@shared/utils/date-only-to-iso';
 
-type JobtrackForm = {
-  title: FormControl<string>;
-  company: FormControl<string>;
-  jobUrl: FormControl<string>;
-  status: FormControl<JobStatus>;
-  contractType: FormControl<ContractType | null>;
-  appliedAt: FormControl<string>;
-  notes: FormControl<string>;
-  frequency: FormControl<number>;
-  isReminderActive: FormControl<boolean>;
+/**
+ * Modèle du formulaire : défauts non-null, conversion vers le DTO uniquement à l'envoi.
+ * `contractType` vide = aucun contrat ; `frequency` garde la valeur native des boutons radio
+ * (chaîne), convertie en nombre dans le payload.
+ */
+type JobtrackDraft = {
+  title: string;
+  company: string;
+  jobUrl: string;
+  status: JobStatus;
+  contractType: ContractType | '';
+  appliedAt: string;
+  notes: string;
+  frequency: string;
+  isReminderActive: boolean;
 };
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+const TITLE_ERROR = 'Le titre du poste est requis (minimum 2 caractères)';
+
 /** Statuses where reminders no longer make sense */
 const TERMINAL_STATUSES: ReadonlySet<JobStatus> = new Set(['ACCEPTED', 'REJECTED']);
 
+function toDraft(job: JobTrack | null): JobtrackDraft {
+  return {
+    title: job?.title ?? '',
+    company: job?.company ?? '',
+    jobUrl: job?.jobUrl ?? '',
+    status: job?.status ?? 'APPLIED',
+    contractType: job?.contractType ?? '',
+    appliedAt: job?.appliedAt ? job.appliedAt.substring(0, 10) : '',
+    notes: job?.notes ?? '',
+    frequency: String(job?.reminder?.frequency ?? 7),
+    isReminderActive: job?.reminder?.isActive ?? true,
+  };
+}
+
 @Component({
   selector: 'app-jobtrack-form-page',
-  imports: [Layout, ReactiveFormsModule, Button, Icon],
+  imports: [Layout, FormRoot, FormField, FieldError, Button, Icon],
   templateUrl: './jobtrack-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class JobtrackFormPage implements OnInit {
+export class JobtrackFormPage {
   private readonly router = inject(Router);
   private readonly jobtrackGateway = inject(JobtrackGateway);
   private readonly toast = inject(Toaster);
@@ -62,89 +84,100 @@ export class JobtrackFormPage implements OnInit {
 
   readonly id = input<string>();
 
-  readonly submitting = signal(false);
-  readonly isEdit = signal(false);
+  readonly isEdit = computed(() => !!this.id());
   readonly allStatuses = ALL_STATUSES;
   readonly statusConfig = STATUS_CONFIG;
   readonly allContractTypes = ALL_CONTRACT_TYPES;
   readonly contractTypeConfig = CONTRACT_TYPE_CONFIG;
 
-  /** Original reminder from backend (edit mode only) */
-  private readonly existingReminder = signal<Reminder | null>(null);
+  /** Candidature chargée en modification (null en création) */
+  private readonly jobResource = rxResource({
+    params: () => this.id(),
+    stream: ({ params: id }) => this.jobtrackGateway.get(id),
+  });
+  private readonly loadedJob = computed(() =>
+    this.jobResource.hasValue() ? this.jobResource.value() : null,
+  );
 
-  /** Tracks whether the user changed reminder-related fields */
-  private readonly originalFrequency = signal<number>(7);
-  private readonly originalAppliedAt = signal<string>('');
+  /** Valeurs d'origine (modification), pour savoir si le rappel doit être recalculé */
+  private readonly baseline = computed(() => toDraft(this.loadedJob()));
+
+  /** Original reminder from backend (edit mode only) */
+  private readonly existingReminder = computed(() => this.loadedJob()?.reminder ?? null);
 
   // ── Documents ────────────────────────────────────────
-  readonly showDocuments = signal(false);
+  readonly showDocuments = linkedSignal(() => {
+    const job = this.loadedJob();
+    return Boolean(job?.cvFileName) || Boolean(job?.lmFileName);
+  });
   readonly cvDragOver = signal(false);
   readonly lmDragOver = signal(false);
   readonly cvUploading = signal(false);
   readonly lmUploading = signal(false);
 
-  /** Pending files for create mode (uploaded after jobtrack creation) */
+  /** Pending files for create mode (uploaded after jobtrack creation), hors modèle du formulaire */
   readonly pendingCvFile = signal<File | null>(null);
   readonly pendingLmFile = signal<File | null>(null);
 
   /** Existing file names from backend (edit mode) */
-  readonly existingCvFileName = signal<string | null>(null);
-  readonly existingLmFileName = signal<string | null>(null);
+  readonly existingCvFileName = linkedSignal(() => this.loadedJob()?.cvFileName ?? null);
+  readonly existingLmFileName = linkedSignal(() => this.loadedJob()?.lmFileName ?? null);
 
   readonly reminderOptions = [
-    { value: 3, label: 'Suivi rapide (3 jours)', description: 'Pour les opportunités urgentes' },
+    { value: '3', label: 'Suivi rapide (3 jours)', description: 'Pour les opportunités urgentes' },
     {
-      value: 7,
+      value: '7',
       label: 'Suivi standard (1 semaine)',
       description: 'Recommandé pour la plupart des candidatures',
     },
     {
-      value: 14,
+      value: '14',
       label: 'Suivi patient (2 semaines)',
       description: 'Pour les grandes entreprises',
     },
     {
-      value: 30,
+      value: '30',
       label: 'Suivi long terme (1 mois)',
       description: 'Pour les postes très spécifiques',
     },
   ];
 
-  readonly form = new FormGroup<JobtrackForm>({
-    title: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.minLength(2)],
-    }),
-    company: new FormControl('', { nonNullable: true }),
-    jobUrl: new FormControl('', { nonNullable: true }),
-    status: new FormControl<JobStatus>('APPLIED', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    contractType: new FormControl<ContractType | null>(null),
-    appliedAt: new FormControl('', { nonNullable: true }),
-    notes: new FormControl('', { nonNullable: true }),
-    frequency: new FormControl(7, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.min(1)],
-    }),
-    isReminderActive: new FormControl(true, { nonNullable: true }),
-  });
+  /** Brouillon édité : réinitialisé depuis la candidature chargée (création = valeurs par défaut) */
+  protected readonly model = linkedSignal(() => toDraft(this.loadedJob()));
 
-  /** Reactive signals tracking form values for computed properties */
-  private readonly currentFrequency = signal(7);
-  private readonly currentAppliedAt = signal('');
-  private readonly currentIsActive = signal(true);
-  private readonly currentStatus = signal<JobStatus>('APPLIED');
-  private readonly currentContractType = signal<ContractType | null>(null);
+  protected readonly jobForm = form(
+    this.model,
+    (path) => {
+      required(path.title, { message: TITLE_ERROR });
+      minLength(path.title, 2, { message: TITLE_ERROR });
+      required(path.status);
+      // Statut terminal : plus de rappel, l'interrupteur et la fréquence disparaissent
+      hidden(path.isReminderActive, {
+        when: ({ valueOf }) => TERMINAL_STATUSES.has(valueOf(path.status)),
+      });
+      hidden(path.frequency, {
+        when: ({ valueOf }) =>
+          TERMINAL_STATUSES.has(valueOf(path.status)) || !valueOf(path.isReminderActive),
+      });
+      required(path.frequency);
+    },
+    {
+      submission: {
+        action: () => this.save(),
+        // Bouton actif sur un formulaire invalide : submit() révèle les erreurs, focus sur la première
+        onInvalid: (field) => focusFirstInvalid(field),
+      },
+    },
+  );
 
   /** Whether the current status is terminal (ACCEPTED/REJECTED) */
-  readonly isTerminalStatus = computed(() => TERMINAL_STATUSES.has(this.currentStatus()));
+  readonly isTerminalStatus = computed(() => TERMINAL_STATUSES.has(this.model().status));
 
   /** Computed next reminder date based on current form values */
   readonly nextReminderDate = computed(() => {
-    if (!this.currentIsActive() || this.isTerminalStatus()) return null;
-    return this.computeNextReminderAt(this.currentAppliedAt(), this.currentFrequency());
+    const { isReminderActive, appliedAt, frequency } = this.model();
+    if (!isReminderActive || this.isTerminalStatus()) return null;
+    return this.computeNextReminderAt(appliedAt, Number(frequency));
   });
 
   /** Formatted next reminder date for display */
@@ -194,30 +227,10 @@ export class JobtrackFormPage implements OnInit {
 
   /** Whether reminder fields (frequency or appliedAt) have changed from original values */
   readonly hasReminderChanged = computed(() => {
-    return (
-      this.currentFrequency() !== this.originalFrequency() ||
-      this.currentAppliedAt() !== this.originalAppliedAt()
-    );
+    const current = this.model();
+    const original = this.baseline();
+    return current.frequency !== original.frequency || current.appliedAt !== original.appliedAt;
   });
-
-  constructor() {
-    // Sync form value changes to signals for computed reactivity
-    this.form.get('frequency')!.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((v) => this.currentFrequency.set(v));
-    this.form.get('appliedAt')!.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((v) => this.currentAppliedAt.set(v));
-    this.form.get('isReminderActive')!.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((v) => this.currentIsActive.set(v));
-    this.form.get('status')!.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((v) => this.currentStatus.set(v));
-    this.form.get('contractType')!.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((v) => this.currentContractType.set(v));
-  }
 
   // Maps statut/contrat → classe de badge (indexées dans le template, plus de méthode).
   protected readonly statusBadgeClasses = computed(
@@ -225,7 +238,7 @@ export class JobtrackFormPage implements OnInit {
       Object.fromEntries(
         this.allStatuses.map((s) => [
           s,
-          this.currentStatus() === s
+          this.model().status === s
             ? this.statusConfig[s].badgeClass + ' cursor-default'
             : 'bg-transparent text-muted border-border/40 ' +
               this.statusConfig[s].hoverClass +
@@ -239,7 +252,7 @@ export class JobtrackFormPage implements OnInit {
       Object.fromEntries(
         this.allContractTypes.map((ct) => [
           ct,
-          this.currentContractType() === ct
+          this.model().contractType === ct
             ? this.contractTypeConfig[ct].badgeClass + ' cursor-default'
             : 'bg-transparent text-muted border-border/40 ' +
               this.contractTypeConfig[ct].hoverClass +
@@ -247,50 +260,6 @@ export class JobtrackFormPage implements OnInit {
         ]),
       ) as Record<ContractType, string>,
   );
-
-  ngOnInit(): void {
-    const jobId = this.id();
-    if (jobId) {
-      this.isEdit.set(true);
-      this.jobtrackGateway.get(jobId).subscribe((job) => this.patchForm(job));
-    }
-  }
-
-  private patchForm(job: JobTrack): void {
-    const frequency = job.reminder?.frequency ?? 7;
-    const appliedAt = job.appliedAt ? job.appliedAt.substring(0, 10) : '';
-    const isActive = job.reminder?.isActive ?? true;
-
-    this.form.patchValue({
-      title: job.title ?? '',
-      company: job.company ?? '',
-      jobUrl: job.jobUrl ?? '',
-      status: job.status ?? 'APPLIED',
-      contractType: job.contractType ?? null,
-      appliedAt,
-      notes: job.notes ?? '',
-      frequency,
-      isReminderActive: isActive,
-    });
-
-    // Store originals for change detection
-    this.existingReminder.set(job.reminder ?? null);
-    this.originalFrequency.set(frequency);
-    this.originalAppliedAt.set(appliedAt);
-
-    // Sync current signals
-    this.currentFrequency.set(frequency);
-    this.currentAppliedAt.set(appliedAt);
-    this.currentIsActive.set(isActive);
-    this.currentStatus.set(job.status ?? 'APPLIED');
-
-    // Documents
-    this.existingCvFileName.set(job.cvFileName ?? null);
-    this.existingLmFileName.set(job.lmFileName ?? null);
-    if (job.cvFileName || job.lmFileName) {
-      this.showDocuments.set(true);
-    }
-  }
 
   // ── Document handling ────────────────────────────────
 
@@ -457,19 +426,13 @@ export class JobtrackFormPage implements OnInit {
     return candidate;
   }
 
-  submit(): void {
-    if (this.form.invalid) return;
-
-    const value = this.form.getRawValue();
-    const isTerminal = TERMINAL_STATUSES.has(value.status);
-    const isActive = isTerminal ? false : value.isReminderActive;
-
-    this.submitting.set(true);
-
+  private async save(): Promise<void> {
+    const value = this.model();
+    const isActive = TERMINAL_STATUSES.has(value.status) ? false : value.isReminderActive;
+    const frequency = Number(value.frequency);
     const jobId = this.id();
-    const isEditMode = this.isEdit() && jobId;
 
-    if (isEditMode) {
+    if (jobId) {
       const updatePayload: UpdateJobTrackWithReminderDto = {
         title: value.title,
         status: value.status,
@@ -486,8 +449,8 @@ export class JobtrackFormPage implements OnInit {
       const isReactivating = wasInactive && isActive;
 
       if ((noExistingReminder && isActive) || reminderChanged || isReactivating) {
-        const nextDate = this.computeNextReminderAt(value.appliedAt, value.frequency);
-        updatePayload.frequency = value.frequency;
+        const nextDate = this.computeNextReminderAt(value.appliedAt, frequency);
+        updatePayload.frequency = frequency;
         updatePayload.nextReminderAt = nextDate.toISOString();
       }
 
@@ -497,55 +460,48 @@ export class JobtrackFormPage implements OnInit {
       if (value.appliedAt) updatePayload.appliedAt = dateOnlyToIso(value.appliedAt);
       if (value.notes) updatePayload.notes = value.notes;
 
-      this.jobtrackGateway.updateWithReminder(jobId!, updatePayload, false).subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.toast.success(
-            'Candidature modifiée',
-            'La candidature a été mise à jour avec succès',
-          );
-          this.router.navigate(['/dashboard/jobtrack']);
-        },
-        error: () => {
-          this.submitting.set(false);
-          this.toast.danger('Erreur', 'Impossible de modifier la candidature');
-        },
-      });
-    } else {
-      const nextDate = this.computeNextReminderAt(value.appliedAt, value.frequency);
-
-      const createPayload: CreateJobTrackWithReminderDto = {
-        title: value.title,
-        status: value.status,
-        frequency: value.frequency,
-        nextReminderAt: nextDate.toISOString(),
-        isActive,
-      };
-
-      if (value.company) createPayload.company = value.company;
-      if (value.jobUrl) createPayload.jobUrl = value.jobUrl;
-      if (value.contractType) createPayload.contractType = value.contractType;
-      if (value.appliedAt) createPayload.appliedAt = dateOnlyToIso(value.appliedAt);
-      if (value.notes) createPayload.notes = value.notes;
-
-      this.jobtrackGateway.createWithReminder(createPayload).subscribe({
-        next: (created) => {
-          this.uploadPendingFiles(created.id);
-        },
-        error: () => {
-          this.submitting.set(false);
-          this.toast.danger('Erreur', 'Impossible de créer la candidature');
-        },
-      });
+      try {
+        await firstValueFrom(this.jobtrackGateway.updateWithReminder(jobId, updatePayload, false));
+      } catch {
+        this.toast.danger('Erreur', 'Impossible de modifier la candidature');
+        return;
+      }
+      this.toast.success('Candidature modifiée', 'La candidature a été mise à jour avec succès');
+      this.router.navigate(['/dashboard/jobtrack']);
+      return;
     }
+
+    const nextDate = this.computeNextReminderAt(value.appliedAt, frequency);
+
+    const createPayload: CreateJobTrackWithReminderDto = {
+      title: value.title,
+      status: value.status,
+      frequency,
+      nextReminderAt: nextDate.toISOString(),
+      isActive,
+    };
+
+    if (value.company) createPayload.company = value.company;
+    if (value.jobUrl) createPayload.jobUrl = value.jobUrl;
+    if (value.contractType) createPayload.contractType = value.contractType;
+    if (value.appliedAt) createPayload.appliedAt = dateOnlyToIso(value.appliedAt);
+    if (value.notes) createPayload.notes = value.notes;
+
+    let created: JobTrack;
+    try {
+      created = await firstValueFrom(this.jobtrackGateway.createWithReminder(createPayload));
+    } catch {
+      this.toast.danger('Erreur', 'Impossible de créer la candidature');
+      return;
+    }
+    await this.uploadPendingFiles(created.id);
   }
 
-  private uploadPendingFiles(jobTrackId: string): void {
+  private async uploadPendingFiles(jobTrackId: string): Promise<void> {
     const cv = this.pendingCvFile();
     const lm = this.pendingLmFile();
 
     if (!cv && !lm) {
-      this.submitting.set(false);
       this.toast.success('Candidature créée', 'La candidature a été ajoutée avec succès');
       this.router.navigate(['/dashboard/jobtrack']);
       return;
@@ -555,28 +511,27 @@ export class JobtrackFormPage implements OnInit {
     if (cv) uploads$.push(this.jobtrackGateway.uploadDocument(jobTrackId, 'cv', cv));
     if (lm) uploads$.push(this.jobtrackGateway.uploadDocument(jobTrackId, 'lm', lm));
 
-    forkJoin(uploads$)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.toast.success('Candidature créée', 'La candidature et les documents ont été enregistrés');
-          this.router.navigate(['/dashboard/jobtrack']);
-        },
-        error: () => {
-          this.submitting.set(false);
-          this.toast.warning(
-            'Candidature créée',
-            "La candidature a été créée mais l'upload des documents a échoué. Vous pourrez les ajouter depuis la page de détail.",
-          );
-          this.router.navigate(['/dashboard/jobtrack']);
-        },
-      });
+    try {
+      await firstValueFrom(forkJoin(uploads$));
+      this.toast.success('Candidature créée', 'La candidature et les documents ont été enregistrés');
+    } catch {
+      this.toast.warning(
+        'Candidature créée',
+        "La candidature a été créée mais l'upload des documents a échoué. Vous pourrez les ajouter depuis la page de détail.",
+      );
+    }
+    this.router.navigate(['/dashboard/jobtrack']);
+  }
+
+  selectStatus(status: JobStatus): void {
+    this.model.update((draft) => ({ ...draft, status }));
   }
 
   toggleContractType(type: ContractType): void {
-    const current = this.form.get('contractType')!.value;
-    this.form.get('contractType')!.setValue(current === type ? null : type);
+    this.model.update((draft) => ({
+      ...draft,
+      contractType: draft.contractType === type ? '' : type,
+    }));
   }
 
   cancel(): void {
