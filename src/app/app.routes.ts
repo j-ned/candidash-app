@@ -31,6 +31,11 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'contact',
+    title: 'Contact — Candidash',
+    loadComponent: () => import('./features/contact/pages/contact/contact').then((m) => m.Contact),
+  },
+  {
     path: 'features',
     loadComponent: () => import('./features/legal/features/features').then((m) => m.Features),
   },

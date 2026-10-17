@@ -265,6 +265,7 @@ import { Reveal } from '@features/home/reveal';
           <a routerLink="/extension-privacy" class="transition-colors hover:text-text"
             >Confidentialité de l'extension</a
           >
+          <a routerLink="/contact" class="transition-colors hover:text-text">Contact</a>
         </nav>
       </div>
     </footer>

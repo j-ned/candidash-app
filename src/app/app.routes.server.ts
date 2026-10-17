@@ -6,6 +6,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'terms-of-service', renderMode: RenderMode.Prerender },
   { path: 'features', renderMode: RenderMode.Prerender },
   { path: 'extension-privacy', renderMode: RenderMode.Prerender },
+  { path: 'contact', renderMode: RenderMode.Prerender },
   // Routes gardées + dynamiques (auth, dashboard) : rendu client (CSR).
   { path: 'dashboard', renderMode: RenderMode.Client },
   { path: 'dashboard/**', renderMode: RenderMode.Client },
