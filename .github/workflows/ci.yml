@@ -54,6 +54,34 @@ jobs:
             test -f "$browser/$page" || { echo "manquant : $page"; exit 1; }
           done
 
+      # CSP stricte (nonce par requête) : tout inline posé par Angular porte le marqueur que nginx
+      # remplace ; un attribut style="" serait bloqué en prod (pas de 'unsafe-inline').
+      - name: CSP guards
+        run: |
+          set -euo pipefail
+          browser=dist/ng-candidash-app/browser
+          for f in $(find $browser -name 'index*.html'); do
+            if grep -oE '<(script|style)[^>]*>' "$f" | grep -v 'src=' | grep -v 'application/json' | grep -vq 'nonce="\*\*CSP_NONCE\*\*"'; then
+              echo "inline sans nonce dans $f"; exit 1
+            fi
+            if grep -q ' style="' "$f"; then echo "attribut style dans $f"; exit 1; fi
+          done
+          if grep -rn ' style="' src/app; then echo "attribut style dans un template"; exit 1; fi
+
       # Exactement ce que Dokploy construit : une image qui ne build pas échoue ici.
       - name: Docker image
         run: docker build -t ng-candidash-app:ci .
+
+      # Conteneur réel : nginx non-root, en-tête CSP présent, nonce de la page = nonce de l'en-tête
+      - name: Container smoke test
+        run: |
+          set -euo pipefail
+          docker run -d --name front -p 8080:80 -e API_URL=https://api.example.test/api/v1 ng-candidash-app:ci
+          sleep 2
+          test "$(docker exec front id -u)" != "0"
+          curl -sf -D headers.txt -o page.html http://localhost:8080/
+          nonce=$(grep -i '^content-security-policy' headers.txt | grep -oE "nonce-[a-f0-9]+" | head -1 | cut -d- -f2)
+          test -n "$nonce"
+          grep -qi "connect-src 'self' https://api.example.test" headers.txt
+          grep -q "nonce=\"$nonce\"" page.html
+          ! grep -q 'CSP_NONCE' page.html

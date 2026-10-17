@@ -62,19 +62,19 @@ const DISMISSED_KEY = 'extension-banner-dismissed';
                   <stop offset="1" stop-color="#34a853" />
                 </linearGradient>
               </defs>
-              <circle cx="24" cy="23.9947" r="12" style="fill:#fff" />
+              <circle cx="24" cy="23.9947" r="12" fill="#fff" />
               <path
                 d="M24,12H44.7812a23.9939,23.9939,0,0,0-41.5639.0029L13.6079,30l.0093-.0024A11.9852,11.9852,0,0,1,24,12Z"
-                style="fill:url(#extension-banner-chrome-a)"
+                fill="url(#extension-banner-chrome-a)"
               />
-              <circle cx="24" cy="24" r="9.5" style="fill:#1a73e8" />
+              <circle cx="24" cy="24" r="9.5" fill="#1a73e8" />
               <path
                 d="M34.3913,30.0029,24.0007,48A23.994,23.994,0,0,0,44.78,12.0031H23.9989l-.0025.0093A11.985,11.985,0,0,1,34.3913,30.0029Z"
-                style="fill:url(#extension-banner-chrome-b)"
+                fill="url(#extension-banner-chrome-b)"
               />
               <path
                 d="M13.6086,30.0031,3.218,12.006A23.994,23.994,0,0,0,24.0025,48L34.3931,30.0029l-.0067-.0068a11.9852,11.9852,0,0,1-20.7778.007Z"
-                style="fill:url(#extension-banner-chrome-c)"
+                fill="url(#extension-banner-chrome-c)"
               />
             </svg>
           }
