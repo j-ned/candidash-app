@@ -189,6 +189,8 @@
 
 [data-theme='dark'],
 .dark {
+  /* Contrôles natifs (barres de défilement, listes déroulantes) assortis au thème sombre */
+  color-scheme: dark;
   /* Base - sombre */
   --color-text: oklch(95.5% 0.008 95);
   --color-background: oklch(16.5% 0.014 155);

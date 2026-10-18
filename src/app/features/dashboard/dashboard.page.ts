@@ -2,9 +2,14 @@ import {
   Component,
   ChangeDetectionStrategy,
   computed,
+  effect,
   inject,
+  linkedSignal,
+  signal,
   DestroyRef,
+  PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { Layout } from '@shared/ui/layout/layout';
@@ -17,6 +22,11 @@ import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
 import { JobtrackList } from '@features/jobtrack/application/components/jobtrack-list/jobtrack-list';
 import { Icon } from '@shared/ui/icon/icon';
 import { ReminderChecker } from '@features/jobtrack/application/reminder-checker';
+import { JobtrackBoard } from '@features/jobtrack/application/components/jobtrack-board/jobtrack-board';
+import { computeJobStats } from '@features/jobtrack/domain/job-stats';
+import { DashboardStats } from './components/dashboard-stats/dashboard-stats';
+import { ViewToggle } from './components/view-toggle/view-toggle';
+import { readViewPreference, writeViewPreference } from './view-preference';
 
 @Component({
   selector: 'app-dashboard',
@@ -71,12 +81,38 @@ import { ReminderChecker } from '@features/jobtrack/application/reminder-checker
           </nav>
         </div>
       </div>
-      <section aria-label="Liste des candidatures" class="container mx-auto px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-        <app-jobtrack-list
-          [jobs]="jobsList()"
-          [loading]="jobsLoading()"
-          (changed)="jobsResource.reload()"
-        />
+      @if (jobs().length > 0) {
+        <section
+          aria-labelledby="dashboard-stats-title"
+          class="container mx-auto px-0 pt-4 sm:px-6 sm:pt-8 lg:px-8"
+        >
+          <h2 id="dashboard-stats-title" class="mb-4 text-xl font-bold text-text sm:text-2xl">
+            Mes statistiques
+          </h2>
+          <app-dashboard-stats [stats]="stats()" />
+        </section>
+      }
+      <section
+        aria-label="Candidatures"
+        class="container mx-auto min-w-0 px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12"
+      >
+        <div class="mb-4 flex justify-end">
+          <app-view-toggle [(view)]="view" />
+        </div>
+        @if (view() === 'board') {
+          <h2 class="mb-2 text-xl font-bold text-text sm:text-2xl lg:text-3xl">Mes candidatures</h2>
+          @if (jobsLoading()) {
+            <p class="py-8 text-center text-sm text-muted">Chargement des candidatures...</p>
+          } @else {
+            <app-jobtrack-board [(jobs)]="jobs" />
+          }
+        } @else {
+          <app-jobtrack-list
+            [jobs]="jobs()"
+            [loading]="jobsLoading()"
+            (changed)="jobsResource.reload()"
+          />
+        }
       </section>
     </app-layout>
   `,
@@ -94,14 +130,30 @@ export class DashboardPage {
     { parse: (raw) => (raw as JobTrackApi[]).map(toJobTrack) },
   );
 
-  protected readonly jobsList = computed(() => this.jobsResource.value() ?? []);
+  /** Copie locale de la liste : le tableau Kanban y applique ses déplacements optimistes. */
+  protected readonly jobs = linkedSignal(() => this.jobsResource.value() ?? []);
   protected readonly jobsLoading = computed(() => this.jobsResource.isLoading());
+  protected readonly stats = computed(() => computeJobStats(this.jobs(), new Date()));
+
+  private readonly storage = browserStorage(isPlatformBrowser(inject(PLATFORM_ID)));
+  protected readonly view = signal(readViewPreference(this.storage));
 
   constructor() {
     this.reminderChecker.start(this.destroyRef);
+    effect(() => writeViewPreference(this.storage, this.view()));
   }
 
   goToCreate(): void {
     this.router.navigate(['/dashboard/jobtrack/new']);
+  }
+}
+
+/** `localStorage` peut lever à la simple lecture (cookies bloqués) : absent dans ce cas, comme en SSR. */
+function browserStorage(isBrowser: boolean): Storage | undefined {
+  if (!isBrowser) return undefined;
+  try {
+    return localStorage;
+  } catch {
+    return undefined;
   }
 }
