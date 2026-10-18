@@ -87,4 +87,34 @@ describe('HttpDocumentsGateway', () => {
     // Then
     await expect(result).resolves.toBeNull();
   });
+
+  it('Given a document When exported Then it downloads the PDF with the file name chosen by the API', async () => {
+    // Given
+    const pdf = new Blob(['%PDF-1.7'], { type: 'application/pdf' });
+
+    // When
+    const result = firstValueFrom(gateway.pdf('d1'));
+    const request = http.expectOne({ method: 'GET', url: `${BASE}/d1/pdf` });
+    request.flush(pdf, {
+      headers: { 'Content-Disposition': 'attachment; filename="cv-angular.pdf"' },
+    });
+
+    // Then
+    expect(request.request.responseType).toBe('blob');
+    expect(await result).toEqual({ fileName: 'cv-angular.pdf', blob: pdf });
+  });
+
+  it('Given a document linked to an application When attached Then it POSTs on /attach', async () => {
+    // Given
+    const attached = { jobTrackId: 'jt-1', type: 'cv', fileName: 'cv-angular.pdf' } as const;
+
+    // When
+    const result = firstValueFrom(gateway.attach('d1'));
+    const request = http.expectOne({ method: 'POST', url: `${BASE}/d1/attach` });
+    request.flush(attached);
+
+    // Then
+    expect(request.request.body).toEqual({});
+    expect(await result).toEqual(attached);
+  });
 });

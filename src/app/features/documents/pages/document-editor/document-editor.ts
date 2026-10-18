@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { httpResource } from '@angular/common/http';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
+import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { FormField, FormRoot, form, maxLength, required, submit } from '@angular/forms/signals';
@@ -22,6 +23,7 @@ import { toDocumentDetail } from '../../infra/document.adapter';
 import type { DocumentDetailApi } from '../../infra/document.types';
 import { HttpDocumentsGateway } from '../../infra/http-documents.gateway';
 import type { LeaveConfirmable } from '../../application/unsaved-changes-guard';
+import { downloadFile } from '../../application/download-file';
 import { DocumentSheet } from '../../application/components/document-sheet';
 import { MarkdownEditor } from '../../application/components/markdown-editor';
 import { MarkdownToolbar } from '../../application/components/markdown-toolbar';
@@ -30,12 +32,19 @@ type DocumentDraft = { title: string; markdown: string; jobTrackId: string };
 
 type Pane = 'edit' | 'preview';
 
+type PdfAction = 'export' | 'attach';
+
 const EMPTY_DRAFT: DocumentDraft = { title: '', markdown: '', jobTrackId: '' };
 
 const KIND_LABELS = { CV: 'CV', LETTER: 'Lettre de motivation' } as const;
 
 const FIELD_CLASS =
   'w-full rounded-lg border border-input bg-background px-3 py-2 text-text focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary aria-invalid:border-error';
+
+const SECONDARY_BUTTON =
+  'inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-text hover:bg-surface-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60';
+
+const ATTACHED_LABELS = { cv: 'CV joint', lm: 'Lettre jointe' } as const;
 
 const PANE_BUTTON =
   'flex-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted aria-pressed:bg-card aria-pressed:text-text aria-pressed:shadow-sm focus-visible:outline-2 focus-visible:outline-primary';
@@ -100,7 +109,32 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
                 {{ dirty() ? 'Modifications non enregistrées' : 'Tout est enregistré' }}
               </p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                data-testid="document-export-pdf"
+                [disabled]="pdfAction() !== null"
+                [attr.aria-busy]="pdfAction() === 'export'"
+                [class]="secondaryButton"
+                (click)="exportPdf()"
+              >
+                <app-icon name="lucide-download" cssClass="h-4 w-4" />
+                {{ pdfAction() === 'export' ? 'Génération…' : 'PDF' }}
+              </button>
+              @if (linkedJob(); as job) {
+                <button
+                  type="button"
+                  data-testid="document-attach"
+                  [disabled]="pdfAction() !== null"
+                  [attr.aria-busy]="pdfAction() === 'attach'"
+                  [attr.aria-label]="'Joindre le PDF à la candidature « ' + job + ' »'"
+                  [class]="secondaryButton"
+                  (click)="attachPdf()"
+                >
+                  <app-icon name="lucide-paperclip" cssClass="h-4 w-4" />
+                  {{ pdfAction() === 'attach' ? 'Envoi…' : 'Joindre à la candidature' }}
+                </button>
+              }
               <button
                 type="button"
                 data-testid="document-delete"
@@ -238,6 +272,7 @@ export class DocumentEditor implements LeaveConfirmable {
   private readonly router = inject(Router);
   private readonly toaster = inject(Toaster);
   private readonly confirmModal = inject(ConfirmModal);
+  private readonly dom = inject(DOCUMENT);
 
   readonly id = input.required<string>();
 
@@ -251,6 +286,8 @@ export class DocumentEditor implements LeaveConfirmable {
 
   protected readonly fieldClass = FIELD_CLASS;
   protected readonly paneButton = PANE_BUTTON;
+  protected readonly secondaryButton = SECONDARY_BUTTON;
+  protected readonly pdfAction = signal<PdfAction | null>(null);
   protected readonly pane = signal<Pane>('edit');
 
   private readonly document = computed(() =>
@@ -290,12 +327,32 @@ export class DocumentEditor implements LeaveConfirmable {
       label: job.company ? `${job.title} — ${job.company}` : job.title,
     })),
   );
+  // Candidature enregistrée (et non celle choisie sans enregistrer) : c'est elle que vise l'API.
+  protected readonly linkedJob = computed(() => {
+    const jobTrackId = this.saved().jobTrackId;
+    return jobTrackId ? (this.jobs().find((job) => job.id === jobTrackId)?.label ?? null) : null;
+  });
   protected readonly dirty = computed(() => !sameDraft(this.model(), this.saved()));
   protected readonly savedTitle = computed(() => this.saved().title);
   protected readonly kindLabel = computed(() => KIND_LABELS[this.document()?.kind ?? 'CV']);
 
   async saveDocument(): Promise<void> {
     await submit(this.docForm);
+  }
+
+  async exportPdf(): Promise<void> {
+    await this.withSavedDocument('export', async () => {
+      const { blob, fileName } = await firstValueFrom(this.gateway.pdf(this.id()));
+      downloadFile(this.dom, blob, fileName);
+    });
+  }
+
+  async attachPdf(): Promise<void> {
+    const job = this.linkedJob();
+    await this.withSavedDocument('attach', async () => {
+      const { type, fileName } = await firstValueFrom(this.gateway.attach(this.id()));
+      this.toaster.success(`${ATTACHED_LABELS[type]} à la candidature`, `« ${job} » : ${fileName}`);
+    });
   }
 
   canLeave(): boolean | Promise<boolean> {
@@ -331,6 +388,32 @@ export class DocumentEditor implements LeaveConfirmable {
 
   protected warnBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.dirty()) event.preventDefault();
+  }
+
+  // Le PDF part de la version enregistrée : les modifications en cours sont d'abord enregistrées,
+  // pour que le fichier corresponde à l'aperçu. Un enregistrement refusé arrête l'action.
+  private async withSavedDocument(action: PdfAction, run: () => Promise<void>): Promise<void> {
+    if (this.pdfAction()) return;
+    this.pdfAction.set(action);
+    try {
+      if (this.dirty()) await this.saveDocument();
+      if (this.dirty()) return;
+      await run();
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 503) {
+        this.toaster.danger(
+          'Export PDF indisponible',
+          'Le service de génération ne répond pas, réessayez plus tard.',
+        );
+      } else {
+        this.toaster.danger(
+          action === 'export' ? 'Génération du PDF impossible' : 'Pièce jointe impossible',
+          'Réessayez dans un instant.',
+        );
+      }
+    } finally {
+      this.pdfAction.set(null);
+    }
   }
 
   // Le brouillon envoyé devient la référence : ce qui est tapé pendant la requête reste « non enregistré ».

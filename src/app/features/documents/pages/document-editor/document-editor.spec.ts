@@ -7,6 +7,7 @@ import {
   JOBS_URL,
   respond,
   setupDocumentsTest,
+  nextMacrotask,
   type Harness,
   type ResponseBody,
 } from '../../test-utils/documents-harness';
@@ -268,5 +269,138 @@ describe('DocumentEditor', () => {
 
     // Then
     expect(testIdText(fixture.nativeElement, 'document-not-found')).toContain('introuvable');
+  });
+
+  describe('PDF', () => {
+    const PDF = new Blob(['%PDF-1.7'], { type: 'application/pdf' });
+    let clicked: HTMLAnchorElement[];
+
+    beforeEach(() => {
+      clicked = [];
+      URL.createObjectURL = vi.fn(() => 'blob:cv');
+      URL.revokeObjectURL = vi.fn();
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+        this: HTMLAnchorElement,
+      ) {
+        clicked.push(this);
+      });
+    });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    async function settle(rendered: Rendered): Promise<void> {
+      await nextMacrotask();
+      await rendered.fixture.whenStable();
+      rendered.fixture.detectChanges();
+    }
+
+    function flushPdf(): void {
+      harness.http.expectOne({ method: 'GET', url: `${DOCUMENTS_URL}/cv-1/pdf` }).flush(PDF, {
+        headers: { 'Content-Disposition': 'attachment; filename="cv-angular.pdf"' },
+      });
+    }
+
+    it('Given a saved document When « PDF » is clicked Then the PDF named by the API is downloaded', async () => {
+      // Given
+      const rendered = await render();
+
+      // When
+      byTestId(rendered.host, 'document-export-pdf')?.click();
+      await settle(rendered);
+      flushPdf();
+      await settle(rendered);
+
+      // Then
+      expect(URL.createObjectURL).toHaveBeenCalledWith(PDF);
+      expect(clicked.map((a) => ({ href: a.href, download: a.download }))).toEqual([
+        { href: 'blob:cv', download: 'cv-angular.pdf' },
+      ]);
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:cv');
+    });
+
+    it('Given unsaved changes When « PDF » is clicked Then they are saved first, so the PDF matches the preview', async () => {
+      // Given
+      const rendered = await render();
+      type(rendered, 'document-markdown', '# Camille');
+
+      // When
+      byTestId(rendered.host, 'document-export-pdf')?.click();
+      await settle(rendered);
+      harness.http
+        .expectOne({ method: 'PUT', url: `${DOCUMENTS_URL}/cv-1` })
+        .flush(documentDetailApi({ id: 'cv-1', markdown: '# Camille' }));
+      await settle(rendered);
+      flushPdf();
+      await settle(rendered);
+
+      // Then
+      expect(clicked).toHaveLength(1);
+    });
+
+    it('Given the PDF service down When « PDF » is clicked Then the user is told the export is unavailable', async () => {
+      // Given
+      const rendered = await render();
+
+      // When
+      byTestId(rendered.host, 'document-export-pdf')?.click();
+      await settle(rendered);
+      harness.http
+        .expectOne({ method: 'GET', url: `${DOCUMENTS_URL}/cv-1/pdf` })
+        .flush(new Blob(), { status: 503, statusText: 'Service Unavailable' });
+      await settle(rendered);
+
+      // Then
+      expect(harness.toaster.danger).toHaveBeenCalledWith(
+        'Export PDF indisponible',
+        'Le service de génération ne répond pas, réessayez plus tard.',
+      );
+      expect(clicked).toEqual([]);
+    });
+
+    it('Given a storage failure When « Joindre » is clicked Then the user is told the attachment failed', async () => {
+      // Given
+      const rendered = await render({ ...DOCUMENT, jobTrackId: 'jt-1' });
+
+      // When
+      byTestId(rendered.host, 'document-attach')?.click();
+      await settle(rendered);
+      harness.http
+        .expectOne({ method: 'POST', url: `${DOCUMENTS_URL}/cv-1/attach` })
+        .flush({ message: 'Erreur' }, { status: 500, statusText: 'Server Error' });
+      await settle(rendered);
+
+      // Then
+      expect(harness.toaster.danger).toHaveBeenCalledWith(
+        'Pièce jointe impossible',
+        'Réessayez dans un instant.',
+      );
+    });
+
+    it('Given a document linked to no application Then it cannot be attached', async () => {
+      // Given / When
+      const rendered = await render();
+
+      // Then
+      expect(byTestId(rendered.host, 'document-attach')).toBeNull();
+    });
+
+    it('Given a CV linked to an application When « Joindre » is clicked Then its PDF becomes the CV of the application', async () => {
+      // Given
+      const rendered = await render({ ...DOCUMENT, jobTrackId: 'jt-1' });
+
+      // When
+      byTestId(rendered.host, 'document-attach')?.click();
+      await settle(rendered);
+      harness.http
+        .expectOne({ method: 'POST', url: `${DOCUMENTS_URL}/cv-1/attach` })
+        .flush({ jobTrackId: 'jt-1', type: 'cv', fileName: 'cv-angular.pdf' });
+      await settle(rendered);
+
+      // Then
+      expect(harness.toaster.success).toHaveBeenCalledWith(
+        'CV joint à la candidature',
+        '« Développeur Angular — Acme Corp » : cv-angular.pdf',
+      );
+    });
   });
 });
