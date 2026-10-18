@@ -25,6 +25,7 @@ import {
   moveJob,
   relativeDate,
   replaceJob,
+  reminderNotice,
   statusChangePayload,
 } from '@features/jobtrack/domain/job-board';
 import { Toaster } from '@shared/ui/toast/service/toast';
@@ -240,7 +241,11 @@ export class JobtrackBoard {
       .subscribe({
         next: (saved) => {
           this.jobs.update((jobs) => replaceJob(jobs, saved));
-          this.toast.success('Statut mis à jour', `« ${job.title} » : ${COLUMN_TITLES[status]}`);
+          const notice = reminderNotice(saved);
+          this.toast.success(
+            'Statut mis à jour',
+            `« ${job.title} » : ${COLUMN_TITLES[status]}${notice ? `. ${notice}` : ''}`,
+          );
         },
         error: () => {
           this.jobs.update((jobs) => replaceJob(jobs, job));

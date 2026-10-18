@@ -42,7 +42,8 @@ export function replaceJob(jobs: readonly JobTrack[], replacement: JobTrack): Jo
  * Payload d'un changement de statut, envoyé au PUT `with-reminder` (mise à jour partielle) :
  * le titre et le statut, comme le formulaire d'édition. Une offre qui quitte « repérée » sans
  * date d'envoi reçoit la date du jour, comme l'ajout rapide de l'extension. Le rappel n'est pas
- * touché : l'API le désactive d'elle-même sur un statut terminal (acceptée, refusée).
+ * touché : l'API le programme d'elle-même au passage à « Envoyée » et le désactive sur un statut
+ * terminal (acceptée, refusée).
  */
 export function statusChangePayload(
   job: JobTrack,
@@ -52,6 +53,14 @@ export function statusChangePayload(
   const payload: UpdateJobTrackWithReminderDto = { title: job.title, status };
   if (status !== 'TO_APPLY' && !job.appliedAt) payload.appliedAt = now.toISOString();
   return payload;
+}
+
+const REMINDER_DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+
+/** Rappel envoyé à l'utilisateur pour relancer l'entreprise, annoncé quand l'offre passe à « Envoyée ». */
+export function reminderNotice(job: JobTrack): string | null {
+  if (job.status !== 'APPLIED' || !job.reminder?.isActive) return null;
+  return `Rappel pour relancer le ${REMINDER_DATE_FORMAT.format(new Date(job.reminder.nextReminderAt))}`;
 }
 
 const DAYS_FORMAT = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });

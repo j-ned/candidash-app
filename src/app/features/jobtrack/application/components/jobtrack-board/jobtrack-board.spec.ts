@@ -130,6 +130,33 @@ describe('JobtrackBoard', () => {
     expect(toaster.danger).not.toHaveBeenCalled();
   });
 
+  it('mentions the follow-up reminder when the card is sent', () => {
+    // Given
+    const fixture = setup([job('1', 'TO_APPLY')]);
+    changeStatus(fixture, 0, 'APPLIED');
+
+    // When
+    response$.next({
+      ...job('1', 'APPLIED'),
+      reminder: {
+        id: 'r-1',
+        jobTrackId: '1',
+        frequency: 7,
+        nextReminderAt: '2026-10-24T12:00:00.000Z',
+        isActive: true,
+        createdAt: '2026-10-17T12:00:00.000Z',
+        updatedAt: '2026-10-17T12:00:00.000Z',
+      },
+    });
+    response$.complete();
+
+    // Then
+    expect(toaster.success).toHaveBeenCalledWith(
+      'Statut mis à jour',
+      '« Poste 1 » : Envoyées. Rappel pour relancer le 24 oct.',
+    );
+  });
+
   it('rolls the card back and warns when the save fails', () => {
     // Given
     const fixture = setup([job('1', 'APPLIED')]);

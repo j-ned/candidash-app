@@ -1,6 +1,13 @@
 import { JobTrackBuilder } from '../test-utils/jobtrack.builder';
 import type { JobStatus, JobTrack } from './models/jobtrack.model';
-import { groupByStatus, moveJob, relativeDate, replaceJob, statusChangePayload } from './job-board';
+import {
+  groupByStatus,
+  moveJob,
+  relativeDate,
+  reminderNotice,
+  replaceJob,
+  statusChangePayload,
+} from './job-board';
 
 function job(id: string, status: JobStatus, appliedAt: string | null = null): JobTrack {
   return JobTrackBuilder.default()
@@ -98,6 +105,34 @@ describe('job-board', () => {
 
       // Then
       expect(payload).toEqual({ title: given.title, status: target, ...extra });
+    });
+  });
+
+  describe('reminderNotice', () => {
+    const reminder = (isActive: boolean) => ({
+      id: 'r-1',
+      jobTrackId: '1',
+      frequency: 7,
+      nextReminderAt: '2026-10-24T12:00:00.000Z',
+      isActive,
+      createdAt: '2026-10-17T12:00:00.000Z',
+      updatedAt: '2026-10-17T12:00:00.000Z',
+    });
+
+    it('announces the follow-up reminder of a sent application', () => {
+      // Given
+      const sent = { ...job('1', 'APPLIED'), reminder: reminder(true) };
+
+      // When / Then
+      expect(reminderNotice(sent)).toBe('Rappel pour relancer le 24 oct.');
+    });
+
+    it.each([
+      ['no reminder', { ...job('1', 'APPLIED'), reminder: null }],
+      ['an inactive reminder', { ...job('1', 'APPLIED'), reminder: reminder(false) }],
+      ['another status', { ...job('1', 'INTERVIEW'), reminder: reminder(true) }],
+    ])('says nothing with %s', (_case, candidate) => {
+      expect(reminderNotice(candidate)).toBeNull();
     });
   });
 

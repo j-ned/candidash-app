@@ -10,6 +10,7 @@ import { Icon } from '@shared/ui/icon/icon';
 import { Toaster } from '@shared/ui/toast/service/toast';
 import { STATUS_CONFIG, ALL_STATUSES } from '@features/jobtrack/domain/models/jobtrack.model';
 import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
+import { reminderNotice } from '@features/jobtrack/domain/job-board';
 import type { JobTrack, JobStatus, DocumentType } from '@features/jobtrack/domain/models/jobtrack.model';
 import { PdfViewerModal } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
 
@@ -249,9 +250,13 @@ export class JobtrackDetail {
       .updateWithReminder(this.id(), { status }, false)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (saved) => {
           this.statusUpdating.set(false);
-          this.toast.success('Statut mis à jour', STATUS_CONFIG[status].label);
+          const notice = reminderNotice(saved);
+          this.toast.success(
+            'Statut mis à jour',
+            notice ? `${STATUS_CONFIG[status].label}. ${notice}` : STATUS_CONFIG[status].label,
+          );
           this.jobResource.reload();
         },
         error: () => {
