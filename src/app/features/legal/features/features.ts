@@ -1,91 +1,109 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 import { Icon } from '@shared/ui/icon/icon';
 
+type Variant = 'light' | 'dark';
+
+const STEPS = [
+  'Connexion au compte de démonstration.',
+  "Le tableau de bord : statistiques, taux d'entretien et envois par semaine.",
+  'Le tableau en cinq colonnes : une candidature glissée vers « Entretiens prévus ».',
+  "L'espace « Mes documents » et le CV de démonstration.",
+  "L'analyse du CV face à l'offre : mots-clés présents, absents, et contrôles de lecture par les ATS.",
+  "L'export du CV en PDF.",
+];
+
+/**
+ * Visite complète, enregistrée sur l'application réelle avec des données fictives
+ * (scripts/capture). Une vidéo par thème, lue à la demande : rien n'est téléchargé avant le clic.
+ * La vidéo est muette ; les étapes écrites en sont l'équivalent textuel.
+ */
 @Component({
   selector: 'app-features',
-  imports: [Icon, ThemeToggle],
-  host: { class: 'min-h-screen bg-background flex flex-col' },
+  imports: [Icon, ThemeToggle, RouterLink],
+  host: { class: 'flex min-h-screen flex-col bg-background text-text' },
   template: `
-      <!-- Header simple -->
-      <header class="p-6 flex items-center justify-between">
-        <button
-          type="button"
-          (click)="goBack()"
-          class="inline-flex items-center text-muted hover:text-text transition-colors"
+    <header
+      class="mx-auto flex w-full max-w-[1180px] items-center justify-between px-4 py-5 sm:px-6"
+    >
+      <a
+        routerLink="/"
+        class="inline-flex items-center gap-2 text-muted transition-colors hover:text-text"
+      >
+        <app-icon name="lucide-arrow-left" cssClass="h-5 w-5" />
+        Retour à l'accueil
+      </a>
+      <app-theme-toggle />
+    </header>
+
+    <main class="mx-auto w-full max-w-[1180px] flex-1 px-4 pb-16 sm:px-6">
+      <div class="mx-auto max-w-2xl text-center">
+        <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          Candidash, de l'offre au CV
+        </h1>
+        <p class="mt-4 text-lg text-muted">
+          Une minute dans l'application réelle, avec un compte de démonstration.
+        </p>
+      </div>
+
+      <figure class="mt-10">
+        <div
+          class="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_60px_-28px_rgb(0_0_0/0.45)]"
         >
-          <app-icon name="lucide-arrow-left" cssClass="w-5 h-5 mr-2" />
-          Retour à l'accueil
-        </button>
-        <app-theme-toggle></app-theme-toggle>
-      </header>
-
-      <!-- Contenu principal centré -->
-      <main class="flex-1 flex items-center justify-center px-6">
-        <div class="w-full max-w-4xl mx-auto text-center space-y-8">
-          <!-- Titre -->
-          <div class="space-y-4">
-            <h1 class="text-4xl font-bold text-text">Découvrez Candidash en action</h1>
-            <p class="text-xl text-muted max-w-2xl mx-auto">
-              Regardez comment notre plateforme simplifie le suivi de vos candidatures d'emploi
-            </p>
-          </div>
-
-          <!-- Vidéo de démonstration -->
-          <div class="relative">
-            <div
-              class="aspect-video bg-card border border-border rounded-xl overflow-hidden shadow-xl"
+          @for (variant of variants; track variant) {
+            <video
+              [attr.data-testid]="'tour-' + variant"
+              [class]="variant === 'dark' ? 'hidden dark:block' : 'dark:hidden'"
+              class="aspect-[16/10] w-full bg-surface-100"
+              controls
+              playsinline
+              muted
+              preload="none"
+              [poster]="'/demo/board-' + variant + '.webp'"
+              aria-describedby="visite-etapes"
             >
-              <video class="w-full h-full object-cover" controls preload="metadata" poster="" aria-label="Démonstration de Candidash">
-                <source src="/video/demo.mp4" type="video/mp4" />
-                <p class="text-center text-muted p-8">
-                  Votre navigateur ne supporte pas la lecture de vidéos HTML5.
-                  <br />
-                  <a href="/video/demo.mp4" class="text-primary hover:underline">
-                    Télécharger la vidéo
-                  </a>
-                </p>
-              </video>
-            </div>
-          </div>
+              <source [src]="'/demo/tour-' + variant + '.webm'" type="video/webm" />
+            </video>
+          }
         </div>
-      </main>
+        <figcaption class="mt-3 text-center text-sm text-muted">
+          Vidéo sans son. Compte, entreprises et candidatures sont fictifs.
+        </figcaption>
+      </figure>
 
-      <!-- CTA en bas -->
-      <footer class="p-6 text-center">
-        <button
-          (click)="goToSignup()"
-          class="inline-flex items-center px-8 py-4 bg-primary text-on-primary rounded-lg font-semibold text-lg hover:bg-primary/90 transition-colors shadow-lg"
+      <section class="mx-auto mt-12 max-w-2xl" aria-labelledby="visite-titre">
+        <h2 id="visite-titre" class="text-2xl font-semibold tracking-tight">
+          Ce que montre la visite
+        </h2>
+        <ol id="visite-etapes" class="mt-4 space-y-3">
+          @for (step of steps; track step; let i = $index) {
+            <li class="flex gap-3">
+              <span
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-900"
+                aria-hidden="true"
+                >{{ i + 1 }}</span
+              >
+              <p class="pt-0.5 leading-relaxed text-muted">{{ step }}</p>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <div class="mt-14 text-center">
+        <a
+          routerLink="/auth/signup"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-base font-medium text-on-primary transition-transform active:scale-[0.98]"
         >
-          <svg class="w-6 h-6 mr-2" aria-hidden="true" focusable="false" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              fill="none"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
-          </svg>
-          Créer mon compte gratuitement
-        </button>
-        <p class="text-sm text-muted mt-3">Aucune carte de crédit requise</p>
-      </footer>
+          Créer mon compte
+          <app-icon name="lucide-arrow-right" cssClass="h-4 w-4" />
+        </a>
+        <p class="mt-3 text-sm text-muted">Gratuit, sans carte bancaire.</p>
+      </div>
+    </main>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Features {
-  private readonly router = inject(Router);
-
-  goBack(): void {
-    this.router.navigate(['/']);
-  }
-
-  goToSignup(): void {
-    this.router.navigate(['/auth/signup']);
-  }
-
-  goToSignin(): void {
-    this.router.navigate(['/auth/signin']);
-  }
+  protected readonly variants: readonly Variant[] = ['light', 'dark'];
+  protected readonly steps = STEPS;
 }
