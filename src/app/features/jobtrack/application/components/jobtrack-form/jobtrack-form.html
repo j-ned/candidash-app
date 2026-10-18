@@ -405,6 +405,36 @@
             échanges avec le recruteur...
           </p>
         </div>
+
+        <div class="space-y-1.5">
+          @let offerTextInError =
+            jobForm.offerText().touched() && jobForm.offerText().invalid();
+          <label for="offer-text" class="block text-xs font-medium text-text sm:text-sm">
+            Texte de l'offre
+          </label>
+          <textarea
+            id="offer-text"
+            data-testid="jobtrack-offer-text"
+            rows="6"
+            class="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-text text-sm placeholder:text-muted/60 focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all sm:px-4 sm:py-3 sm:text-base resize-y aria-invalid:border-error"
+            [formField]="jobForm.offerText"
+            [attr.aria-invalid]="offerTextInError"
+            [attr.aria-describedby]="
+              offerTextInError ? 'offer-text-help offer-text-error' : 'offer-text-help'
+            "
+            placeholder="Collez ici la description du poste (missions, profil recherché, compétences)."
+          ></textarea>
+          <app-field-error
+            [field]="jobForm.offerText"
+            errorId="offer-text-error"
+            testId="jobtrack-offer-text-error"
+          />
+          <p id="offer-text-help" class="text-xs text-muted flex items-center gap-1">
+            <app-icon name="lucide-info" cssClass="w-3.5 h-3.5" />
+            Rempli par l'extension à l'ajout, ou collé ici. Il sert à comparer votre CV et votre
+            lettre à l'offre, dans « Mes documents ».
+          </p>
+        </div>
       </fieldset>
 
       <!-- Section 4: Documents -->

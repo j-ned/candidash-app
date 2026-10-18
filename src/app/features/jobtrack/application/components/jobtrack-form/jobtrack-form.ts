@@ -11,7 +11,15 @@ import {
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { firstValueFrom, forkJoin } from 'rxjs';
-import { FormField, FormRoot, form, hidden, minLength, required } from '@angular/forms/signals';
+import {
+  FormField,
+  FormRoot,
+  form,
+  hidden,
+  maxLength,
+  minLength,
+  required,
+} from '@angular/forms/signals';
 import { Layout } from '@shared/ui/layout/layout';
 import { Button } from '@shared/ui/button/button';
 import { STATUS_CONFIG, ALL_STATUSES, CONTRACT_TYPE_CONFIG, ALL_CONTRACT_TYPES } from '@features/jobtrack/domain/models/jobtrack.model';
@@ -44,11 +52,15 @@ type JobtrackDraft = {
   contractType: ContractType | '';
   appliedAt: string;
   notes: string;
+  offerText: string;
   frequency: string;
   isReminderActive: boolean;
 };
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+/** Borne identique à celle de l'API. */
+const OFFER_TEXT_MAX = 20_000;
 
 const TITLE_ERROR = 'Le titre du poste est requis (minimum 2 caractères)';
 
@@ -64,6 +76,7 @@ function toDraft(job: JobTrack | null): JobtrackDraft {
     contractType: job?.contractType ?? '',
     appliedAt: job?.appliedAt ? job.appliedAt.substring(0, 10) : '',
     notes: job?.notes ?? '',
+    offerText: job?.offerText ?? '',
     frequency: String(job?.reminder?.frequency ?? 7),
     isReminderActive: job?.reminder?.isActive ?? true,
   };
@@ -160,6 +173,9 @@ export class JobtrackFormPage {
           TERMINAL_STATUSES.has(valueOf(path.status)) || !valueOf(path.isReminderActive),
       });
       required(path.frequency);
+      maxLength(path.offerText, OFFER_TEXT_MAX, {
+        message: 'Le texte de l’offre ne peut pas dépasser 20 000 caractères.',
+      });
     },
     {
       submission: {
@@ -459,6 +475,10 @@ export class JobtrackFormPage {
       if (value.contractType) updatePayload.contractType = value.contractType;
       if (value.appliedAt) updatePayload.appliedAt = dateOnlyToIso(value.appliedAt);
       if (value.notes) updatePayload.notes = value.notes;
+      // Envoyé seulement s'il a changé ; vide, il efface le texte enregistré
+      if (value.offerText !== (this.loadedJob()?.offerText ?? '')) {
+        updatePayload.offerText = value.offerText;
+      }
 
       try {
         await firstValueFrom(this.jobtrackGateway.updateWithReminder(jobId, updatePayload, false));
@@ -486,6 +506,7 @@ export class JobtrackFormPage {
     if (value.contractType) createPayload.contractType = value.contractType;
     if (value.appliedAt) createPayload.appliedAt = dateOnlyToIso(value.appliedAt);
     if (value.notes) createPayload.notes = value.notes;
+    if (value.offerText.trim()) createPayload.offerText = value.offerText;
 
     let created: JobTrack;
     try {

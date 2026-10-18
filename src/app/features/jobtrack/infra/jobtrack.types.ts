@@ -27,6 +27,7 @@ export type JobTrackApi = {
   appliedAt?: string | null;
   contractType?: ContractType | null;
   notes?: string | null;
+  offerText?: string | null;
   attachments?: Record<string, JsonValue> | null;
   cvFileName?: string | null;
   lmFileName?: string | null;
