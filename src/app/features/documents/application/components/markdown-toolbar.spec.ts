@@ -1,3 +1,4 @@
+import { SPRITE_VERSION } from '@shared/ui/icon/sprite-version';
 import { Component } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { byTestId, testIdText } from '../../test-utils/by-test-id';
@@ -104,61 +105,61 @@ describe('MarkdownToolbar: structure', () => {
         name: 'Gras',
         type: 'button',
         shortcut: 'Control+B Meta+B',
-        icon: '/icons/sprite.svg#lucide-bold',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-bold`,
       },
       {
         name: 'Italique',
         type: 'button',
         shortcut: 'Control+I Meta+I',
-        icon: '/icons/sprite.svg#lucide-italic',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-italic`,
       },
       {
         name: 'Souligné',
         type: 'button',
         shortcut: 'Control+U Meta+U',
-        icon: '/icons/sprite.svg#lucide-underline',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-underline`,
       },
       {
         name: 'Barré',
         type: 'button',
         shortcut: null,
-        icon: '/icons/sprite.svg#lucide-strikethrough',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-strikethrough`,
       },
       {
         name: 'Code en ligne',
         type: 'button',
         shortcut: 'Control+E Meta+E',
-        icon: '/icons/sprite.svg#lucide-code',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-code`,
       },
       {
         name: 'Lien',
         type: 'button',
         shortcut: 'Control+K Meta+K',
-        icon: '/icons/sprite.svg#lucide-link',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-link`,
       },
       {
         name: 'Liste à puces',
         type: 'button',
         shortcut: null,
-        icon: '/icons/sprite.svg#lucide-list',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-list`,
       },
       {
         name: 'Liste numérotée',
         type: 'button',
         shortcut: null,
-        icon: '/icons/sprite.svg#lucide-list-ordered',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-list-ordered`,
       },
       {
         name: 'Citation',
         type: 'button',
         shortcut: null,
-        icon: '/icons/sprite.svg#lucide-text-quote',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-text-quote`,
       },
       {
         name: 'Séparateur',
         type: 'button',
         shortcut: null,
-        icon: '/icons/sprite.svg#lucide-minus',
+        icon: `/icons/sprite.svg?v=${SPRITE_VERSION}#lucide-minus`,
       },
     ]);
   });
