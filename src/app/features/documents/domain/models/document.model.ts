@@ -35,6 +35,16 @@ export type DuplicateDocumentPayload = {
   readonly jobTrackId?: string;
 };
 
+/** Export PDF : le fichier et le nom choisi par l'API. */
+export type DocumentPdf = { readonly fileName: string; readonly blob: Blob };
+
+/** Le PDF joint à la candidature comme CV (`cv`) ou lettre de motivation (`lm`). */
+export type AttachedPdf = {
+  readonly jobTrackId: string;
+  readonly type: 'cv' | 'lm';
+  readonly fileName: string;
+};
+
 /** Bornes identiques à celles de l'API (dto/document.dto.ts). */
 export const DOCUMENT_TITLE_MAX = 120;
 export const DOCUMENT_MARKDOWN_MAX = 50_000;
