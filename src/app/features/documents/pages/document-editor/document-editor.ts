@@ -37,6 +37,7 @@ import type { LeaveConfirmable } from '../../application/unsaved-changes-guard';
 import { downloadFile } from '../../application/download-file';
 import { pdfToMarkdown } from '../../domain/pdf-to-markdown';
 import { PDF_IMPORT_MAX_BYTES, PdfTextReader } from '../../infra/pdf-text-reader';
+import { DocumentAnalysis } from '../../application/components/document-analysis';
 import { DocumentSheet } from '../../application/components/document-sheet';
 import { MarkdownEditor } from '../../application/components/markdown-editor';
 import { MarkdownToolbar } from '../../application/components/markdown-toolbar';
@@ -89,6 +90,7 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
     MarkdownEditor,
     MarkdownToolbar,
     DocumentSheet,
+    DocumentAnalysis,
   ],
   host: { '(window:beforeunload)': 'warnBeforeUnload($event)' },
   template: `
@@ -342,6 +344,38 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
               <app-document-sheet [markdown]="docForm.markdown().value()" />
             </section>
           </div>
+
+          <section
+            aria-labelledby="document-analysis-title"
+            class="rounded-xl border border-border bg-card"
+          >
+            <h2 id="document-analysis-title">
+              <button
+                type="button"
+                data-testid="document-analysis-toggle"
+                aria-controls="document-analysis-panel"
+                [attr.aria-expanded]="analysisOpen()"
+                class="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left font-semibold text-text hover:bg-surface-200 focus-visible:outline-2 focus-visible:outline-primary"
+                (click)="analysisOpen.update((open) => !open)"
+              >
+                Analyse du document (ATS et offre)
+                <app-icon
+                  [name]="analysisOpen() ? 'lucide-chevron-up' : 'lucide-chevron-down'"
+                  cssClass="h-4 w-4 text-muted"
+                />
+              </button>
+            </h2>
+            @if (analysisOpen()) {
+              <div id="document-analysis-panel" class="border-t border-border p-4">
+                <app-document-analysis
+                  [kind]="document()?.kind ?? 'CV'"
+                  [markdown]="docForm.markdown().value()"
+                  [offerText]="linkedOffer()"
+                  [jobLabel]="selectedJobLabel()"
+                />
+              </div>
+            }
+          </section>
         </form>
       } @else {
         <p class="text-sm text-muted">Chargement…</p>
@@ -377,9 +411,10 @@ export class DocumentEditor implements LeaveConfirmable {
   protected readonly pdfAction = signal<PdfAction | null>(null);
   protected readonly importing = signal(false);
   protected readonly imported = signal<ImportedPdf | null>(null);
+  protected readonly analysisOpen = signal(false);
   protected readonly pane = signal<Pane>('edit');
 
-  private readonly document = computed(() =>
+  protected readonly document = computed(() =>
     this.documentResource.hasValue() ? this.documentResource.value() : undefined,
   );
   // Version enregistrée : point de comparaison de l'indicateur et de la garde de sortie.
@@ -421,6 +456,24 @@ export class DocumentEditor implements LeaveConfirmable {
     const jobTrackId = this.saved().jobTrackId;
     return jobTrackId ? (this.jobs().find((job) => job.id === jobTrackId)?.label ?? null) : null;
   });
+  // Candidature choisie dans le formulaire : l'analyse suit la sélection, même non enregistrée.
+  private readonly selectedJobId = computed(() => this.model().jobTrackId);
+  protected readonly selectedJobLabel = computed(
+    () => this.jobs().find((job) => job.id === this.selectedJobId())?.label ?? null,
+  );
+  // Le texte de l'offre n'est que sur le détail : chargé seulement quand l'analyse est ouverte.
+  private readonly selectedJobResource = httpResource<JobTrack>(
+    () => {
+      const id = this.selectedJobId();
+      return this.analysisOpen() && id ? this.jobtrackGateway.getUrl(id) : undefined;
+    },
+    { parse: (raw) => toJobTrack(raw as JobTrackApi) },
+  );
+  protected readonly linkedOffer = computed(() =>
+    this.selectedJobResource.hasValue()
+      ? (this.selectedJobResource.value().offerText ?? null)
+      : null,
+  );
   protected readonly dirty = computed(() => !sameDraft(this.model(), this.saved()));
   protected readonly savedTitle = computed(() => this.saved().title);
   protected readonly kindLabel = computed(() => KIND_LABELS[this.document()?.kind ?? 'CV']);

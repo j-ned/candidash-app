@@ -45,7 +45,10 @@ export function setupDocumentsTest(
       provideHttpClientTesting(),
       provideRouter([]),
       { provide: Config, useValue: { apiUrl: API } },
-      { provide: JobtrackGateway, useValue: { listUrl: () => JOBS_URL } },
+      {
+        provide: JobtrackGateway,
+        useValue: { listUrl: () => JOBS_URL, getUrl: (id: string) => `${JOBS_URL}/${id}` },
+      },
       { provide: Toaster, useValue: toaster },
       { provide: ConfirmModal, useValue: { confirm } },
       ...providers,

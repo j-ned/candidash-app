@@ -31,6 +31,7 @@ const EXISTING_JOB: JobTrack = JobTrackBuilder.default()
   .with('appliedAt', '2026-10-10T00:00:00.000Z')
   .with('contractType', 'CDI')
   .with('notes', 'Contact RH sympathique')
+  .with('offerText', 'Angular 22, NestJS et PostgreSQL.')
   .with('reminder', {
     id: 'rem-1',
     jobTrackId: 'jt-1',
@@ -307,6 +308,35 @@ describe('JobtrackFormPage', () => {
         'La candidature a été mise à jour avec succès',
       );
       expect(navigate).toHaveBeenCalledWith(['/dashboard/jobtrack']);
+    });
+
+    it('prefills the offer text and sends it only once changed', async () => {
+      // Given
+      const fixture = await setup('jt-1');
+      expect(byTestId<HTMLTextAreaElement>(fixture, 'jobtrack-offer-text').value).toBe(
+        'Angular 22, NestJS et PostgreSQL.',
+      );
+      type(fixture, 'jobtrack-offer-text', 'Angular 22, NestJS, PostgreSQL et Docker.');
+
+      // When
+      await submit(fixture);
+
+      // Then
+      const [, payload] = gateway.updateWithReminder.mock.calls[0];
+      expect(payload.offerText).toBe('Angular 22, NestJS, PostgreSQL et Docker.');
+    });
+
+    it('clears the offer text with an empty value', async () => {
+      // Given
+      const fixture = await setup('jt-1');
+      type(fixture, 'jobtrack-offer-text', '');
+
+      // When
+      await submit(fixture);
+
+      // Then
+      const [, payload] = gateway.updateWithReminder.mock.calls[0];
+      expect(payload.offerText).toBe('');
     });
 
     it('recomputes the reminder when its frequency changes', async () => {

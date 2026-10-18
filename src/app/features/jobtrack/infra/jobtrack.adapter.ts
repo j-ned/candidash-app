@@ -27,6 +27,7 @@ export function toJobTrack(api: JobTrackApi): JobTrack {
     appliedAt: api.appliedAt,
     contractType: api.contractType,
     notes: api.notes,
+    offerText: api.offerText,
     attachments: api.attachments,
     cvFileName: api.cvFileName,
     lmFileName: api.lmFileName,

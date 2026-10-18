@@ -538,4 +538,54 @@ describe('DocumentEditor', () => {
       },
     );
   });
+
+  describe('analysis', () => {
+    function openAnalysis(rendered: Rendered): void {
+      byTestId(rendered.host, 'document-analysis-toggle')?.click();
+      rendered.fixture.detectChanges();
+    }
+
+    it('Given the editor Then the analysis stays closed and loads nothing', async () => {
+      // Given / When
+      const rendered = await render({ ...DOCUMENT, jobTrackId: 'jt-1' });
+
+      // Then
+      expect(
+        byTestId(rendered.host, 'document-analysis-toggle')?.getAttribute('aria-expanded'),
+      ).toBe('false');
+      harness.http.expectNone(`${JOBS_URL}/jt-1`);
+    });
+
+    it('Given a document linked to an application with an offer When the analysis opens Then the document is compared to the offer', async () => {
+      // Given
+      const rendered = await render({ ...DOCUMENT, jobTrackId: 'jt-1' });
+
+      // When
+      openAnalysis(rendered);
+      await respond(rendered.fixture, harness.http, [
+        {
+          url: `${JOBS_URL}/jt-1`,
+          body: { ...JOBS[0], offerText: 'Angular, NestJS et Docker. Angular avant tout.' },
+        },
+      ]);
+
+      // Then
+      expect(
+        byTestId(rendered.host, 'document-analysis-toggle')?.getAttribute('aria-expanded'),
+      ).toBe('true');
+      expect(testIdText(rendered.host, 'analysis-score')).toBe('0 mots-clés sur 3 (0 %)');
+    });
+
+    it('Given a document linked to no application When the analysis opens Then it explains how to compare with an offer', async () => {
+      // Given
+      const rendered = await render();
+
+      // When
+      openAnalysis(rendered);
+
+      // Then
+      expect(testIdText(rendered.host, 'analysis-no-offer')).toContain('Liez ce document');
+      expect(byTestId(rendered.host, 'analysis-check')).not.toBeNull();
+    });
+  });
 });
