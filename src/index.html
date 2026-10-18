@@ -9,6 +9,17 @@
       name="description"
       content="Candidash - Centralisez et suivez vos candidatures d'emploi simplement et efficacement."
     />
+    <!-- Thème posé avant le premier rendu (même règle que ThemeManager : choix enregistré, sinon
+         préférence système) : ni éclair clair en mode sombre, ni capture du mauvais thème. -->
+    <script nonce="**CSP_NONCE**">
+      try {
+        var theme =
+          localStorage.getItem('theme') ||
+          (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.classList.add(theme);
+      } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="preload" href="/config.json" as="fetch" crossorigin="anonymous" />

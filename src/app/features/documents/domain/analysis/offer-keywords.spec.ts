@@ -45,6 +45,20 @@ describe('offerKeywords', () => {
     expect(offerKeywords(offer)).toEqual(expect.arrayContaining(['paie', 'comptabilité']));
   });
 
+  it('leaves out the verbs job ads repeat ("faire évoluer", "participer")', () => {
+    // Given
+    const offer =
+      'Faire évoluer la plateforme, faire évoluer les API. Participer aux rituels, participer aux revues. Concevoir et concevoir encore.';
+
+    // When
+    const keywords = offerKeywords(offer).map((keyword) => keyword.toLowerCase());
+
+    // Then
+    expect(keywords).not.toEqual(expect.arrayContaining(['évoluer']));
+    expect(keywords).not.toContain('participer');
+    expect(keywords).not.toContain('concevoir');
+  });
+
   it.each([
     ['C#', 'Développeur C# / .NET confirmé, C# au quotidien', ['C#', '.NET']],
     ['Node.js', 'Back-end en Node.js et CI/CD GitLab', ['Node.js', 'CI/CD', 'GitLab']],

@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* `dark:` suit le thème du site (bouton et script de index.html), pas seulement la préférence
+   système : sinon une capture sombre s'afficherait sur la page claire, et inversement. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 /* Outfit, auto-hébergée (OFL, licence dans public/fonts/OFL.txt). Police variable : un seul
    fichier couvre toutes les graisses. font-display: swap affiche le texte immédiatement avec la
    pile système puis le remplace, donc jamais de texte invisible. Le sous-ensemble latin-ext n'est

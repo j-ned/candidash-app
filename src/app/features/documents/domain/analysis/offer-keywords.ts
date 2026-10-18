@@ -13,7 +13,8 @@ const MAX_KEYWORDS = 20;
 const MIN_REPEATS = 2;
 const MIN_WORD_LENGTH = 4;
 
-// Mots outils et vocabulaire commun à toutes les offres : ils ne disent rien du poste.
+// Mots outils, vocabulaire et verbes d'action communs à toutes les offres : ils ne disent rien
+// du poste (« faire évoluer », « participer aux rituels »).
 const STOP_WORDS = new Set(
   `nous vous notre votre nos vos pour avec dans sans sous chez entre plus moins tres etre avoir
   sont sera seront etes avez avons fait faire cette celle ceux leurs leur tout tous toute toutes
@@ -26,7 +27,10 @@ const STOP_WORDS = new Set(
   quotidien coeur methode methodes tests offre offres developpeur developpeuse developpement
   application applications technique techniques technologies solutions outils qualite services
   service groupe secteur domaine activite activites contrat temps plein partiel date debut selon
-  etc this that with from your will have work team role`.split(/\s+/),
+  etc this that with from your will have work team role
+  evoluer participer concevoir developper realiser assurer garantir accompagner contribuer
+  integrer maintenir piloter mettre proposer offrir permettre apprendre animer suivre definir
+  analyser ecrire gerer porter prendre`.split(/\s+/),
 );
 
 function countMatches(pattern: RegExp, text: string): { count: number; first: number } {

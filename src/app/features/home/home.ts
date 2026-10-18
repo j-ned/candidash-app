@@ -4,6 +4,7 @@ import { Icon } from '@shared/ui/icon/icon';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 import { Reveal } from '@features/home/reveal';
 import { ExtensionShowcase } from '@features/home/extension-showcase';
+import { DemoMedia } from '@features/home/demo-media';
 
 /**
  * Page d'accueil publique.
@@ -21,7 +22,7 @@ import { ExtensionShowcase } from '@features/home/extension-showcase';
  */
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Icon, Reveal, ThemeToggle, ExtensionShowcase],
+  imports: [RouterLink, Icon, Reveal, ThemeToggle, ExtensionShowcase, DemoMedia],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block min-h-[100dvh] bg-background text-text' },
   template: `
@@ -71,21 +72,19 @@ import { ExtensionShowcase } from '@features/home/extension-showcase';
     </header>
 
     <main id="contenu">
-      <!-- Héros : split asymétrique, le produit à droite. -->
-      <section
-        class="mx-auto grid max-w-[1180px] gap-10 px-4 pt-10 pb-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-12 lg:pt-16"
-      >
-        <div appReveal>
+      <!-- Héros : la promesse centrée, puis le vrai tableau en mouvement, en grand. -->
+      <section class="mx-auto max-w-[1180px] px-4 pt-12 pb-16 sm:px-6 lg:pt-20 lg:pb-24">
+        <div appReveal class="mx-auto max-w-3xl text-center">
           <h1
-            class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-[2.85rem] lg:leading-[1.1]"
+            class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl lg:leading-[1.05]"
           >
             Toutes tes candidatures, au même endroit.
           </h1>
-          <p class="mt-5 max-w-[46ch] text-base leading-relaxed text-muted sm:text-lg">
-            Chaque candidature, sa date, son statut et sa relance. Sans tableur, sans post-it, sans
-            rien oublier.
+          <p class="mx-auto mt-5 max-w-[56ch] text-base leading-relaxed text-muted sm:text-lg">
+            Garde une offre en un clic, suis chaque candidature sur ton tableau, reçois un rappel
+            quand il est temps de relancer, et ajuste ton CV aux mots-clés de l'offre.
           </p>
-          <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:items-center">
             <a
               routerLink="/auth/signup"
               class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-medium text-on-primary transition-transform active:scale-[0.98]"
@@ -97,93 +96,105 @@ import { ExtensionShowcase } from '@features/home/extension-showcase';
               routerLink="/features"
               class="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-6 py-3.5 text-base font-medium text-text transition-colors hover:border-primary"
             >
-              Voir la démo
+              <app-icon name="lucide-circle-play" cssClass="h-4 w-4" />
+              Voir la visite complète
             </a>
           </div>
+          <p class="mt-4 text-sm text-muted">Gratuit, sans carte bancaire.</p>
         </div>
 
-        <!-- Une seule image, en thème sombre : le thème se change par un bouton, pas seulement par
-             la préférence système, donc une source conditionnée à prefers-color-scheme se
-             tromperait la moitié du temps. Cadrée, elle se lit comme une fenêtre du produit sur
-             les deux fonds. -->
-        <div appReveal="120" class="lg:-mr-6 xl:-mr-16">
-          <img
-            src="/screen/app-dark.webp"
-            width="2281"
-            height="1548"
-            [attr.fetchpriority]="'high'"
-            decoding="async"
-            alt="Le tableau de bord Candidash : huit candidatures avec leur entreprise, leur date et leur statut."
-            class="w-full rounded-2xl border border-border shadow-[0_24px_60px_-28px_rgb(0_0_0/0.45)]"
+        <app-demo-media
+          appReveal="120"
+          name="board"
+          alt="Le tableau des candidatures : une offre glissée de « Repérées » à « Envoyées », et le rappel de relance programmé."
+          width="1600"
+          height="1000"
+          priority
+          class="mx-auto mt-12 max-w-[1080px] lg:mt-16"
+        />
+      </section>
+
+      <!-- Extension : vraie vidéo du popup sur une annonce, badges officiels des stores. -->
+      <section class="border-y border-border bg-surface-100" aria-labelledby="extension-titre">
+        <app-extension-showcase appReveal />
+      </section>
+
+      <!-- Suivi : statistiques réelles, relances automatiques. -->
+      <section
+        class="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 lg:py-24"
+        aria-labelledby="suivi-titre"
+      >
+        <div appReveal class="max-w-3xl">
+          <h2
+            id="suivi-titre"
+            class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
+          >
+            Tu sais où tu en es. Les relances suivent.
+          </h2>
+        </div>
+        <ul appReveal="60" class="mt-8 grid gap-6 md:grid-cols-3">
+          @for (point of suivi; track point.titre) {
+            <li>
+              <app-icon [name]="point.icone" cssClass="h-6 w-6 text-primary" />
+              <h3 class="mt-3 font-semibold text-text">{{ point.titre }}</h3>
+              <p class="mt-1 leading-relaxed text-muted">{{ point.texte }}</p>
+            </li>
+          }
+        </ul>
+        <app-demo-media
+          appReveal="120"
+          name="stats"
+          alt="Les statistiques de Candidash : candidatures par statut, taux d'entretien, envois par semaine et entonnoir de conversion."
+          [width]="1400"
+          [height]="statsHeight"
+          [video]="false"
+          class="mx-auto mt-12 max-w-[1080px]"
+        />
+      </section>
+
+      <!-- Espace CV : vidéo de l'analyse qui réagit à la saisie. -->
+      <section class="border-y border-border bg-surface-100" aria-labelledby="cv-titre">
+        <div class="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 lg:py-24">
+          <div appReveal class="max-w-3xl">
+            <h2
+              id="cv-titre"
+              class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
+            >
+              Un CV raccord avec chaque offre.
+            </h2>
+          </div>
+          <ul appReveal="60" class="mt-8 grid gap-6 md:grid-cols-3">
+            @for (point of cv; track point.titre) {
+              <li>
+                <app-icon [name]="point.icone" cssClass="h-6 w-6 text-primary" />
+                <h3 class="mt-3 font-semibold text-text">{{ point.titre }}</h3>
+                <p class="mt-1 leading-relaxed text-muted">{{ point.texte }}</p>
+              </li>
+            }
+          </ul>
+          <app-demo-media
+            appReveal="120"
+            name="cv"
+            alt="L'éditeur de CV de Candidash : l'analyse liste les mots-clés de l'offre absents du CV, puis le score monte quand ils sont ajoutés."
+            width="1600"
+            height="1000"
+            class="mx-auto mt-12 max-w-[1080px]"
           />
         </div>
       </section>
 
-      <!-- Relances : split inversé, image à gauche, pour ne pas rejouer la composition du héros. -->
-      <section class="border-y border-border bg-surface-100">
-        <div
-          class="mx-auto grid max-w-[1180px] items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-14 lg:py-24"
-        >
-          <div appReveal class="order-2 lg:order-1">
-            <img
-              src="/screen/relance-dark.webp"
-              width="1951"
-              height="1269"
-              loading="lazy"
-              decoding="async"
-              alt="Le choix de la fréquence de relance, avec la date du prochain rappel calculée."
-              class="w-full rounded-2xl border border-border shadow-[0_18px_44px_-24px_rgb(0_0_0/0.40)]"
-            />
-          </div>
-          <div appReveal="100" class="order-1 lg:order-2">
-            <h2 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Les relances partent sans toi.
-            </h2>
-            <p class="mt-4 max-w-[46ch] text-base leading-relaxed text-muted sm:text-lg">
-              Tu choisis la fréquence en enregistrant l'annonce. Candidash calcule la date et
-              t'envoie le mail quand il est temps de relancer.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Trois sujets, trois cellules, tailles et fonds différents. -->
+      <!-- Trois engagements, trois cellules. -->
       <section class="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 lg:py-24">
         <div appReveal class="max-w-[46ch]">
           <h2 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Ce que tu ne veux plus chercher.
+            Simple, et sérieux avec tes données.
           </h2>
         </div>
 
         <div class="mt-10 grid gap-4 md:grid-cols-3">
           <article
             appReveal
-            class="rounded-2xl border border-border bg-primary-50 p-6 md:col-span-2 md:p-8"
-          >
-            <app-icon name="lucide-paperclip" cssClass="h-6 w-6 text-primary-900" />
-            <h3 class="mt-4 text-xl font-semibold tracking-tight">
-              Le CV que tu as vraiment envoyé
-            </h3>
-            <p class="mt-2 max-w-[52ch] leading-relaxed text-primary-900">
-              Le CV et la lettre partent avec la candidature et restent attachés à sa fiche. Trois
-              semaines plus tard, tu sais encore quelle version l'entreprise a reçue.
-            </p>
-          </article>
-
-          <article
-            appReveal="80"
-            class="rounded-2xl border border-border bg-surface-100 p-6 md:p-8"
-          >
-            <app-icon name="lucide-shield-check" cssClass="h-6 w-6 text-accent" />
-            <h3 class="mt-4 text-xl font-semibold tracking-tight">Compte protégé</h3>
-            <p class="mt-2 leading-relaxed text-muted">
-              Double authentification par application, au même endroit que le reste de tes réglages.
-            </p>
-          </article>
-
-          <article
-            appReveal="160"
-            class="rounded-2xl border border-border bg-accent-50 p-6 md:col-span-3 md:p-8"
+            class="rounded-2xl border border-border bg-accent-50 p-6 md:col-span-2 md:p-8"
           >
             <h3 class="text-xl font-semibold tracking-tight">Cinq statuts, pas trente.</h3>
             <p class="mt-2 max-w-[60ch] leading-relaxed text-accent-900">
@@ -198,17 +209,36 @@ import { ExtensionShowcase } from '@features/home/extension-showcase';
               }
             </ul>
           </article>
+
+          <article
+            appReveal="80"
+            class="rounded-2xl border border-border bg-surface-100 p-6 md:p-8"
+          >
+            <app-icon name="lucide-shield-check" cssClass="h-6 w-6 text-accent" />
+            <h3 class="mt-4 text-xl font-semibold tracking-tight">Compte protégé</h3>
+            <p class="mt-2 leading-relaxed text-muted">
+              Double authentification par application, mots de passe hachés avec Argon2.
+            </p>
+          </article>
+
+          <article
+            appReveal="160"
+            class="rounded-2xl border border-border bg-primary-50 p-6 md:col-span-3 md:p-8"
+          >
+            <app-icon name="lucide-lock-keyhole" cssClass="h-6 w-6 text-primary-900" />
+            <h3 class="mt-4 text-xl font-semibold tracking-tight">Rien ne part ailleurs.</h3>
+            <p class="mt-2 max-w-[70ch] leading-relaxed text-primary-900">
+              Pas de publicité ni de traceur. L'analyse de ton CV tourne dans ton navigateur, sans
+              intelligence artificielle tierce, et l'extension n'envoie l'offre qu'au moment où tu
+              cliques.
+            </p>
+          </article>
         </div>
       </section>
 
-      <!-- Extension : navigateur dessiné, vrai popup, liens vers les stores. -->
-      <section class="border-y border-border bg-surface-100" aria-labelledby="extension-titre">
-        <app-extension-showcase appReveal />
-      </section>
-
       <!-- Appel final : bande centrée, un seul geste. -->
-      <section class="mx-auto max-w-[1180px] px-4 py-20 text-center sm:px-6 lg:py-28">
-        <div appReveal class="mx-auto max-w-2xl">
+      <section class="border-t border-border bg-surface-100">
+        <div appReveal class="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6 lg:py-28">
           <h2 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Commence ta prochaine recherche au propre.
           </h2>
@@ -261,6 +291,47 @@ import { ExtensionShowcase } from '@features/home/extension-showcase';
 })
 export class Home {
   protected readonly annee = new Date().getFullYear();
+
+  /** Hauteur intrinsèque de la capture des statistiques (largeur 1400, scripts/capture). */
+  protected readonly statsHeight = 914;
+
+  protected readonly suivi = [
+    {
+      icone: 'lucide-columns-3',
+      titre: 'Un tableau en cinq colonnes',
+      texte: "Glisse une carte d'un statut à l'autre, la date d'envoi se remplit toute seule.",
+    },
+    {
+      icone: 'lucide-clock',
+      titre: 'Les relances partent sans toi',
+      texte:
+        "Au passage à « Envoyée », un rappel est programmé à sept jours : tu reçois un e-mail quand il est temps de relancer l'entreprise.",
+    },
+    {
+      icone: 'lucide-bar-chart-3',
+      titre: 'Des chiffres qui parlent',
+      texte: "Taux d'entretien, envois par semaine et entonnoir : tu vois ce qui marche.",
+    },
+  ];
+
+  protected readonly cv = [
+    {
+      icone: 'lucide-upload',
+      titre: 'Pars de ton CV actuel',
+      texte: 'Importe ton PDF : le texte est repris, titres et puces compris.',
+    },
+    {
+      icone: 'lucide-file-check',
+      titre: "Compare-le à l'offre",
+      texte:
+        "L'analyse liste les mots-clés présents et absents, et vérifie ce que les logiciels de tri (ATS) lisent mal.",
+    },
+    {
+      icone: 'lucide-download',
+      titre: 'Exporte un PDF propre',
+      texte: 'Texte sélectionnable, mise en page sobre, et joint à la candidature en un clic.',
+    },
+  ];
 
   protected readonly statuts = [
     'Repérée',
