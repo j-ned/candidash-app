@@ -72,8 +72,8 @@ import { RouterLink } from '@angular/router';
                   >Titre, entreprise, détails de l'annonce (lieu, salaire, télétravail), type de
                   contrat, statut :</strong
                 >
-                lus dans la page, puis envoyés à l'API Candidash uniquement quand vous cliquez sur
-                « Ajouter à Candidash ».
+                lus dans la page, puis envoyés à l'API Candidash uniquement quand vous cliquez sur «
+                Ajouter à Candidash ».
               </li>
               <li>
                 <strong>Version de l'extension :</strong> sur le site Candidash uniquement,
