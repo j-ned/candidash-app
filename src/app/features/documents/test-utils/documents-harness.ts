@@ -1,4 +1,4 @@
-import { Component, type Type } from '@angular/core';
+import { Component, type Provider, type Type } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import {
@@ -32,7 +32,11 @@ export type Harness = {
 class LayoutStub {}
 
 /** Gateway réelle sur HttpTestingController ; toasts, modale de confirmation et jobtrack doublés. */
-export function setupDocumentsTest(page: Type<unknown>, confirmAnswer = true): Harness {
+export function setupDocumentsTest(
+  page: Type<unknown>,
+  confirmAnswer = true,
+  providers: readonly Provider[] = [],
+): Harness {
   const toaster = { success: vi.fn(), danger: vi.fn() };
   const confirm = vi.fn().mockResolvedValue(confirmAnswer);
   TestBed.configureTestingModule({
@@ -44,6 +48,7 @@ export function setupDocumentsTest(page: Type<unknown>, confirmAnswer = true): H
       { provide: JobtrackGateway, useValue: { listUrl: () => JOBS_URL } },
       { provide: Toaster, useValue: toaster },
       { provide: ConfirmModal, useValue: { confirm } },
+      ...providers,
     ],
   });
   TestBed.overrideComponent(page, {

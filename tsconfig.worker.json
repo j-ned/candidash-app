@@ -1,0 +1,10 @@
+/* Workers empaquetés par le build Angular (new Worker(new URL('./x.worker', import.meta.url))). */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/worker",
+    "lib": ["es2022", "webworker"],
+    "types": []
+  },
+  "include": ["src/**/*.worker.ts", "src/**/pdfjs-worker.d.ts"]
+}
