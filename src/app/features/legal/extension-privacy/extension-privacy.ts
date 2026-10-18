@@ -63,11 +63,17 @@ import { RouterLink } from '@angular/router';
                 du navigateur, et nulle part ailleurs, pour que vous restiez connecté.
               </li>
               <li>
+                <strong>Adresse (URL) de l'offre affichée :</strong> envoyée à l'API Candidash à
+                l'ouverture de l'extension, si vous êtes connecté, pour vérifier si l'offre est déjà
+                dans vos candidatures. Rien n'est enregistré à cette étape.
+              </li>
+              <li>
                 <strong
-                  >Titre, entreprise et URL de l'offre affichée, type de contrat, statut :</strong
+                  >Titre, entreprise, détails de l'annonce (lieu, salaire, télétravail), type de
+                  contrat, statut :</strong
                 >
-                lus dans la page quand vous ouvrez l'extension. Ils ne sont envoyés à l'API
-                Candidash qu'au moment où vous cliquez sur « Ajouter à Candidash ».
+                lus dans la page, puis envoyés à l'API Candidash uniquement quand vous cliquez sur «
+                Ajouter à Candidash ».
               </li>
               <li>
                 <strong>Version de l'extension :</strong> sur le site Candidash uniquement,
@@ -85,8 +91,8 @@ import { RouterLink } from '@angular/router';
               <li>Aucune mesure d'audience, aucun traceur, aucun service tiers.</li>
               <li>Aucune vente ni aucun partage de données.</li>
               <li>
-                Aucun historique de navigation : la page n'est lue qu'à l'ouverture de l'extension,
-                et rien n'est envoyé sans votre clic.
+                Aucun historique de navigation. Sur les sites d'offres pris en charge, la page est
+                analysée localement pour afficher le badge « + » sur l'icône : rien n'est envoyé.
               </li>
             </ul>
           </section>
@@ -119,7 +125,7 @@ import { RouterLink } from '@angular/router';
   `,
 })
 export class ExtensionPrivacy {
-  protected readonly lastUpdated = new Date('2026-10-17').toLocaleDateString('fr-FR', {
+  protected readonly lastUpdated = new Date('2026-10-18').toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
