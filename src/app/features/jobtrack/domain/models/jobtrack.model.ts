@@ -25,6 +25,8 @@ export type JobTrack = {
   appliedAt?: string | null;
   contractType?: ContractType | null;
   notes?: string | null;
+  /** Texte de l'offre : présent sur le détail d'une candidature, absent de la liste. */
+  offerText?: string | null;
   attachments?: Record<string, JsonValue> | null;
   cvFileName?: string | null;
   lmFileName?: string | null;
@@ -41,6 +43,7 @@ export type CreateJobTrackDto = {
   status?: JobStatus;
   contractType?: ContractType;
   notes?: string;
+  offerText?: string;
 };
 
 export type UpdateJobTrackDto = Partial<CreateJobTrackDto>;
@@ -61,6 +64,7 @@ export type CreateJobTrackWithReminderDto = {
   status?: JobStatus;
   contractType?: ContractType;
   notes?: string;
+  offerText?: string;
   frequency: number;
   nextReminderAt: string;
   isActive?: boolean;
@@ -101,6 +105,7 @@ export type UpdateJobTrackWithReminderDto = {
   status?: JobStatus;
   contractType?: ContractType;
   notes?: string;
+  offerText?: string;
   frequency?: number;
   nextReminderAt?: string;
   isActive?: boolean;

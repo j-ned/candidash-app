@@ -1,4 +1,15 @@
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
@@ -24,6 +35,9 @@ import type { DocumentDetailApi } from '../../infra/document.types';
 import { HttpDocumentsGateway } from '../../infra/http-documents.gateway';
 import type { LeaveConfirmable } from '../../application/unsaved-changes-guard';
 import { downloadFile } from '../../application/download-file';
+import { pdfToMarkdown } from '../../domain/pdf-to-markdown';
+import { PDF_IMPORT_MAX_BYTES, PdfTextReader } from '../../infra/pdf-text-reader';
+import { DocumentAnalysis } from '../../application/components/document-analysis';
 import { DocumentSheet } from '../../application/components/document-sheet';
 import { MarkdownEditor } from '../../application/components/markdown-editor';
 import { MarkdownToolbar } from '../../application/components/markdown-toolbar';
@@ -33,6 +47,8 @@ type DocumentDraft = { title: string; markdown: string; jobTrackId: string };
 type Pane = 'edit' | 'preview';
 
 type PdfAction = 'export' | 'attach';
+
+type ImportedPdf = { readonly fileName: string; readonly markdown: string };
 
 const EMPTY_DRAFT: DocumentDraft = { title: '', markdown: '', jobTrackId: '' };
 
@@ -74,6 +90,7 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
     MarkdownEditor,
     MarkdownToolbar,
     DocumentSheet,
+    DocumentAnalysis,
   ],
   host: { '(window:beforeunload)': 'warnBeforeUnload($event)' },
   template: `
@@ -110,6 +127,25 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
               </p>
             </div>
             <div class="flex flex-wrap gap-2">
+              <input
+                #importInput
+                type="file"
+                accept="application/pdf"
+                data-testid="document-import-input"
+                class="hidden"
+                (change)="importPdf($event)"
+              />
+              <button
+                type="button"
+                data-testid="document-import"
+                [disabled]="importing()"
+                [attr.aria-busy]="importing()"
+                [class]="secondaryButton"
+                (click)="importInput.click()"
+              >
+                <app-icon name="lucide-upload" cssClass="h-4 w-4" />
+                {{ importing() ? 'Lecture…' : 'Importer un PDF' }}
+              </button>
               <button
                 type="button"
                 data-testid="document-export-pdf"
@@ -196,6 +232,55 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
             </div>
           </fieldset>
 
+          @if (imported(); as pdf) {
+            <section
+              data-testid="document-import-panel"
+              aria-labelledby="document-import-title"
+              class="space-y-4 rounded-xl border border-primary/40 bg-card p-4"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0 space-y-1">
+                  <h2
+                    #importTitle
+                    id="document-import-title"
+                    tabindex="-1"
+                    class="font-semibold text-text focus:outline-none"
+                  >
+                    Texte extrait de « {{ pdf.fileName }} »
+                  </h2>
+                  <p class="text-sm text-muted">
+                    La mise en page d'origine est perdue : vérifiez les titres et les puces après
+                    l'import.
+                    @if (docForm.markdown().value().trim()) {
+                      Le contenu actuel sera remplacé.
+                    }
+                  </p>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    data-testid="document-import-cancel"
+                    [class]="secondaryButton"
+                    (click)="imported.set(null)"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="document-import-replace"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    (click)="replaceWithImport(pdf.markdown)"
+                  >
+                    Remplacer le contenu
+                  </button>
+                </div>
+              </div>
+              <div class="max-h-[60vh] overflow-y-auto rounded-lg bg-surface-200 p-4">
+                <app-document-sheet [markdown]="pdf.markdown" />
+              </div>
+            </section>
+          }
+
           <div
             role="group"
             aria-label="Affichage"
@@ -259,6 +344,38 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
               <app-document-sheet [markdown]="docForm.markdown().value()" />
             </section>
           </div>
+
+          <section
+            aria-labelledby="document-analysis-title"
+            class="rounded-xl border border-border bg-card"
+          >
+            <h2 id="document-analysis-title">
+              <button
+                type="button"
+                data-testid="document-analysis-toggle"
+                aria-controls="document-analysis-panel"
+                [attr.aria-expanded]="analysisOpen()"
+                class="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left font-semibold text-text hover:bg-surface-200 focus-visible:outline-2 focus-visible:outline-primary"
+                (click)="analysisOpen.update((open) => !open)"
+              >
+                Analyse du document (ATS et offre)
+                <app-icon
+                  [name]="analysisOpen() ? 'lucide-chevron-up' : 'lucide-chevron-down'"
+                  cssClass="h-4 w-4 text-muted"
+                />
+              </button>
+            </h2>
+            @if (analysisOpen()) {
+              <div id="document-analysis-panel" class="border-t border-border p-4">
+                <app-document-analysis
+                  [kind]="document()?.kind ?? 'CV'"
+                  [markdown]="docForm.markdown().value()"
+                  [offerText]="linkedOffer()"
+                  [jobLabel]="selectedJobLabel()"
+                />
+              </div>
+            }
+          </section>
         </form>
       } @else {
         <p class="text-sm text-muted">Chargement…</p>
@@ -273,8 +390,12 @@ export class DocumentEditor implements LeaveConfirmable {
   private readonly toaster = inject(Toaster);
   private readonly confirmModal = inject(ConfirmModal);
   private readonly dom = inject(DOCUMENT);
+  private readonly pdfReader = inject(PdfTextReader);
+  private readonly injector = inject(Injector);
 
   readonly id = input.required<string>();
+
+  private readonly importTitle = viewChild<ElementRef<HTMLElement>>('importTitle');
 
   protected readonly documentResource = httpResource<DocumentDetail>(
     () => this.gateway.detailUrl(this.id()),
@@ -288,9 +409,12 @@ export class DocumentEditor implements LeaveConfirmable {
   protected readonly paneButton = PANE_BUTTON;
   protected readonly secondaryButton = SECONDARY_BUTTON;
   protected readonly pdfAction = signal<PdfAction | null>(null);
+  protected readonly importing = signal(false);
+  protected readonly imported = signal<ImportedPdf | null>(null);
+  protected readonly analysisOpen = signal(false);
   protected readonly pane = signal<Pane>('edit');
 
-  private readonly document = computed(() =>
+  protected readonly document = computed(() =>
     this.documentResource.hasValue() ? this.documentResource.value() : undefined,
   );
   // Version enregistrée : point de comparaison de l'indicateur et de la garde de sortie.
@@ -332,6 +456,24 @@ export class DocumentEditor implements LeaveConfirmable {
     const jobTrackId = this.saved().jobTrackId;
     return jobTrackId ? (this.jobs().find((job) => job.id === jobTrackId)?.label ?? null) : null;
   });
+  // Candidature choisie dans le formulaire : l'analyse suit la sélection, même non enregistrée.
+  private readonly selectedJobId = computed(() => this.model().jobTrackId);
+  protected readonly selectedJobLabel = computed(
+    () => this.jobs().find((job) => job.id === this.selectedJobId())?.label ?? null,
+  );
+  // Le texte de l'offre n'est que sur le détail : chargé seulement quand l'analyse est ouverte.
+  private readonly selectedJobResource = httpResource<JobTrack>(
+    () => {
+      const id = this.selectedJobId();
+      return this.analysisOpen() && id ? this.jobtrackGateway.getUrl(id) : undefined;
+    },
+    { parse: (raw) => toJobTrack(raw as JobTrackApi) },
+  );
+  protected readonly linkedOffer = computed(() =>
+    this.selectedJobResource.hasValue()
+      ? (this.selectedJobResource.value().offerText ?? null)
+      : null,
+  );
   protected readonly dirty = computed(() => !sameDraft(this.model(), this.saved()));
   protected readonly savedTitle = computed(() => this.saved().title);
   protected readonly kindLabel = computed(() => KIND_LABELS[this.document()?.kind ?? 'CV']);
@@ -353,6 +495,47 @@ export class DocumentEditor implements LeaveConfirmable {
       const { type, fileName } = await firstValueFrom(this.gateway.attach(this.id()));
       this.toaster.success(`${ATTACHED_LABELS[type]} à la candidature`, `« ${job} » : ${fileName}`);
     });
+  }
+
+  /** Le texte du PDF est lu dans le navigateur, puis proposé en aperçu avant de remplacer quoi que ce soit. */
+  async importPdf(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (file.type !== 'application/pdf' || file.size > PDF_IMPORT_MAX_BYTES) {
+      this.toaster.danger(
+        'Format non pris en charge',
+        'Choisissez un fichier PDF de 5 Mo au plus.',
+      );
+      return;
+    }
+    this.importing.set(true);
+    try {
+      const markdown = pdfToMarkdown(await this.pdfReader.read(file));
+      if (!markdown) {
+        this.toaster.danger(
+          'Aucun texte trouvé',
+          'Ce PDF est sans doute une image (scan) : son texte ne peut pas être lu.',
+        );
+        return;
+      }
+      this.imported.set({ fileName: file.name, markdown });
+      afterNextRender(() => this.importTitle()?.nativeElement.focus(), { injector: this.injector });
+    } catch {
+      this.toaster.danger(
+        'Lecture du PDF impossible',
+        'Le fichier est peut-être protégé ou endommagé.',
+      );
+    } finally {
+      this.importing.set(false);
+    }
+  }
+
+  protected replaceWithImport(markdown: string): void {
+    this.model.update((draft) => ({ ...draft, markdown }));
+    this.imported.set(null);
+    this.toaster.success('Texte importé', 'Relisez-le, puis enregistrez le document.');
   }
 
   canLeave(): boolean | Promise<boolean> {

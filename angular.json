@@ -23,6 +23,7 @@
               }
             ],
             "styles": ["src/styles.css"],
+            "webWorkerTsConfig": "tsconfig.worker.json",
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {

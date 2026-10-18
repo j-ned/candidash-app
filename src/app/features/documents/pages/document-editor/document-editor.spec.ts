@@ -12,6 +12,8 @@ import {
   type ResponseBody,
 } from '../../test-utils/documents-harness';
 import { DocumentEditor } from './document-editor';
+import { PdfTextReader } from '../../infra/pdf-text-reader';
+import type { PdfTextItem } from '../../domain/pdf-to-markdown';
 
 const DOCUMENT = documentDetailApi({
   id: 'cv-1',
@@ -401,6 +403,189 @@ describe('DocumentEditor', () => {
         'CV joint à la candidature',
         '« Développeur Angular — Acme Corp » : cv-angular.pdf',
       );
+    });
+  });
+
+  describe('PDF import', () => {
+    const CV_PAGE: PdfTextItem[] = [
+      { text: 'Camille Martin', x: 50, y: 800, fontSize: 22 },
+      { text: '• Angular 22', x: 50, y: 760, fontSize: 10 },
+      { text: '• NestJS', x: 50, y: 748, fontSize: 10 },
+    ];
+    let read: ReturnType<typeof vi.fn>;
+
+    async function renderWithReader(pages: () => Promise<PdfTextItem[][]>): Promise<Rendered> {
+      read = vi.fn(pages);
+      harness = setupDocumentsTest(DocumentEditor, true, [
+        { provide: PdfTextReader, useValue: { read } },
+      ]);
+      const fixture = TestBed.createComponent(DocumentEditor);
+      fixture.componentRef.setInput('id', 'cv-1');
+      fixture.detectChanges();
+      await respond(fixture, harness.http, [
+        { url: `${DOCUMENTS_URL}/cv-1`, body: DOCUMENT },
+        { url: JOBS_URL, body: JOBS },
+      ]);
+      return {
+        fixture,
+        host: fixture.nativeElement as HTMLElement,
+        editor: fixture.componentInstance,
+      };
+    }
+
+    async function pick(rendered: Rendered, file: File): Promise<void> {
+      const input = byTestId(rendered.host, 'document-import-input') as HTMLInputElement;
+      Object.defineProperty(input, 'files', { value: [file], configurable: true });
+      input.dispatchEvent(new Event('change'));
+      await nextMacrotask();
+      await rendered.fixture.whenStable();
+      rendered.fixture.detectChanges();
+    }
+
+    const pdfFile = (): File =>
+      new File(['%PDF-1.7'], 'ancien-cv.pdf', { type: 'application/pdf' });
+    const markdown = (rendered: Rendered): string =>
+      (byTestId(rendered.host, 'document-markdown') as HTMLTextAreaElement).value;
+
+    it('Given a PDF When it is chosen Then its text is shown as Markdown before anything is replaced', async () => {
+      // Given
+      const rendered = await renderWithReader(() => Promise.resolve([CV_PAGE]));
+
+      // When
+      await pick(rendered, pdfFile());
+
+      // Then
+      expect(read).toHaveBeenCalledWith(expect.objectContaining({ name: 'ancien-cv.pdf' }));
+      const panel = byTestId(rendered.host, 'document-import-panel');
+      expect(panel?.querySelector('[data-testid="document-preview"] h2')?.textContent).toBe(
+        'Camille Martin',
+      );
+      expect(panel?.querySelectorAll('li')).toHaveLength(2);
+      expect(markdown(rendered)).toBe('# Camille Martin\n\n## Expérience');
+    });
+
+    it('Given the extracted text When « Remplacer » is clicked Then it becomes the unsaved content', async () => {
+      // Given
+      const rendered = await renderWithReader(() => Promise.resolve([CV_PAGE]));
+      await pick(rendered, pdfFile());
+
+      // When
+      byTestId(rendered.host, 'document-import-replace')?.click();
+      rendered.fixture.detectChanges();
+
+      // Then
+      expect(markdown(rendered)).toBe('# Camille Martin\n\n- Angular 22\n- NestJS');
+      expect(byTestId(rendered.host, 'document-import-panel')).toBeNull();
+      expect(testIdText(rendered.host, 'document-save-state')).toBe(
+        'Modifications non enregistrées',
+      );
+    });
+
+    it('Given the extracted text When « Annuler » is clicked Then the content is kept', async () => {
+      // Given
+      const rendered = await renderWithReader(() => Promise.resolve([CV_PAGE]));
+      await pick(rendered, pdfFile());
+
+      // When
+      byTestId(rendered.host, 'document-import-cancel')?.click();
+      rendered.fixture.detectChanges();
+
+      // Then
+      expect(byTestId(rendered.host, 'document-import-panel')).toBeNull();
+      expect(markdown(rendered)).toBe('# Camille Martin\n\n## Expérience');
+    });
+
+    it('Given a file that is not a PDF When it is chosen Then it is refused without being read', async () => {
+      // Given
+      const rendered = await renderWithReader(() => Promise.resolve([CV_PAGE]));
+
+      // When
+      await pick(rendered, new File(['texte'], 'cv.docx', { type: 'application/msword' }));
+
+      // Then
+      expect(read).not.toHaveBeenCalled();
+      expect(harness.toaster.danger).toHaveBeenCalledWith(
+        'Format non pris en charge',
+        'Choisissez un fichier PDF de 5 Mo au plus.',
+      );
+    });
+
+    it.each([
+      [
+        'a scanned PDF',
+        () => Promise.resolve([[]]),
+        'Aucun texte trouvé',
+        'Ce PDF est sans doute une image (scan) : son texte ne peut pas être lu.',
+      ],
+      [
+        'an unreadable PDF',
+        () => Promise.reject(new Error('Invalid PDF structure')),
+        'Lecture du PDF impossible',
+        'Le fichier est peut-être protégé ou endommagé.',
+      ],
+    ])(
+      'Given %s When it is chosen Then the user is told why',
+      async (_case, pages, title, message) => {
+        // Given
+        const rendered = await renderWithReader(pages);
+
+        // When
+        await pick(rendered, pdfFile());
+
+        // Then
+        expect(harness.toaster.danger).toHaveBeenCalledWith(title, message);
+        expect(byTestId(rendered.host, 'document-import-panel')).toBeNull();
+      },
+    );
+  });
+
+  describe('analysis', () => {
+    function openAnalysis(rendered: Rendered): void {
+      byTestId(rendered.host, 'document-analysis-toggle')?.click();
+      rendered.fixture.detectChanges();
+    }
+
+    it('Given the editor Then the analysis stays closed and loads nothing', async () => {
+      // Given / When
+      const rendered = await render({ ...DOCUMENT, jobTrackId: 'jt-1' });
+
+      // Then
+      expect(
+        byTestId(rendered.host, 'document-analysis-toggle')?.getAttribute('aria-expanded'),
+      ).toBe('false');
+      harness.http.expectNone(`${JOBS_URL}/jt-1`);
+    });
+
+    it('Given a document linked to an application with an offer When the analysis opens Then the document is compared to the offer', async () => {
+      // Given
+      const rendered = await render({ ...DOCUMENT, jobTrackId: 'jt-1' });
+
+      // When
+      openAnalysis(rendered);
+      await respond(rendered.fixture, harness.http, [
+        {
+          url: `${JOBS_URL}/jt-1`,
+          body: { ...JOBS[0], offerText: 'Angular, NestJS et Docker. Angular avant tout.' },
+        },
+      ]);
+
+      // Then
+      expect(
+        byTestId(rendered.host, 'document-analysis-toggle')?.getAttribute('aria-expanded'),
+      ).toBe('true');
+      expect(testIdText(rendered.host, 'analysis-score')).toBe('0 mots-clés sur 3 (0 %)');
+    });
+
+    it('Given a document linked to no application When the analysis opens Then it explains how to compare with an offer', async () => {
+      // Given
+      const rendered = await render();
+
+      // When
+      openAnalysis(rendered);
+
+      // Then
+      expect(testIdText(rendered.host, 'analysis-no-offer')).toContain('Liez ce document');
+      expect(byTestId(rendered.host, 'analysis-check')).not.toBeNull();
     });
   });
 });
