@@ -30,7 +30,17 @@ import { readViewPreference, writeViewPreference } from './view-preference';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [Layout, Button, ExtensionBanner, JobtrackList, Icon, RouterLink],
+  imports: [
+    Layout,
+    Button,
+    ExtensionBanner,
+    JobtrackList,
+    JobtrackBoard,
+    DashboardStats,
+    ViewToggle,
+    Icon,
+    RouterLink,
+  ],
   template: `
     <app-layout>
       <app-extension-banner />
