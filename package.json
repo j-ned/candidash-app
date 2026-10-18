@@ -4,18 +4,19 @@
   "scripts": {
     "ng": "ng",
     "icons:version": "node scripts/sprite-version.mjs",
-    "prestart": "pnpm icons:version",
+    "prestart": "pnpm icons:version && pnpm media:version",
     "start": "ng serve",
-    "prebuild": "pnpm icons:version",
+    "prebuild": "pnpm icons:version && pnpm media:version",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "pretest": "pnpm icons:version",
+    "pretest": "pnpm icons:version && pnpm media:version",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prelint": "pnpm icons:version",
+    "prelint": "pnpm icons:version && pnpm media:version",
     "lint": "eslint src",
     "serve:ssr:ng-candidash-app": "node dist/ng-candidash-app/server/server.mjs",
-    "capture": "node scripts/capture/capture.mjs"
+    "capture": "node scripts/capture/capture.mjs",
+    "media:version": "node scripts/media-versions.mjs"
   },
   "prettier": {
     "printWidth": 100,

@@ -52,3 +52,4 @@ src/environments/environment.development.ts
 # Empreinte du sprite, générée avant build/test/lint/serve
 src/app/shared/ui/icon/sprite-version.ts
 capture-error.png
+src/app/features/home/media-versions.ts

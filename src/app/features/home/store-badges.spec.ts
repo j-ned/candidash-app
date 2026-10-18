@@ -30,7 +30,7 @@ describe('StoreBadges', () => {
     expect(link?.target).toBe('_blank');
     expect(link?.rel).toContain('noopener');
     const badge = link?.querySelector('img');
-    expect(badge?.getAttribute('src')).toBe('/badges/chrome-web-store.png');
+    expect(badge?.getAttribute('src')).toMatch(/^\/badges\/chrome-web-store\.png\?v=[0-9a-f]{8}$/);
     expect(badge?.alt).toBe('Disponible sur le Chrome Web Store');
   });
 
@@ -44,8 +44,8 @@ describe('StoreBadges', () => {
     // Then
     const link = byTestId<HTMLAnchorElement>(fixture, 'store-link-firefox');
     expect(link?.href).toBe('https://addons.mozilla.org/fr/firefox/addon/candidash/');
-    expect(link?.querySelector('img')?.getAttribute('src')).toBe(
-      '/badges/firefox-get-the-addon.svg',
+    expect(link?.querySelector('img')?.getAttribute('src')).toMatch(
+      /^\/badges\/firefox-get-the-addon\.svg\?v=[0-9a-f]{8}$/,
     );
     expect(byTestId(fixture, 'store-pending-firefox')).toBeNull();
   });

@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 import { Icon } from '@shared/ui/icon/icon';
+import { withVersion } from '@features/home/media-url';
 
 type Variant = 'light' | 'dark';
 
@@ -51,19 +52,19 @@ const STEPS = [
         <div
           class="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_60px_-28px_rgb(0_0_0/0.45)]"
         >
-          @for (variant of variants; track variant) {
+          @for (variant of variants; track variant.theme) {
             <video
-              [attr.data-testid]="'tour-' + variant"
-              [class]="variant === 'dark' ? 'hidden dark:block' : 'dark:hidden'"
+              [attr.data-testid]="'tour-' + variant.theme"
+              [class]="variant.visibility"
               class="aspect-[16/10] w-full bg-surface-100"
               controls
               playsinline
               muted
               preload="none"
-              [poster]="'/demo/board-' + variant + '.webp'"
+              [poster]="variant.poster"
               aria-describedby="visite-etapes"
             >
-              <source [src]="'/demo/tour-' + variant + '.webm'" type="video/webm" />
+              <source [src]="variant.video" type="video/webm" />
             </video>
           }
         </div>
@@ -104,6 +105,11 @@ const STEPS = [
   `,
 })
 export class Features {
-  protected readonly variants: readonly Variant[] = ['light', 'dark'];
+  protected readonly variants = (['light', 'dark'] as const).map((theme: Variant) => ({
+    theme,
+    visibility: theme === 'dark' ? 'hidden dark:block' : 'dark:hidden',
+    poster: withVersion(`/demo/board-${theme}.webp`),
+    video: withVersion(`/demo/tour-${theme}.webm`),
+  }));
   protected readonly steps = STEPS;
 }
