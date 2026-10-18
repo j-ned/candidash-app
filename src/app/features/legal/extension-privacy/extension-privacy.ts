@@ -69,11 +69,12 @@ import { RouterLink } from '@angular/router';
               </li>
               <li>
                 <strong
-                  >Titre, entreprise, détails de l'annonce (lieu, salaire, télétravail), type de
-                  contrat, statut :</strong
+                  >Titre, entreprise, détails de l'annonce (lieu, salaire, télétravail), texte de
+                  l'offre, type de contrat, statut :</strong
                 >
                 lus dans la page, puis envoyés à l'API Candidash uniquement quand vous cliquez sur «
-                Ajouter à Candidash ».
+                Ajouter à Candidash ». Le texte de l'offre sert à comparer votre CV et votre lettre
+                à l'offre, dans votre espace « Mes documents ».
               </li>
               <li>
                 <strong>Version de l'extension :</strong> sur le site Candidash uniquement,
