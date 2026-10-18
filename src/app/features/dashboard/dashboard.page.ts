@@ -6,7 +6,7 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Layout } from '@shared/ui/layout/layout';
 import { Button } from '@shared/ui/button/button';
 import { ExtensionBanner } from '@shared/ui/extension-banner/extension-banner';
@@ -20,7 +20,7 @@ import { ReminderChecker } from '@features/jobtrack/application/reminder-checker
 
 @Component({
   selector: 'app-dashboard',
-  imports: [Layout, Button, ExtensionBanner, JobtrackList, Icon],
+  imports: [Layout, Button, ExtensionBanner, JobtrackList, Icon, RouterLink],
   template: `
     <app-layout>
       <app-extension-banner />
@@ -47,6 +47,14 @@ import { ReminderChecker } from '@features/jobtrack/application/reminder-checker
                 </div>
 
                 <div class="flex items-center gap-2 sm:gap-3">
+                  <a
+                    routerLink="/dashboard/documents"
+                    data-testid="dashboard-documents-link"
+                    class="inline-flex items-center justify-center rounded-xl border border-border p-2 text-sm font-semibold text-text hover:bg-surface-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:rounded-lg sm:px-4 sm:py-2.5"
+                  >
+                    <app-icon name="lucide-file-text" cssClass="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                    <span class="sr-only sm:not-sr-only">Mes documents</span>
+                  </a>
                   <app-button
                     [customClass]="
                       '!w-auto inline-flex items-center justify-center !p-2 !rounded-xl !shadow-md !text-sm sm:!px-5 sm:!py-2.5 sm:!rounded-lg sm:!shadow-lg'

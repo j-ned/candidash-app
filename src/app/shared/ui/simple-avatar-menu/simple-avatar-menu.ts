@@ -56,6 +56,18 @@ import { Icon } from '@shared/ui/icon/icon';
             </button>
           </li>
 
+          <li>
+            <button
+              type="button"
+              data-testid="menu-documents"
+              (click)="goToDocuments()"
+              class="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface/80 transition-colors"
+            >
+              <app-icon name="lucide-file-text" cssClass="w-4 h-4 mr-3" />
+              Mes documents
+            </button>
+          </li>
+
           @if (authService.isAdmin()) {
             <li>
               <button
@@ -113,6 +125,11 @@ export class SimpleAvatarMenu {
   goToDashboard(): void {
     this.closeMenu();
     this.router.navigate(['/dashboard']);
+  }
+
+  goToDocuments(): void {
+    this.closeMenu();
+    this.router.navigate(['/dashboard/documents']);
   }
 
   goToAdmin(): void {

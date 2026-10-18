@@ -68,7 +68,7 @@ describe('parseMarkdown', () => {
     },
     {
       case: 'a style attribute',
-      markdown: '<p style="position:fixed">Texte</p>',
+      markdown: "<p style='position:fixed'>Texte</p>",
       forbidden: '[style]',
     },
     {
