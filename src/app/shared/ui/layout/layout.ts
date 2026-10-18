@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 import { AuthState } from '@features/auth/application/auth-state';
@@ -22,7 +22,10 @@ import { SimpleAvatarMenu } from '../simple-avatar-menu/simple-avatar-menu';
   template: `
     <div class="flex min-h-[100dvh] flex-col bg-background">
       <header class="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
-        <div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-end gap-2 px-4 sm:px-6">
+        <div
+          class="mx-auto flex h-16 w-full items-center justify-end gap-2 px-4 sm:px-6"
+          [class.max-w-6xl]="!wide()"
+        >
           @if (authService.isAuthenticated()) {
             <app-simple-avatar-menu />
           }
@@ -30,7 +33,11 @@ import { SimpleAvatarMenu } from '../simple-avatar-menu/simple-avatar-menu';
         </div>
       </header>
 
-      <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
+      <main
+        data-testid="layout-main"
+        class="mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:py-10"
+        [class.max-w-6xl]="!wide()"
+      >
         <div class="content-enter h-full rounded-2xl border border-border bg-card p-4 sm:p-8">
           <ng-content></ng-content>
         </div>
@@ -39,7 +46,8 @@ import { SimpleAvatarMenu } from '../simple-avatar-menu/simple-avatar-menu';
       <footer class="border-t border-border">
         <nav
           aria-label="Informations légales"
-          class="mx-auto flex w-full max-w-6xl justify-center gap-6 px-4 py-5 sm:px-6"
+          class="mx-auto flex w-full justify-center gap-6 px-4 py-5 sm:px-6"
+          [class.max-w-6xl]="!wide()"
         >
           <a
             routerLink="/terms-of-service"
@@ -73,5 +81,8 @@ import { SimpleAvatarMenu } from '../simple-avatar-menu/simple-avatar-menu';
   `,
 })
 export class Layout {
+  // Pleine largeur pour les écrans qui en ont besoin (tableau Kanban à 5 colonnes)
+  readonly wide = input(false);
+
   readonly authService = inject(AuthState);
 }

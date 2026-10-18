@@ -42,7 +42,7 @@ import { readViewPreference, writeViewPreference } from './view-preference';
     RouterLink,
   ],
   template: `
-    <app-layout>
+    <app-layout [wide]="view() === 'board'">
       <app-extension-banner />
       <div class="relative overflow-hidden">
         <div
@@ -51,7 +51,10 @@ import { readViewPreference, writeViewPreference } from './view-preference';
         <div class="relative">
           <!-- Header Navigation Bar -->
           <nav aria-label="Navigation du dashboard" class="backdrop-blur-sm bg-background/95 border-b border-border/50">
-            <div class="container mx-auto px-1 sm:px-6 lg:px-8">
+            <div
+              class="mx-auto w-full px-1 sm:px-6 lg:px-8"
+              [class.container]="view() !== 'board'"
+            >
               <div class="flex items-center justify-between h-14 sm:h-20">
                 <div class="flex items-center gap-3">
                   <div class="relative">
@@ -94,7 +97,8 @@ import { readViewPreference, writeViewPreference } from './view-preference';
       @if (jobs().length > 0) {
         <section
           aria-labelledby="dashboard-stats-title"
-          class="container mx-auto px-0 pt-4 sm:px-6 sm:pt-8 lg:px-8"
+          class="mx-auto w-full px-0 pt-4 sm:px-6 sm:pt-8 lg:px-8"
+          [class.container]="view() !== 'board'"
         >
           <h2 id="dashboard-stats-title" class="mb-4 text-xl font-bold text-text sm:text-2xl">
             Mes statistiques
@@ -104,7 +108,8 @@ import { readViewPreference, writeViewPreference } from './view-preference';
       }
       <section
         aria-label="Candidatures"
-        class="container mx-auto min-w-0 px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12"
+        class="mx-auto w-full min-w-0 px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12"
+        [class.container]="view() !== 'board'"
       >
         <div class="mb-4 flex justify-end">
           <app-view-toggle [(view)]="view" />

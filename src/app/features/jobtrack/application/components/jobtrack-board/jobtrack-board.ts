@@ -72,14 +72,14 @@ const DRAG_START_DELAY = { touch: 250, mouse: 0 };
     </p>
     <div
       cdkDropListGroup
-      class="-mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-4"
+      class="-mx-1 flex snap-x items-start gap-4 overflow-x-auto px-1 pb-4 xl:grid xl:grid-cols-5 xl:snap-none xl:overflow-visible"
       data-testid="board"
     >
       @for (column of columns(); track column.status) {
         <section
           [attr.aria-labelledby]="'board-column-title-' + column.status"
           [attr.data-testid]="'board-column-' + column.status"
-          class="flex w-72 shrink-0 snap-start flex-col rounded-xl border border-t-4 border-border bg-surface-100"
+          class="flex max-h-[min(72dvh,46rem)] w-72 shrink-0 snap-start flex-col rounded-xl border border-t-4 border-border bg-surface-100 xl:w-auto xl:min-w-0"
           [class]="column.accent"
         >
           <h3
@@ -99,7 +99,7 @@ const DRAG_START_DELAY = { touch: 250, mouse: 0 };
             cdkDropListSortingDisabled
             [cdkDropListData]="column.status"
             (cdkDropListDropped)="drop($event)"
-            class="flex min-h-24 flex-1 flex-col gap-2 p-2"
+            class="flex min-h-24 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2"
           >
             @for (card of column.cards; track card.id) {
               <li
