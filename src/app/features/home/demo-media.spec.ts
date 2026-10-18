@@ -64,10 +64,9 @@ describe('DemoMedia', () => {
 
     // Then
     const images = [...host(fixture).querySelectorAll('img')];
-    expect(images.map((image) => image.getAttribute('src'))).toEqual([
-      '/demo/board-light.webp',
-      '/demo/board-dark.webp',
-    ]);
+    const sources = images.map((image) => image.getAttribute('src'));
+    expect(sources[0]).toMatch(/^\/demo\/board-light\.webp\?v=[0-9a-f]{8}$/);
+    expect(sources[1]).toMatch(/^\/demo\/board-dark\.webp\?v=[0-9a-f]{8}$/);
     expect(images.map((image) => image.getAttribute('fetchpriority'))).toEqual(['high', 'auto']);
     expect(images[1].getAttribute('loading')).toBe('lazy');
     expect(images.every((image) => image.alt === 'Le tableau Kanban des candidatures')).toBe(true);
@@ -92,7 +91,9 @@ describe('DemoMedia', () => {
     await settle(fixture);
 
     // Then
-    expect(clip(fixture, 'light').getAttribute('src')).toBe('/demo/board-light.webm');
+    expect(clip(fixture, 'light').getAttribute('src')).toMatch(
+      /^\/demo\/board-light\.webm\?v=[0-9a-f]{8}$/,
+    );
     expect(clip(fixture, 'dark').getAttribute('src')).toBeNull();
     expect(play).toHaveBeenCalledTimes(1);
 
@@ -115,7 +116,9 @@ describe('DemoMedia', () => {
     await settle(fixture);
 
     // Then
-    expect(clip(fixture, 'dark').getAttribute('src')).toBe('/demo/board-dark.webm');
+    expect(clip(fixture, 'dark').getAttribute('src')).toMatch(
+      /^\/demo\/board-dark\.webm\?v=[0-9a-f]{8}$/,
+    );
   });
 
   it('lets the visitor pause and resume the clip (WCAG 2.2.2)', async () => {

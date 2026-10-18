@@ -20,7 +20,7 @@ describe('ExtensionShowcase', () => {
     // Then
     const host: HTMLElement = fixture.nativeElement;
     const demo = host.querySelector('app-demo-media img');
-    expect(demo?.getAttribute('src')).toBe('/demo/extension-light.webp');
+    expect(demo?.getAttribute('src')).toMatch(/^\/demo\/extension-light\.webp\?v=[0-9a-f]{8}$/);
     expect(demo?.getAttribute('alt')).toContain('extension Candidash');
     expect(host.querySelector('[data-testid="store-link-chrome"]')).not.toBeNull();
     expect(host.querySelector('#extension-titre')?.textContent).toContain('en un clic');

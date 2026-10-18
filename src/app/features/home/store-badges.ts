@@ -2,6 +2,7 @@ import { Component, afterNextRender, computed, inject, signal } from '@angular/c
 import { NgOptimizedImage } from '@angular/common';
 import { Config } from '@core/services/config';
 import { toChromeWebStoreUrl } from '@shared/ui/extension-banner/service/extension-detection';
+import { withVersion } from './media-url';
 
 /**
  * Badges officiels des stores, non modifiés et liés à la fiche de l'extension, comme l'exigent
@@ -26,7 +27,7 @@ import { toChromeWebStoreUrl } from '@shared/ui/extension-banner/service/extensi
           class="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
         >
           <img
-            ngSrc="/badges/chrome-web-store.png"
+            [ngSrc]="chromeBadge"
             width="496"
             height="150"
             alt="Disponible sur le Chrome Web Store"
@@ -48,7 +49,7 @@ import { toChromeWebStoreUrl } from '@shared/ui/extension-banner/service/extensi
           class="rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
         >
           <img
-            ngSrc="/badges/firefox-get-the-addon.svg"
+            [ngSrc]="firefoxBadge"
             width="172"
             height="60"
             alt="Disponible sur les modules complémentaires Firefox"
@@ -70,6 +71,8 @@ import { toChromeWebStoreUrl } from '@shared/ui/extension-banner/service/extensi
 export class StoreBadges {
   private readonly config = inject(Config);
 
+  protected readonly chromeBadge = withVersion('/badges/chrome-web-store.png');
+  protected readonly firefoxBadge = withVersion('/badges/firefox-get-the-addon.svg');
   protected readonly pendingClass =
     'inline-flex h-12 items-center rounded-md border border-dashed border-border px-4 text-sm text-muted';
   private readonly _rendered = signal(false);

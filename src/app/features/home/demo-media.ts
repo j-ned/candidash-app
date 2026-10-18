@@ -15,6 +15,7 @@ import {
 import { NgOptimizedImage } from '@angular/common';
 import { Icon } from '@shared/ui/icon/icon';
 import { ThemeManager, type Theme } from '@shared/ui/theme-toggle/service/theme';
+import { withVersion } from './media-url';
 
 const VARIANTS: readonly Theme[] = ['light', 'dark'];
 
@@ -113,7 +114,7 @@ export class DemoMedia {
   protected readonly variants = computed(() =>
     VARIANTS.map((theme) => ({
       theme,
-      poster: `/demo/${this.name()}-${theme}.webp`,
+      poster: withVersion(`/demo/${this.name()}-${theme}.webp`),
       visibility: theme === 'dark' ? 'hidden dark:block' : 'dark:hidden',
       priority: this.priority() && theme === 'light',
     })),
@@ -139,7 +140,9 @@ export class DemoMedia {
         const shouldPlay = this.inView() && !this.paused();
         for (const { nativeElement: clip } of this.clips()) {
           if (shouldPlay && clip.dataset['variant'] === active) {
-            if (!clip.getAttribute('src')) clip.src = `/demo/${this.name()}-${active}.webm`;
+            if (!clip.getAttribute('src')) {
+              clip.src = withVersion(`/demo/${this.name()}-${active}.webm`);
+            }
             clip.play().catch(() => this.paused.set(true));
           } else if (clip.getAttribute('src')) {
             clip.pause();
