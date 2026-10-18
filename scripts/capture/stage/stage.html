@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Scène : extension</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        font-family: system-ui, sans-serif;
+        background: #e7e5e4;
+      }
+      body.dark {
+        background: #1c1917;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 52px;
+        padding: 0 16px;
+        background: #f5f5f4;
+        border-bottom: 1px solid #d6d3d1;
+      }
+      .dark .toolbar {
+        background: #292524;
+        border-color: #44403c;
+      }
+      .dots {
+        display: flex;
+        gap: 7px;
+      }
+      .dots i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #d6d3d1;
+        display: block;
+      }
+      .dark .dots i {
+        background: #57534e;
+      }
+      .address {
+        flex: 1;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #fff;
+        color: #57534e;
+        font-size: 14px;
+      }
+      .dark .address {
+        background: #1c1917;
+        color: #a8a29e;
+      }
+      .ext {
+        position: relative;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+      }
+      .ext img {
+        width: 22px;
+        height: 22px;
+      }
+      .ext.active {
+        background: #d6d3d1;
+      }
+      .dark .ext.active {
+        background: #44403c;
+      }
+      .content {
+        position: relative;
+        flex: 1;
+      }
+      .content iframe.offer {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .popup {
+        position: absolute;
+        top: 6px;
+        right: 12px;
+        width: 380px;
+        height: 0;
+        border: 0;
+        border-radius: 12px;
+        box-shadow: 0 24px 60px -12px rgb(0 0 0 / 0.45);
+        background: #fff;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition:
+          opacity 160ms ease,
+          transform 160ms ease;
+      }
+      .popup.open {
+        opacity: 1;
+        transform: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="address">emplois.exemple/offres/developpeuse-angular-lumiere-voyages</div>
+      <div class="ext" id="ext-icon"><img src="/icons/icon-32.png" alt="" /></div>
+    </div>
+    <div class="content">
+      <iframe class="offer" src="/offer.html" title="Offre"></iframe>
+      <iframe class="popup" id="popup" title="Extension Candidash"></iframe>
+    </div>
+    <script>
+      if (new URLSearchParams(location.search).get('theme') === 'dark')
+        document.body.classList.add('dark');
+      document.getElementById('ext-icon').addEventListener('click', () => {
+        const popup = document.getElementById('popup');
+        document.getElementById('ext-icon').classList.add('active');
+        popup.src = '/src/popup/popup.html';
+        popup.addEventListener(
+          'load',
+          () => {
+            // Comme un vrai popup : la hauteur suit le contenu
+            const body = popup.contentDocument.body;
+            const fit = () => (popup.style.height = `${body.scrollHeight}px`);
+            new ResizeObserver(fit).observe(body);
+            fit();
+            popup.classList.add('open');
+          },
+          { once: true },
+        );
+      });
+    </script>
+  </body>
+</html>
