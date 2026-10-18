@@ -48,3 +48,6 @@ src/environments/environment.development.ts
 .claude/*
 .remember/*
 .superpowers/
+
+# Empreinte du sprite, générée avant build/test/lint/serve
+src/app/shared/ui/icon/sprite-version.ts

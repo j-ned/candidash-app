@@ -3,11 +3,16 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "icons:version": "node scripts/sprite-version.mjs",
+    "prestart": "pnpm icons:version",
     "start": "ng serve",
+    "prebuild": "pnpm icons:version",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
+    "pretest": "pnpm icons:version",
     "test": "vitest run",
     "test:watch": "vitest",
+    "prelint": "pnpm icons:version",
     "lint": "eslint src",
     "serve:ssr:ng-candidash-app": "node dist/ng-candidash-app/server/server.mjs"
   },
