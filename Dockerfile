@@ -1,30 +1,51 @@
-# ---- Étape de build ----
-# Node.js 24 (LTS active) sur Alpine pour le build
-FROM node:24-alpine AS build
+# syntax=docker/dockerfile:1.7
 
-# Définit le répertoire de travail dans le conteneur
-WORKDIR /app
+# ==============================================================================
+# Étage 1 : sources et dépendances, partagées par le build et les tests
+# Node.js 24 (LTS active) sur Alpine
+# ==============================================================================
+FROM node:24-alpine AS source
 
 # pnpm à la version du champ packageManager (corepack), pas « la dernière » publiée
 RUN corepack enable
 
-# Copie les fichiers package.json, pnpm-lock.yaml et pnpm-workspace.yaml
-# (ce dernier porte allowBuilds — sans lui, pnpm install bloque sur
-# ERR_PNPM_IGNORED_BUILDS pour esbuild/lmdb/etc.)
-COPY package*.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+WORKDIR /app
 
-# Installe les dépendances
-RUN pnpm install --frozen-lockfile
+# pnpm-workspace.yaml porte allowBuilds : sans lui, pnpm install bloque sur
+# ERR_PNPM_IGNORED_BUILDS pour esbuild/lmdb/etc.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Copie tout le code source
 COPY . .
 
-# Build l'application Angular en mode production
-RUN pnpm run build --configuration production
+# ==============================================================================
+# Étage 2 : build Angular en production (prérendu des pages publiques, coquille CSR)
+# ==============================================================================
+FROM source AS build
 
-# ---- Étape de production ----
-# nginx non-root (utilisateur nginx, uid 101) : un processus compromis n'a pas les droits root
-FROM nginxinc/nginx-unprivileged:alpine
+RUN pnpm run build --configuration production \
+ && test -f dist/ng-candidash-app/browser/index.html \
+ && test -f dist/ng-candidash-app/browser/index.csr.html
+
+# ==============================================================================
+# Étage de tests, construit par la CI seulement (`--target test`) : l'image de production n'en
+# dépend pas, BuildKit ne le construit donc pas pour un `docker build` simple. Même Node que le build.
+# ==============================================================================
+FROM source AS test
+
+ENV CI=1
+# CSP stricte (nonce par requête, pas de 'unsafe-inline') : un attribut style="" dans un template
+# serait bloqué en prod.
+RUN pnpm lint \
+ && pnpm test \
+ && if grep -rn ' style="' src/app; then echo "attribut style dans un template"; exit 1; fi
+
+# ==============================================================================
+# Étage 3, production : nginx non-root (utilisateur nginx, uid 101), un processus compromis
+# n'a pas les droits root
+# ==============================================================================
+FROM nginxinc/nginx-unprivileged:alpine AS production
 
 COPY --from=build /app/dist/ng-candidash-app/browser/ /usr/share/nginx/html/
 COPY docker/default.conf /etc/nginx/conf.d/default.conf
