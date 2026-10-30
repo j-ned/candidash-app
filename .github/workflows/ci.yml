@@ -1,9 +1,14 @@
 name: CI
 
+# Sur une PR : construire, tester, juger l'image. Sur master : la même chose, puis publier l'image
+# jugée sur GHCR et demander à Dokploy de la déployer (il ne construit plus rien) ; lancé à la main
+# sur master, il redéploie. Le run sur master écrit aussi le cache Docker que les PR lisent (GitHub
+# cloisonne le cache entre PR).
 on:
+  pull_request:
   push:
     branches: [master]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,74 +19,75 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
-    name: Lint · Test · Build · Image
+  ci:
+    name: Build · Test · Smoke
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write # publication de l'image sur GHCR, utilisée seulement sur master
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # pnpm avant setup-node : la version vient du champ `packageManager` de package.json.
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      # Runner jetable : pas de nettoyage du builder en fin de job.
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
         with:
-          node-version: 24 # même majeure que le Dockerfile (node:24-alpine)
-          cache: pnpm
+          cleanup: false
 
-      # Même commande que le Dockerfile : un lockfile incohérent échoue ici, pas chez Dokploy.
-      - name: Install (frozen lockfile)
-        run: pnpm install --frozen-lockfile
+      # Un seul passage BuildKit : étage `test` (lint, Vitest, garde CSP des templates) et image de
+      # production, en parallèle sur les mêmes sources installées, avec le cache GHA.
+      - name: Build and test (Dockerfile)
+        uses: docker/bake-action@v6
+        with:
+          source: .
+          targets: ci
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Test
-        run: pnpm test
-
-      - name: Build production (SSR + prérendu)
-        run: pnpm run build --configuration production
-
-      # Pages publiques prérendues : accueil, démo, CGU, confidentialité de l'extension, contact.
-      - name: Verify prerendered pages
+      # Pages prérendues et CSP, jugées sur les fichiers que l'image sert.
+      - name: Verify served build
         run: |
           set -euo pipefail
-          browser=dist/ng-candidash-app/browser
-          for page in index.html features/index.html terms-of-service/index.html extension-privacy/index.html contact/index.html; do
-            test -f "$browser/$page" || { echo "manquant : $page"; exit 1; }
-          done
+          id=$(docker create ng-candidash-app:ci)
+          docker cp -q "$id:/usr/share/nginx/html" /tmp/browser
+          docker rm -f "$id" > /dev/null
+          ci/verify-build.sh /tmp/browser
 
-      # CSP stricte (nonce par requête) : tout inline posé par Angular porte le marqueur que nginx
-      # remplace ; un attribut style="" serait bloqué en prod (pas de 'unsafe-inline').
-      - name: CSP guards
+      - name: Smoke test the image
+        run: ci/smoke.sh ng-candidash-app:ci
+
+      # Seule l'image qui vient de passer les tests et le test de fumée est publiée : celle que
+      # Dokploy déploie est octet pour octet celle-ci.
+      - name: Publish image (master)
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          browser=dist/ng-candidash-app/browser
-          for f in $(find $browser -name 'index*.html'); do
-            if grep -oE '<(script|style)[^>]*>' "$f" | grep -v 'src=' | grep -v 'application/json' | grep -vq 'nonce="\*\*CSP_NONCE\*\*"'; then
-              echo "inline sans nonce dans $f"; exit 1
-            fi
-            if grep -q ' style="' "$f"; then echo "attribut style dans $f"; exit 1; fi
-          done
-          if grep -rn ' style="' src/app; then echo "attribut style dans un template"; exit 1; fi
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          image=ghcr.io/${{ github.repository }}
+          docker tag ng-candidash-app:ci "$image:sha-${GITHUB_SHA::7}"
+          docker tag ng-candidash-app:ci "$image:latest"
+          docker push -q "$image:sha-${GITHUB_SHA::7}"
+          docker push -q "$image:latest"
 
-      # Exactement ce que Dokploy construit : une image qui ne build pas échoue ici.
-      - name: Docker image
-        run: docker build -t ng-candidash-app:ci .
-
-      # Conteneur réel : nginx non-root, en-tête CSP présent, nonce de la page = nonce de l'en-tête
-      - name: Container smoke test
+      # Dokploy tire `latest` et redémarre le conteneur (API `application.deploy` : le webhook
+      # d'une application « image » attend la charge utile de Docker Hub). Sans les secrets,
+      # l'étape ne fait rien et le déploiement reste celui configuré dans Dokploy.
+      - name: Deploy (Dokploy API)
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        env:
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
         run: |
-          set -euo pipefail
-          docker run -d --name front -p 8080:80 -e API_URL=https://api.example.test/api/v1 ng-candidash-app:ci
-          sleep 2
-          test "$(docker exec front id -u)" != "0"
-          curl -sf -D headers.txt -o page.html http://localhost:8080/
-          nonce=$(grep -i '^content-security-policy' headers.txt | grep -oE "nonce-[a-f0-9]+" | head -1 | cut -d- -f2)
-          test -n "$nonce"
-          grep -qi "connect-src 'self' https://api.example.test" headers.txt
-          grep -q "nonce=\"$nonce\"" page.html
-          ! grep -q 'CSP_NONCE' page.html
+          if [ -z "$DOKPLOY_URL" ] || [ -z "$DOKPLOY_API_KEY" ] || [ -z "$DOKPLOY_APPLICATION_ID" ]; then
+            echo "Secrets Dokploy absents : pas de déclenchement."
+            exit 0
+          fi
+          curl -fsS -X POST "$DOKPLOY_URL/api/application.deploy" \
+            -H "x-api-key: $DOKPLOY_API_KEY" -H 'Content-Type: application/json' \
+            -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\"}" -o /dev/null
