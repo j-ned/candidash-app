@@ -1,6 +1,6 @@
-import { Component, type Provider, type Type } from '@angular/core';
+import { Component, inject, type Provider, type Type } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
   provideHttpClientTesting,
@@ -47,7 +47,18 @@ export function setupDocumentsTest(
       { provide: Config, useValue: { apiUrl: API } },
       {
         provide: JobtrackGateway,
-        useValue: { listUrl: () => JOBS_URL, getUrl: (id: string) => `${JOBS_URL}/${id}` },
+        useFactory: () => {
+          const http = inject(HttpClient);
+          return {
+            listUrl: () => JOBS_URL,
+            getUrl: (id: string) => `${JOBS_URL}/${id}`,
+            uploadDocument: (id: string, type: string, file: File) => {
+              const form = new FormData();
+              form.append('file', file);
+              return http.post(`${JOBS_URL}/${id}/${type}`, form);
+            },
+          };
+        },
       },
       { provide: Toaster, useValue: toaster },
       { provide: ConfirmModal, useValue: { confirm } },

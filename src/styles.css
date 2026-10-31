@@ -341,3 +341,38 @@
   --color-ring: oklch(76% 0.098 155);
   --color-input: oklch(29% 0.014 155);
 }
+
+/* Export PDF des documents : le navigateur n'imprime que la feuille (.print-sheet de l'éditeur),
+   au gabarit A4 de l'aperçu ; « Enregistrer en PDF » donne un PDF au texte sélectionnable. Tout ce
+   qui ne la contient pas disparaît, ses ancêtres perdent leur mise en page. Sans feuille dans la
+   page, l'impression reste celle du site. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14.7mm 16.8mm;
+  }
+
+  body:has(.print-sheet) *:not(:has(.print-sheet), .print-sheet, .print-sheet *) {
+    display: none !important;
+  }
+
+  body:has(.print-sheet),
+  body:has(.print-sheet) *:has(.print-sheet) {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  .print-sheet app-document-sheet {
+    aspect-ratio: auto;
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+  }
+}
