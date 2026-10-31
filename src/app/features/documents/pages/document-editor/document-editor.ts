@@ -34,7 +34,7 @@ import { toDocumentDetail } from '../../infra/document.adapter';
 import type { DocumentDetailApi } from '../../infra/document.types';
 import { HttpDocumentsGateway } from '../../infra/http-documents.gateway';
 import type { LeaveConfirmable } from '../../application/unsaved-changes-guard';
-import { downloadFile } from '../../application/download-file';
+import { downloadFile } from '@shared/utils/download-file';
 import { pdfToMarkdown } from '../../domain/pdf-to-markdown';
 import { PDF_IMPORT_MAX_BYTES, PdfTextReader } from '../../infra/pdf-text-reader';
 import { DocumentAnalysis } from '../../application/components/document-analysis';

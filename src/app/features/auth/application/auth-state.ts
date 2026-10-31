@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, EMPTY, throwError } from 'rxjs';
-import { catchError, tap, switchMap } from 'rxjs/operators';
+import { catchError, tap, switchMap, finalize, share } from 'rxjs/operators';
 import { TokenStore } from '@core/services/token';
 import { Toaster } from '@shared/ui/toast/service/toast';
 import type {
@@ -38,8 +38,9 @@ export class AuthState {
     error: null,
   });
 
-  private readonly refreshInProgress = signal(false);
-  private readonly autoLoginInProgress = signal(false);
+  // Un seul appel /auth/refresh à la fois : les appelants concurrents (401 simultanés, guard,
+  // démarrage) partagent sa réponse au lieu de recevoir EMPTY.
+  private refresh$: Observable<RefreshResponse> | null = null;
 
   readonly pendingTwoFactorToken = signal<string | null>(null);
   readonly hasPending2FA = computed(() => this.pendingTwoFactorToken() !== null);
@@ -249,27 +250,20 @@ export class AuthState {
   }
 
   refreshToken(): Observable<RefreshResponse> {
-    if (this.refreshInProgress()) {
-      return EMPTY;
-    }
-
     if (!this.tokenService.hasValidRefreshToken()) {
       this.handleRefreshError();
       return throwError(() => new Error('No refresh token available'));
     }
 
-    this.refreshInProgress.set(true);
-
-    return this.authGateway.refreshToken().pipe(
-      tap(() => {
-        this.refreshInProgress.set(false);
-      }),
+    this.refresh$ ??= this.authGateway.refreshToken().pipe(
       catchError((error) => {
-        this.refreshInProgress.set(false);
         this.handleRefreshError();
         return throwError(() => error);
       }),
+      finalize(() => (this.refresh$ = null)),
+      share(),
     );
+    return this.refresh$;
   }
 
   checkAuthStatus(): boolean {
@@ -281,12 +275,6 @@ export class AuthState {
       return throwError(() => new Error('No refresh token available'));
     }
 
-    if (this.autoLoginInProgress()) {
-      return EMPTY;
-    }
-
-    this.autoLoginInProgress.set(true);
-
     return this.refreshToken().pipe(
       switchMap(() => {
         const user = this.getStoredUser();
@@ -296,14 +284,11 @@ export class AuthState {
             isAuthenticated: true,
             user,
           }));
-          this.autoLoginInProgress.set(false);
           return [true];
         }
-        this.autoLoginInProgress.set(false);
         return throwError(() => new Error('No user data available'));
       }),
       catchError(() => {
-        this.autoLoginInProgress.set(false);
         this.clearAuthData();
         return [false];
       }),

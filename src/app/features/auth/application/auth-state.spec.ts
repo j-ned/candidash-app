@@ -1,11 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, throwError, firstValueFrom, defer, defaultIfEmpty } from 'rxjs';
+import { of, throwError, firstValueFrom, defer, defaultIfEmpty, Subject } from 'rxjs';
 import { AuthState } from './auth-state';
 import { AuthGateway } from '../domain/gateways/auth.gateway';
 import { TokenStore } from '@core/services/token';
 import { Toaster } from '@shared/ui/toast/service/toast';
-import type { AuthResponse, LoginResponse, User } from '../domain/models/auth.model';
+import type {
+  AuthResponse,
+  LoginResponse,
+  RefreshResponse,
+  User,
+} from '../domain/models/auth.model';
 
 function buildUser(overrides: Partial<User> = {}): User {
   return {
@@ -160,5 +165,54 @@ describe('AuthState', () => {
 
     // Then
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthState.refreshToken', () => {
+  function setup() {
+    const refresh$ = new Subject<RefreshResponse>();
+    const gateway = { refreshToken: vi.fn(() => refresh$) };
+    TestBed.configureTestingModule({
+      providers: [
+        AuthState,
+        { provide: AuthGateway, useValue: gateway },
+        { provide: Router, useValue: { navigate: vi.fn(), url: '/dashboard' } },
+        { provide: Toaster, useValue: { show: vi.fn() } },
+        { provide: TokenStore, useValue: { hasValidRefreshToken: () => true } },
+      ],
+    });
+    return { state: TestBed.inject(AuthState), gateway, refresh$ };
+  }
+
+  it('shares a single refresh call between concurrent callers', async () => {
+    // Given
+    const { state, gateway, refresh$ } = setup();
+    const response = { message: 'ok' } as RefreshResponse;
+
+    // When
+    const first = firstValueFrom(state.refreshToken());
+    const second = firstValueFrom(state.refreshToken());
+    refresh$.next(response);
+    refresh$.complete();
+
+    // Then
+    expect(gateway.refreshToken).toHaveBeenCalledTimes(1);
+    await expect(first).resolves.toBe(response);
+    await expect(second).resolves.toBe(response);
+  });
+
+  it('starts a new refresh once the previous one is over', async () => {
+    // Given
+    const { state, gateway, refresh$ } = setup();
+    const done = firstValueFrom(state.refreshToken());
+    refresh$.next({} as RefreshResponse);
+    refresh$.complete();
+    await done;
+
+    // When
+    state.refreshToken().subscribe();
+
+    // Then
+    expect(gateway.refreshToken).toHaveBeenCalledTimes(2);
   });
 });
