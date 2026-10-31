@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "candidash-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-15",
+  // pg (TCP vers Hyperdrive) et quelques modules Node (crypto) en ont besoin
+  "compatibility_flags": ["nodejs_compat"],
+  // Même adresse que l'API Nest : l'extension et le front n'ont rien à changer
+  "routes": [{ "pattern": "api-candidash.nedellec-julien.fr", "custom_domain": true }],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // `wrangler hyperdrive create candidash-db --connection-string=…` (via le Cloudflare Tunnel)
+      "id": "00000000000000000000000000000000",
+      "localConnectionString": "postgresql://candidash:candidash@localhost:5432/candidash"
+    }
+  ],
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "candidash-app" }],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "ALLOWED_ORIGINS": "https://candidash.nedellec-julien.fr"
+  },
+  "observability": { "enabled": true }
+}
