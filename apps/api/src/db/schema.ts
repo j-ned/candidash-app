@@ -1,0 +1,335 @@
+import { sql } from 'drizzle-orm';
+import {
+  pgTable,
+  pgEnum,
+  text,
+  boolean,
+  integer,
+  doublePrecision,
+  jsonb,
+  timestamp,
+  index,
+  uniqueIndex,
+  foreignKey,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+
+// ---------- Enums (noms = types PG réels, confirmés par drizzle-kit pull) ----------
+export const roleEnum = pgEnum('Role', ['ADMIN', 'USER']);
+export const documentKindEnum = pgEnum('DocumentKind', ['CV', 'LETTER']);
+export const jobStatusEnum = pgEnum('JobStatus', [
+  'TO_APPLY',
+  'APPLIED',
+  'INTERVIEW',
+  'REJECTED',
+  'ACCEPTED',
+]);
+export const contractTypeEnum = pgEnum('ContractType', [
+  'CDI',
+  'CDD',
+  'INTERIM',
+  'STAGE',
+  'ALTERNANCE',
+  'FREELANCE',
+]);
+
+const ts = (name: string) =>
+  timestamp(name, { precision: 3, mode: 'date', withTimezone: false });
+
+// id TEXT sans default SQL → généré côté app (parité Prisma @default(uuid())).
+const idCol = () =>
+  text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID());
+
+// updatedAt NOT NULL sans default SQL → géré côté app (parité Prisma @updatedAt).
+const updatedAtCol = () =>
+  ts('updatedAt')
+    .notNull()
+    .$defaultFn(() => new Date())
+    .$onUpdate(() => new Date());
+
+// ---------- Utilisateurs (User) ----------
+export const users = pgTable(
+  'Utilisateurs',
+  {
+    id: idCol(),
+    email: text('email').notNull(),
+    username: text('username'),
+    password: text('password').notNull(),
+    role: roleEnum('role').notNull().default('USER'),
+    refreshToken: text('refreshToken'),
+    refreshTokenExpires: ts('refreshTokenExpires'),
+    resetPasswordToken: text('resetPasswordToken'),
+    resetPasswordExpires: ts('resetPasswordExpires'),
+    totpSecret: text('totpSecret'),
+    totpEnabled: boolean('totpEnabled').notNull().default(false),
+    totpRecoveryCodes: text('totpRecoveryCodes')
+      .array()
+      .notNull()
+      .default(sql`ARRAY[]::text[]`),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    updatedAt: updatedAtCol(),
+  },
+  (t) => [uniqueIndex('Utilisateurs_email_key').on(t.email)],
+);
+
+// ---------- Annonces (JobTrack) ----------
+export const jobTracks = pgTable(
+  'Annonces',
+  {
+    id: idCol(),
+    userId: text('userId').notNull(),
+    title: text('title').notNull(),
+    company: text('company'),
+    jobUrl: text('jobUrl'),
+    appliedAt: ts('appliedAt'),
+    status: jobStatusEnum('status').notNull().default('APPLIED'),
+    contractType: contractTypeEnum('contractType'),
+    notes: text('notes'),
+    // Texte de l'offre (extension ou collé par l'utilisateur) : matière de l'analyse des documents
+    offerText: text('offerText'),
+    cvFileName: text('cvFileName'),
+    lmFileName: text('lmFileName'),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    updatedAt: updatedAtCol(),
+  },
+  (t) => [
+    index('Annonces_userId_idx').on(t.userId),
+    foreignKey({
+      columns: [t.userId],
+      foreignColumns: [users.id],
+      name: 'Annonces_userId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('cascade'),
+  ],
+);
+
+// ---------- Relance (Reminder) ----------
+export const reminders = pgTable(
+  'Relance',
+  {
+    id: idCol(),
+    jobTrackId: text('jobTrackId').notNull(),
+    frequency: integer('frequency').notNull(),
+    nextReminderAt: ts('nextReminderAt').notNull(),
+    lastSentAt: ts('lastSentAt'),
+    isActive: boolean('isActive').notNull().default(true),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    updatedAt: updatedAtCol(),
+  },
+  (t) => [
+    index('Relance_jobTrackId_idx').on(t.jobTrackId),
+    index('Relance_isActive_nextReminderAt_idx').on(
+      t.isActive,
+      t.nextReminderAt,
+    ),
+    foreignKey({
+      columns: [t.jobTrackId],
+      foreignColumns: [jobTracks.id],
+      name: 'Relance_jobTrackId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('cascade'),
+  ],
+);
+
+// ---------- Jetons d'API (ApiToken) — auth indépendante pour l'extension navigateur ----------
+export const apiTokens = pgTable(
+  'Jetons',
+  {
+    id: idCol(),
+    userId: text('userId').notNull(),
+    nomAffiche: text('nomAffiche').notNull(),
+    tokenHash: text('tokenHash').notNull(),
+    derniereUtilisation: ts('derniereUtilisation'),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    revokedAt: ts('revokedAt'),
+  },
+  (t) => [
+    uniqueIndex('Jetons_tokenHash_key').on(t.tokenHash),
+    index('Jetons_userId_idx').on(t.userId),
+    foreignKey({
+      columns: [t.userId],
+      foreignColumns: [users.id],
+      name: 'Jetons_userId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('cascade'),
+  ],
+);
+
+// ---------- UserTracking (non utilisé en code, présent pour parité schéma) ----------
+export const userTracking = pgTable(
+  'UserTracking',
+  {
+    id: idCol(),
+    userId: text('userId').notNull(),
+    totalApplications: integer('totalApplications').notNull().default(0),
+    totalRemindersSent: integer('totalRemindersSent').notNull().default(0),
+    applicationsPerStatus: jsonb('applicationsPerStatus').notNull().default({}),
+    lastActionAt: ts('lastActionAt'),
+    responseRate: doublePrecision('responseRate').default(0),
+    remindersEffectiveness: doublePrecision('remindersEffectiveness').default(
+      0,
+    ),
+    avgResponseTime: doublePrecision('avgResponseTime').default(0),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    updatedAt: updatedAtCol(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.userId],
+      foreignColumns: [users.id],
+      name: 'UserTracking_userId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('cascade'),
+  ],
+);
+
+// ---------- CodesVerification (VerificationCode) ----------
+export const verificationCodes = pgTable(
+  'CodesVerification',
+  {
+    id: idCol(),
+    email: text('email').notNull(),
+    code: text('code').notNull(),
+    expiresAt: ts('expiresAt').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    updatedAt: updatedAtCol(),
+  },
+  (t) => [uniqueIndex('CodesVerification_email_key').on(t.email)],
+);
+
+// ---------- Documents (CV et lettres rédigés en Markdown) ----------
+// Une déclinaison (baseDocumentId) est une copie indépendante de son document de base.
+export const documents = pgTable(
+  'Documents',
+  {
+    id: idCol(),
+    userId: text('userId').notNull(),
+    kind: documentKindEnum('kind').notNull(),
+    title: text('title').notNull(),
+    markdown: text('markdown').notNull().default(''),
+    template: text('template').notNull().default('sobre'),
+    baseDocumentId: text('baseDocumentId'),
+    jobTrackId: text('jobTrackId'),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    updatedAt: updatedAtCol(),
+  },
+  (t) => [
+    index('Documents_userId_idx').on(t.userId),
+    foreignKey({
+      columns: [t.userId],
+      foreignColumns: [users.id],
+      name: 'Documents_userId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('cascade'),
+    foreignKey({
+      columns: [t.jobTrackId],
+      foreignColumns: [jobTracks.id],
+      name: 'Documents_jobTrackId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('set null'),
+  ],
+);
+
+// ---------- Visites (mesure d'audience, sans IP ni cookie) ----------
+// visitorHash = HMAC(secret, ip|ua|jour) : change chaque jour, non réversible sans le secret.
+export const visits = pgTable(
+  'Visites',
+  {
+    id: idCol(),
+    visitorHash: text('visitorHash').notNull(),
+    path: text('path').notNull(),
+    referrerHost: text('referrerHost'),
+    // Origine lisible (tag utm_source/ref, sinon referrer connu) ; null = accès direct
+    source: text('source'),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+  },
+  (t) => [index('Visites_createdAt_idx').on(t.createdAt)],
+);
+
+// ---------- UtilisateursEnAttente (PendingUser) ----------
+export const pendingUsers = pgTable(
+  'UtilisateursEnAttente',
+  {
+    id: idCol(),
+    email: text('email').notNull(),
+    username: text('username'),
+    password: text('password').notNull(),
+    verified: boolean('verified').notNull().default(false),
+    createdAt: ts('createdAt').notNull().defaultNow(),
+    updatedAt: updatedAtCol(),
+  },
+  (t) => [uniqueIndex('UtilisateursEnAttente_email_key').on(t.email)],
+);
+
+// ---------- Relations (pour db.query.*.findMany({ with })) ----------
+export const usersRelations = relations(users, ({ many }) => ({
+  jobTracks: many(jobTracks),
+  userTracking: many(userTracking),
+  apiTokens: many(apiTokens),
+}));
+
+export const jobTracksRelations = relations(jobTracks, ({ one, many }) => ({
+  user: one(users, { fields: [jobTracks.userId], references: [users.id] }),
+  reminders: many(reminders),
+}));
+
+export const remindersRelations = relations(reminders, ({ one }) => ({
+  jobtrack: one(jobTracks, {
+    fields: [reminders.jobTrackId],
+    references: [jobTracks.id],
+  }),
+}));
+
+export const userTrackingRelations = relations(userTracking, ({ one }) => ({
+  user: one(users, { fields: [userTracking.userId], references: [users.id] }),
+}));
+
+export const apiTokensRelations = relations(apiTokens, ({ one }) => ({
+  user: one(users, { fields: [apiTokens.userId], references: [users.id] }),
+}));
+
+// ---------- Types inférés (remplacent les types Prisma) ----------
+export type UserRow = typeof users.$inferSelect;
+export type JobTrackRow = typeof jobTracks.$inferSelect;
+export type ReminderRow = typeof reminders.$inferSelect;
+export type PendingUserRow = typeof pendingUsers.$inferSelect;
+export type VerificationCodeRow = typeof verificationCodes.$inferSelect;
+export type ApiTokenRow = typeof apiTokens.$inferSelect;
+export type DocumentRow = typeof documents.$inferSelect;
+export type DocumentKind = (typeof documentKindEnum.enumValues)[number];
+
+// Enums exposés à la fois comme type ET valeur runtime (parité avec les enums
+// Prisma générés : `JobStatus.APPLIED`, `enum: ContractType`, etc.).
+export type Role = (typeof roleEnum.enumValues)[number];
+export const Role = { ADMIN: 'ADMIN', USER: 'USER' } as const satisfies Record<
+  string,
+  Role
+>;
+
+export type JobStatus = (typeof jobStatusEnum.enumValues)[number];
+export const JobStatus = {
+  TO_APPLY: 'TO_APPLY',
+  APPLIED: 'APPLIED',
+  INTERVIEW: 'INTERVIEW',
+  REJECTED: 'REJECTED',
+  ACCEPTED: 'ACCEPTED',
+} as const satisfies Record<string, JobStatus>;
+
+export type ContractType = (typeof contractTypeEnum.enumValues)[number];
+export const ContractType = {
+  CDI: 'CDI',
+  CDD: 'CDD',
+  INTERIM: 'INTERIM',
+  STAGE: 'STAGE',
+  ALTERNANCE: 'ALTERNANCE',
+  FREELANCE: 'FREELANCE',
+} as const satisfies Record<string, ContractType>;
