@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import fixtures from './nest-fixtures.json';
-import { hashPassword, verifyPassword } from '../src/auth/passwords';
-import { decryptAesGcm, encryptAesGcm } from '../src/auth/crypto';
+import fixtures from './nest-fixtures.json' with { type: 'json' };
+import { hashPassword, verifyPassword } from '../src/auth/passwords.js';
+import { decryptAesGcm, encryptAesGcm } from '../src/auth/crypto.js';
 
 // Valeurs produites par l'API Nest (@node-rs/argon2, bcryptjs, node:crypto) : les données déjà
 // en base doivent rester valides après la migration.

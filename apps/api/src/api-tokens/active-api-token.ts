@@ -1,5 +1,5 @@
 import { and, gte, isNull, or } from 'drizzle-orm';
-import { apiTokens } from '../db/schema';
+import { apiTokens } from '../db/schema.js';
 
 // Un jeton inutilisé depuis 90 jours expire (ex. extension oubliée sur une ancienne
 // machine). Fenêtre glissante : un usage régulier de l'extension ne déconnecte jamais.

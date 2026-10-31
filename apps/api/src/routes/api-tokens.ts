@@ -1,15 +1,15 @@
 import { Hono } from 'hono';
 import { and, desc, eq } from 'drizzle-orm';
-import type { AppEnv } from '../env';
-import type { Db } from '../db/client';
-import { apiTokens, type ApiTokenRow } from '../db/schema';
-import { validate } from '../validate';
-import { httpError } from '../http-errors';
-import { rateLimit, requireApiToken, requireUser } from '../auth/middleware';
-import { randomHex, sha256Hex } from '../auth/crypto';
-import { authenticate, completeTwoFactor } from '../auth/sessions';
-import { activeApiToken } from '../api-tokens/active-api-token';
-import { createApiTokenSchema, login2faApiTokenSchema, loginApiTokenSchema } from '../auth/schemas';
+import type { AppEnv } from '../env.js';
+import type { Db } from '../db/client.js';
+import { apiTokens, type ApiTokenRow } from '../db/schema.js';
+import { validate } from '../validate.js';
+import { httpError } from '../http-errors.js';
+import { rateLimit, requireApiToken, requireUser } from '../auth/middleware.js';
+import { randomHex, sha256Hex } from '../auth/crypto.js';
+import { authenticate, completeTwoFactor } from '../auth/sessions.js';
+import { activeApiToken } from '../api-tokens/active-api-token.js';
+import { createApiTokenSchema, login2faApiTokenSchema, loginApiTokenSchema } from '../auth/schemas.js';
 
 const toApiToken = (row: ApiTokenRow) => ({
   id: row.id,

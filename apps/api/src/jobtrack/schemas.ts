@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { contractTypeEnum, jobStatusEnum } from '../db/schema';
+import { contractTypeEnum, jobStatusEnum } from '../db/schema.js';
 
 // Repris des DTO de l'API Nest (mêmes règles, mêmes messages).
 export const OFFER_TEXT_MAX = 20_000;

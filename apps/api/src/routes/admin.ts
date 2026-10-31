@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { count, desc, eq, max } from 'drizzle-orm';
 import { z } from 'zod';
-import type { AppEnv } from '../env';
-import { jobTracks, users } from '../db/schema';
-import { validate } from '../validate';
-import { requireRole, requireUser } from '../auth/middleware';
-import { visitStats } from '../analytics/stats';
-import { ANALYTICS_MAX_DAYS } from '../jobs/scheduled';
+import type { AppEnv } from '../env.js';
+import { jobTracks, users } from '../db/schema.js';
+import { validate } from '../validate.js';
+import { requireRole, requireUser } from '../auth/middleware.js';
+import { visitStats } from '../analytics/stats.js';
+import { ANALYTICS_MAX_DAYS } from '../jobs/scheduled.js';
 
 const statsQuery = z
   .object({ days: z.coerce.number().int().min(1).max(ANALYTICS_MAX_DAYS).default(30) })

@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import type { AppEnv } from '../env';
-import { visits } from '../db/schema';
-import { validate } from '../validate';
-import { sha256Hex } from '../auth/crypto';
-import { isBot, toReferrerHost, toTrackedPath, toVisitorHash } from '../analytics/visit-rules';
-import { toVisitSource } from '../analytics/visit-source';
-import { clientIp } from '../auth/middleware';
+import type { AppEnv } from '../env.js';
+import { visits } from '../db/schema.js';
+import { validate } from '../validate.js';
+import { sha256Hex } from '../auth/crypto.js';
+import { isBot, toReferrerHost, toTrackedPath, toVisitorHash } from '../analytics/visit-rules.js';
+import { toVisitSource } from '../analytics/visit-source.js';
+import { clientIp } from '../auth/middleware.js';
 
 const trackSchema = z
   .object({ path: z.string().min(1).max(500), referrer: z.string().max(1000).optional() })

@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { capturingMailer, client, testEnv, uniqueEmail } from './helpers';
-import { createUser, withDb } from './db';
-import { sendDueReminders } from '../src/jobs/scheduled';
-import { dbLimiter } from '../src/rate-limit';
-import { s3Bucket } from '../src/files/bucket';
-import { jobTracks, reminders } from '../src/db/schema';
+import { capturingMailer, client, testEnv, uniqueEmail } from './helpers.js';
+import { createUser, withDb } from './db.js';
+import { sendDueReminders } from '../src/jobs/scheduled.js';
+import { dbLimiter } from '../src/rate-limit.js';
+import { s3Bucket } from '../src/files/bucket.js';
+import { jobTracks, reminders } from '../src/db/schema.js';
 
 async function dueReminder() {
   const user = await createUser();
@@ -120,7 +120,7 @@ describe('entrée Vercel', () => {
       S3_BUCKET: 'candidash-app',
     };
     for (const [name, value] of Object.entries(vars)) vi.stubEnv(name, value);
-    const { default: app } = await import('../src/index');
+    const { default: app } = await import('../src/index.js');
 
     const res = await app.request('/api/v1/health', { headers: { Origin: 'https://candidash.example.test' } });
 

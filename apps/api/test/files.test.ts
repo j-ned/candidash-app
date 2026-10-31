@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { memoryBucket, testEnv } from './helpers';
-import { loggedIn } from './session';
+import { memoryBucket, testEnv } from './helpers.js';
+import { loggedIn } from './session.js';
 
 const pdf = (content = '%PDF-1.7\n…', type = 'application/pdf', name = 'Mon CV.pdf') => {
   const form = new FormData();

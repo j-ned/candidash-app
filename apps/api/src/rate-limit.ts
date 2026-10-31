@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
-import type { Db } from './db/client';
-import type { RateLimiter } from './env';
+import type { Db } from './db/client.js';
+import type { RateLimiter } from './env.js';
 
 /**
  * Fenêtre fixe d'une minute, comptée en base (une requête par appel) : les instances serverless

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
-import type { Db } from '../db/client';
-import { users, type UserRow } from '../db/schema';
-import { hashPassword, verifyPassword } from '../auth/passwords';
+import type { Db } from '../db/client.js';
+import { users, type UserRow } from '../db/schema.js';
+import { hashPassword, verifyPassword } from '../auth/passwords.js';
 
 export type UserSafe = Pick<UserRow, 'id' | 'email' | 'role' | 'totpEnabled' | 'createdAt' | 'updatedAt'> & {
   username?: string;

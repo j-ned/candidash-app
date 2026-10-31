@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import type { AppEnv } from '../env';
-import { validate } from '../validate';
-import { httpError } from '../http-errors';
-import { rateLimit } from '../auth/middleware';
+import type { AppEnv } from '../env.js';
+import { validate } from '../validate.js';
+import { httpError } from '../http-errors.js';
+import { rateLimit } from '../auth/middleware.js';
 
 const UNAVAILABLE = "Le message n'a pas pu être envoyé, réessayez plus tard.";
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toVisitSource } from './visit-source';
+import { toVisitSource } from './visit-source.js';
 
 const FIREFOX =
   'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0';

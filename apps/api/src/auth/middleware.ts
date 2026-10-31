@@ -2,12 +2,12 @@ import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { getCookie } from 'hono/cookie';
 import { and, eq } from 'drizzle-orm';
-import type { AppEnv } from '../env';
-import { apiTokens, users, type Role } from '../db/schema';
-import { httpError } from '../http-errors';
-import { verifyAccess } from './tokens';
-import { sha256Hex } from './crypto';
-import { activeApiToken } from '../api-tokens/active-api-token';
+import type { AppEnv } from '../env.js';
+import { apiTokens, users, type Role } from '../db/schema.js';
+import { httpError } from '../http-errors.js';
+import { verifyAccess } from './tokens.js';
+import { sha256Hex } from './crypto.js';
+import { activeApiToken } from '../api-tokens/active-api-token.js';
 
 /** Session web : jeton d'accès dans le cookie HttpOnly `access_token`, jamais en en-tête. */
 export const requireUser = createMiddleware<AppEnv>(async (c, next) => {

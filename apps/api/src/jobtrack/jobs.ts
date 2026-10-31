@@ -1,9 +1,9 @@
 import { and, desc, eq } from 'drizzle-orm';
-import type { Db } from '../db/client';
-import { jobTracks, reminders, type JobStatus, type JobTrackRow, type ReminderRow } from '../db/schema';
-import { httpError } from '../http-errors';
-import { normalizeJobUrl } from './normalize-job-url';
-import type { JobInput } from './schemas';
+import type { Db } from '../db/client.js';
+import { jobTracks, reminders, type JobStatus, type JobTrackRow, type ReminderRow } from '../db/schema.js';
+import { httpError } from '../http-errors.js';
+import { normalizeJobUrl } from './normalize-job-url.js';
+import type { JobInput } from './schemas.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_REMINDER_FREQUENCY_DAYS = 7;

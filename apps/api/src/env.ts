@@ -1,7 +1,7 @@
-import type { Db } from './db/client';
-import type { AccessPayload } from './auth/tokens';
-import type { Mailer } from './mail/mailer';
-import type { Bucket } from './files/bucket';
+import type { Db } from './db/client.js';
+import type { AccessPayload } from './auth/tokens.js';
+import type { Mailer } from './mail/mailer.js';
+import type { Bucket } from './files/bucket.js';
 
 export type RateLimiter = { limit(options: { key: string }): Promise<{ success: boolean }> };
 

@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
-import type { AppEnv } from '../env';
-import { validate } from '../validate';
-import { httpError } from '../http-errors';
-import { rateLimit, requireUser } from '../auth/middleware';
-import { setAuthCookies } from '../auth/cookies';
-import { completeTwoFactor, openSession, twoFactorUser } from '../auth/sessions';
-import { consumeRecoveryCode, disableTotp, enableTotp, startTotpSetup, verifyTotp } from '../auth/two-factor';
-import { checkPassword, findUserById } from '../users/users';
-import { disableTotpSchema, recoverySchema, totpTokenSchema, validateTotpSchema } from '../auth/schemas';
+import type { AppEnv } from '../env.js';
+import { validate } from '../validate.js';
+import { httpError } from '../http-errors.js';
+import { rateLimit, requireUser } from '../auth/middleware.js';
+import { setAuthCookies } from '../auth/cookies.js';
+import { completeTwoFactor, openSession, twoFactorUser } from '../auth/sessions.js';
+import { consumeRecoveryCode, disableTotp, enableTotp, startTotpSetup, verifyTotp } from '../auth/two-factor.js';
+import { checkPassword, findUserById } from '../users/users.js';
+import { disableTotpSchema, recoverySchema, totpTokenSchema, validateTotpSchema } from '../auth/schemas.js';
 
 export const twoFactorRoutes = new Hono<AppEnv>()
   .post('/setup', requireUser, async (c) => {
