@@ -29,7 +29,7 @@
     <link rel="preconnect" href="https://api-candidash.nedellec-julien.fr" crossorigin />
   </head>
   <body>
-    <!-- **CSP_NONCE** est remplacé par nginx à chaque requête ($request_id), même valeur que l'en-tête CSP -->
+    <!-- **CSP_NONCE** est remplacé à chaque requête (cloudflare/worker.ts), même valeur que l'en-tête CSP -->
     <app-root ngCspNonce="**CSP_NONCE**"></app-root>
   </body>
 </html>

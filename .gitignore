@@ -53,3 +53,7 @@ src/environments/environment.development.ts
 src/app/shared/ui/icon/sprite-version.ts
 capture-error.png
 src/app/features/home/media-versions.ts
+
+# Cache local de wrangler dev
+.wrangler/
+.dev.vars

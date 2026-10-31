@@ -15,7 +15,10 @@
     "prelint": "pnpm icons:version && pnpm media:version",
     "lint": "eslint src",
     "capture": "node scripts/capture/capture.mjs",
-    "media:version": "node scripts/media-versions.mjs"
+    "media:version": "node scripts/media-versions.mjs",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "pnpm build && wrangler deploy",
+    "typecheck:worker": "tsc -p cloudflare"
   },
   "prettier": {
     "printWidth": 100,
@@ -68,7 +71,8 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.60.0",
-    "vitest": "^4.1.12"
+    "vitest": "^4.1.12",
+    "wrangler": "^4.151.1"
   },
   "packageManager": "pnpm@12.3.4"
 }
