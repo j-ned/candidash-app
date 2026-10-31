@@ -53,15 +53,26 @@ export function capturingMailer() {
   return { mailer, codes, resetUrls, changed };
 }
 
-/** Faux bucket R2 : seules les suppressions sont observées ici. */
+/** Faux bucket R2 en mémoire : dépôt, lecture et suppression, comme le binding. */
 export function memoryBucket() {
+  const objects = new Map<string, Uint8Array>();
   const deleted: string[] = [];
   const bucket = {
+    async put(key: string, value: ArrayBuffer) {
+      objects.set(key, new Uint8Array(value));
+    },
+    async get(key: string) {
+      const bytes = objects.get(key);
+      return bytes ? { body: new Response(bytes).body } : null;
+    },
     async delete(keys: string | string[]) {
-      deleted.push(...[keys].flat());
+      for (const key of [keys].flat()) {
+        objects.delete(key);
+        deleted.push(key);
+      }
     },
   } as unknown as R2Bucket;
-  return { bucket, deleted };
+  return { bucket, objects, deleted };
 }
 
 // waitUntil sans attente : la connexion se ferme en arrière-plan, comme sous Workers
@@ -86,16 +97,17 @@ export function client(options: { env?: Bindings; mailer?: Mailer } = {}) {
 
   async function send(method: string, path: string, body?: unknown, headers: Record<string, string> = {}) {
     const cookie = [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
+    const isForm = body instanceof FormData;
     const res = await app.request(
       `/api/v1${path}`,
       {
         method,
         headers: {
-          ...(body !== undefined && { 'Content-Type': 'application/json' }),
+          ...(body !== undefined && !isForm && { 'Content-Type': 'application/json' }),
           ...(cookie && { Cookie: cookie }),
           ...headers,
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       },
       env,
       executionContext(),

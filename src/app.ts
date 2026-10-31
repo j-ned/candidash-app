@@ -12,6 +12,8 @@ import { twoFactorRoutes } from './routes/two-factor';
 import { apiTokenRoutes } from './routes/api-tokens';
 import { accountRoutes } from './routes/accounts';
 import { jobTrackRoutes } from './routes/jobtrack';
+import { jobFileRoutes } from './routes/job-files';
+import { documentRoutes } from './routes/documents';
 
 function defaultMailer(env: Bindings): Mailer {
   return env.ENVIRONMENT === 'production' ? unavailableMailer : consoleMailer;
@@ -68,6 +70,8 @@ export function createApp({ mailer = defaultMailer }: AppOptions = {}) {
   app.route('/api-tokens', apiTokenRoutes);
   app.route('/accounts', accountRoutes);
   app.route('/jobtrack', jobTrackRoutes);
+  app.route('/jobtrack', jobFileRoutes);
+  app.route('/documents', documentRoutes);
 
   app.notFound((c) => c.json(errorBody(404, `Cannot ${c.req.method} ${c.req.path}`), 404));
   app.onError(handleError);
