@@ -1,11 +1,4 @@
-import { createApp, defaultMailer } from './app';
-import type { Bindings } from './env';
-import { runScheduled } from './jobs/scheduled';
+import { createApp } from './app';
 
-const app = createApp();
-
-export default {
-  fetch: app.fetch,
-  // Cron Triggers déclarés dans wrangler.jsonc
-  scheduled: (controller, env, ctx) => ctx.waitUntil(runScheduled(controller.cron, env, defaultMailer(env))),
-} satisfies ExportedHandler<Bindings>;
+// Point d'entrée Vercel (Hono détecté sans configuration) : une fonction Node pour /api/v1/*.
+export default createApp();

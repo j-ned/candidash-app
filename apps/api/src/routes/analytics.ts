@@ -6,6 +6,7 @@ import { validate } from '../validate';
 import { sha256Hex } from '../auth/crypto';
 import { isBot, toReferrerHost, toTrackedPath, toVisitorHash } from '../analytics/visit-rules';
 import { toVisitSource } from '../analytics/visit-source';
+import { clientIp } from '../auth/middleware';
 
 const trackSchema = z
   .object({ path: z.string().min(1).max(500), referrer: z.string().max(1000).optional() })
@@ -36,7 +37,7 @@ export const analyticsRoutes = new Hono<AppEnv>()
       // Clé dérivée du secret JWT (pas de secret de plus), même dérivation que l'API Nest
       const secret = await sha256Hex(`analytics|${c.env.JWT_SECRET}`);
       await c.var.db.insert(visits).values({
-        visitorHash: await toVisitorHash(secret, c.req.header('cf-connecting-ip') ?? '', userAgent, today()),
+        visitorHash: await toVisitorHash(secret, clientIp(c), userAgent, today()),
         path,
         referrerHost,
         source: toVisitSource(rawPath, referrerHost, userAgent),

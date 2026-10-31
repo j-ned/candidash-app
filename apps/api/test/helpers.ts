@@ -1,5 +1,6 @@
 import { createApp } from '../src/app';
 import type { Bindings } from '../src/env';
+import type { Bucket } from '../src/files/bucket';
 import { templatedMailer, type Mailer, type OutgoingEmail } from '../src/mail/mailer';
 
 const DATABASE_URL =
@@ -19,8 +20,8 @@ export function memoryLimiter(limit: number) {
 
 export function testEnv(overrides: Partial<Bindings> = {}): Bindings {
   return {
-    HYPERDRIVE: { connectionString: DATABASE_URL },
-    FILES: {} as R2Bucket,
+    DATABASE_URL,
+    FILES: memoryBucket().bucket,
     STRICT_LIMITER: memoryLimiter(1000),
     GLOBAL_LIMITER: memoryLimiter(1000),
     CONTACT_LIMITER: memoryLimiter(1000),
@@ -51,7 +52,7 @@ export function capturingMailer() {
 
 /** Faux bucket R2 en mémoire : dépôt, lecture et suppression, comme le binding. */
 export function memoryBucket() {
-  const objects = new Map<string, Uint8Array>();
+  const objects = new Map<string, Uint8Array<ArrayBuffer>>();
   const deleted: string[] = [];
   const bucket = {
     async put(key: string, value: ArrayBuffer) {
@@ -67,17 +68,8 @@ export function memoryBucket() {
         deleted.push(key);
       }
     },
-  } as unknown as R2Bucket;
+  } as unknown as Bucket;
   return { bucket, objects, deleted };
-}
-
-// waitUntil sans attente : la connexion se ferme en arrière-plan, comme sous Workers
-function executionContext(): ExecutionContext {
-  return {
-    waitUntil: () => {},
-    passThroughOnException: () => {},
-    props: {},
-  } as unknown as ExecutionContext;
 }
 
 export type Client = ReturnType<typeof client>;
@@ -106,7 +98,6 @@ export function client(options: { env?: Bindings; mailer?: Mailer } = {}) {
         body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       },
       env,
-      executionContext(),
     );
     for (const header of res.headers.getSetCookie()) {
       const [pair, ...attrs] = header.split(';');
@@ -129,7 +120,7 @@ export function client(options: { env?: Bindings; mailer?: Mailer } = {}) {
 
 /** Requête ponctuelle sans état (tests simples). */
 export function request(path: string, init?: RequestInit, env: Bindings = testEnv()) {
-  return createApp().request(`/api/v1${path}`, init, env, executionContext());
+  return createApp().request(`/api/v1${path}`, init, env);
 }
 
 export function uniqueEmail(label: string): string {

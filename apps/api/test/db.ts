@@ -1,17 +1,12 @@
 import { eq } from 'drizzle-orm';
-import { openDb } from '../src/db/client';
+import { getDb, type Db } from '../src/db/client';
 import { users, apiTokens } from '../src/db/schema';
 import { hashPassword } from '../src/auth/passwords';
 import { testEnv, uniqueEmail } from './helpers';
 
 /** Accès direct à la base de test, pour préparer ou inspecter un état. */
-export async function withDb<T>(fn: (db: Awaited<ReturnType<typeof openDb>>['db']) => Promise<T>): Promise<T> {
-  const { db, close } = await openDb(testEnv().HYPERDRIVE.connectionString);
-  try {
-    return await fn(db);
-  } finally {
-    await close();
-  }
+export function withDb<T>(fn: (db: Db) => Promise<T>): Promise<T> {
+  return fn(getDb(testEnv().DATABASE_URL));
 }
 
 export async function createUser(options: { password?: string; storedHash?: string } = {}) {

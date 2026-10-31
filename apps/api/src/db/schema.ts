@@ -239,6 +239,14 @@ export const documents = pgTable(
   ],
 );
 
+// ---------- Limites de débit (fenêtres d'une minute, par IP et par chemin) ----------
+// Les fonctions serverless ne partagent pas de mémoire : le compteur vit en base. Purgé chaque jour.
+export const rateLimits = pgTable('LimitesDebit', {
+  key: text('key').primaryKey(),
+  windowStart: ts('windowStart').notNull(),
+  count: integer('count').notNull(),
+});
+
 // ---------- Visites (mesure d'audience, sans IP ni cookie) ----------
 // visitorHash = HMAC(secret, ip|ua|jour) : change chaque jour, non réversible sans le secret.
 export const visits = pgTable(
