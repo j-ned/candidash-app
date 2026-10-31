@@ -7,7 +7,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@app': resolve(__dirname, 'src/app'),
-      '@environments': resolve(__dirname, 'src/environments'),
       '@shared': resolve(__dirname, 'src/app/shared'),
       '@core': resolve(__dirname, 'src/app/core'),
       '@features': resolve(__dirname, 'src/app/features'),

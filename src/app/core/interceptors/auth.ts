@@ -3,10 +3,7 @@ import { inject } from '@angular/core';
 import { AuthState } from '@features/auth/application/auth-state';
 import { TokenStore } from '@core/services/token';
 import { Config } from '@core/services/config';
-import { Observable, catchError, switchMap, throwError, share } from 'rxjs';
-import type { RefreshResponse } from '@features/auth/domain/models/auth.model';
-
-let refreshInFlight$: Observable<RefreshResponse> | null = null;
+import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthState);
@@ -38,34 +35,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         isApiCall &&
         tokenService.hasValidRefreshToken()
       ) {
-        // Share a single refresh Observable across concurrent 401s
-        if (!refreshInFlight$) {
-          refreshInFlight$ = authService.refreshToken().pipe(
-            share({
-              resetOnComplete: true,
-              resetOnError: true,
-              resetOnRefCountZero: true,
-            }),
-          );
-
-          // Clear the shared observable after it completes or errors
-          refreshInFlight$.subscribe({
-            complete: () => (refreshInFlight$ = null),
-            error: () => (refreshInFlight$ = null),
-          });
-        }
-
-        return refreshInFlight$.pipe(
-          switchMap(() => {
-            const retryReq = req.clone({
-              withCredentials: true,
-            });
-            return next(retryReq);
-          }),
-          catchError((refreshError) => {
-            return throwError(() => refreshError);
-          }),
-        );
+        // AuthState partage un seul refresh entre les 401 concurrents
+        return authService
+          .refreshToken()
+          .pipe(switchMap(() => next(req.clone({ withCredentials: true }))));
       }
 
       return throwError(() => error);

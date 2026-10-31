@@ -8,6 +8,8 @@ import {
   linkedSignal,
   DestroyRef,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { downloadFile } from '@shared/utils/download-file';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { firstValueFrom, forkJoin } from 'rxjs';
@@ -94,6 +96,7 @@ export class JobtrackFormPage {
   private readonly toast = inject(Toaster);
   private readonly pdfViewerModal = inject(PdfViewerModal);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dom = inject(DOCUMENT);
 
   readonly id = input<string>();
 
@@ -361,12 +364,7 @@ export class JobtrackFormPage {
       .subscribe({
         next: (blob) => {
           const fileName = type === 'cv' ? this.existingCvFileName() : this.existingLmFileName();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName ?? `${type}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
+          downloadFile(this.dom, blob, fileName ?? `${type}.pdf`);
         },
         error: () => {
           this.toast.danger('Erreur', 'Impossible de télécharger le fichier');

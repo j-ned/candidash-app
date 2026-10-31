@@ -1,4 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, linkedSignal, input, DestroyRef } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { downloadFile } from '@shared/utils/download-file';
 import { httpResource } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -28,6 +30,7 @@ export class JobtrackDetail {
   private readonly pdfViewerModal = inject(PdfViewerModal);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dom = inject(DOCUMENT);
 
   readonly id = input.required<string>();
 
@@ -179,12 +182,7 @@ export class JobtrackDetail {
       .subscribe({
         next: (blob) => {
           const fileName = type === 'cv' ? currentJob.cvFileName : currentJob.lmFileName;
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName ?? `${type}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
+          downloadFile(this.dom, blob, fileName ?? `${type}.pdf`);
         },
         error: () => {
           this.toast.danger('Erreur', 'Impossible de télécharger le fichier');
