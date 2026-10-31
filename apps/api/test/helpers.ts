@@ -1,4 +1,4 @@
-import { createApp } from '../src/app';
+import { createApp } from '../src/create-app';
 import type { Bindings } from '../src/env';
 import type { Bucket } from '../src/files/bucket';
 import { templatedMailer, type Mailer, type OutgoingEmail } from '../src/mail/mailer';
