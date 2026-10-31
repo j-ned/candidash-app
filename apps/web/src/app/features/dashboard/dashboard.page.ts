@@ -1,0 +1,174 @@
+import {
+  Component,
+  ChangeDetectionStrategy,
+  computed,
+  effect,
+  inject,
+  linkedSignal,
+  signal,
+  DestroyRef,
+  PLATFORM_ID,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { httpResource } from '@angular/common/http';
+import { Router, RouterLink } from '@angular/router';
+import { Layout } from '@shared/ui/layout/layout';
+import { Button } from '@shared/ui/button/button';
+import { ExtensionBanner } from '@shared/ui/extension-banner/extension-banner';
+import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
+import { toJobTrack } from '@features/jobtrack/infra/jobtrack.adapter';
+import type { JobTrackApi } from '@features/jobtrack/infra/jobtrack.types';
+import type { JobTrack } from '@features/jobtrack/domain/models/jobtrack.model';
+import { JobtrackList } from '@features/jobtrack/application/components/jobtrack-list/jobtrack-list';
+import { Icon } from '@shared/ui/icon/icon';
+import { ReminderChecker } from '@features/jobtrack/application/reminder-checker';
+import { JobtrackBoard } from '@features/jobtrack/application/components/jobtrack-board/jobtrack-board';
+import { computeJobStats } from '@features/jobtrack/domain/job-stats';
+import { DashboardStats } from './components/dashboard-stats/dashboard-stats';
+import { ViewToggle } from './components/view-toggle/view-toggle';
+import { readViewPreference, writeViewPreference } from './view-preference';
+
+@Component({
+  selector: 'app-dashboard',
+  imports: [
+    Layout,
+    Button,
+    ExtensionBanner,
+    JobtrackList,
+    JobtrackBoard,
+    DashboardStats,
+    ViewToggle,
+    Icon,
+    RouterLink,
+  ],
+  template: `
+    <app-layout [wide]="view() === 'board'">
+      <app-extension-banner />
+      <div class="relative overflow-hidden">
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"
+        ></div>
+        <div class="relative">
+          <!-- Header Navigation Bar -->
+          <nav aria-label="Navigation du dashboard" class="backdrop-blur-sm bg-background/95 border-b border-border/50">
+            <div
+              class="mx-auto w-full px-1 sm:px-6 lg:px-8"
+              [class.container]="view() !== 'board'"
+            >
+              <div class="flex items-center justify-between h-14 sm:h-20">
+                <div class="flex items-center gap-3">
+                  <div class="relative">
+                    <div class="absolute inset-0 bg-primary/20 rounded-xl blur"></div>
+                    <div class="relative p-2 bg-primary/10 rounded-xl">
+                      <app-icon name="lucide-bar-chart-3" cssClass="w-8 h-8 sm:w-10 sm:h-10" />
+                    </div>
+                  </div>
+                  <div>
+                    <h1 class="text-xl font-bold text-text sm:text-2xl">Candidash</h1>
+                    <p class="text-xs text-muted sm:text-sm">Dashboard de candidatures</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 sm:gap-3">
+                  <a
+                    routerLink="/dashboard/documents"
+                    data-testid="dashboard-documents-link"
+                    class="inline-flex items-center justify-center rounded-xl border border-border p-2 text-sm font-semibold text-text hover:bg-surface-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:rounded-lg sm:px-4 sm:py-2.5"
+                  >
+                    <app-icon name="lucide-file-text" cssClass="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                    <span class="sr-only sm:not-sr-only">Mes documents</span>
+                  </a>
+                  <app-button
+                    [customClass]="
+                      '!w-auto inline-flex items-center justify-center !p-2 !rounded-xl !shadow-md !text-sm sm:!px-5 sm:!py-2.5 sm:!rounded-lg sm:!shadow-lg'
+                    "
+                    color="primary"
+                    (buttonClick)="goToCreate()"
+                  >
+                    <app-icon name="lucide-plus" cssClass="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+                    <span class="hidden sm:inline">Ajoute une annonce</span>
+                  </app-button>
+                </div>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+      @if (jobs().length > 0) {
+        <section
+          aria-labelledby="dashboard-stats-title"
+          class="mx-auto w-full px-0 pt-4 sm:px-6 sm:pt-8 lg:px-8"
+          [class.container]="view() !== 'board'"
+        >
+          <h2 id="dashboard-stats-title" class="mb-4 text-xl font-bold text-text sm:text-2xl">
+            Mes statistiques
+          </h2>
+          <app-dashboard-stats [stats]="stats()" />
+        </section>
+      }
+      <section
+        aria-label="Candidatures"
+        class="mx-auto w-full min-w-0 px-0 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12"
+        [class.container]="view() !== 'board'"
+      >
+        <div class="mb-4 flex justify-end">
+          <app-view-toggle [(view)]="view" />
+        </div>
+        @if (view() === 'board') {
+          <h2 class="mb-2 text-xl font-bold text-text sm:text-2xl lg:text-3xl">Mes candidatures</h2>
+          @if (jobsLoading()) {
+            <p class="py-8 text-center text-sm text-muted">Chargement des candidatures...</p>
+          } @else {
+            <app-jobtrack-board [(jobs)]="jobs" />
+          }
+        } @else {
+          <app-jobtrack-list
+            [jobs]="jobs()"
+            [loading]="jobsLoading()"
+            (changed)="jobsResource.reload()"
+          />
+        }
+      </section>
+    </app-layout>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class DashboardPage {
+  private readonly router = inject(Router);
+  private readonly jobtrackGateway = inject(JobtrackGateway);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly reminderChecker = inject(ReminderChecker);
+
+  // Chargement full signal de la liste (la gateway fournit l'URL).
+  protected readonly jobsResource = httpResource<JobTrack[]>(
+    () => this.jobtrackGateway.listUrl(),
+    { parse: (raw) => (raw as JobTrackApi[]).map(toJobTrack) },
+  );
+
+  /** Copie locale de la liste : le tableau Kanban y applique ses déplacements optimistes. */
+  protected readonly jobs = linkedSignal(() => this.jobsResource.value() ?? []);
+  protected readonly jobsLoading = computed(() => this.jobsResource.isLoading());
+  protected readonly stats = computed(() => computeJobStats(this.jobs(), new Date()));
+
+  private readonly storage = browserStorage(isPlatformBrowser(inject(PLATFORM_ID)));
+  protected readonly view = signal(readViewPreference(this.storage));
+
+  constructor() {
+    this.reminderChecker.start(this.destroyRef);
+    effect(() => writeViewPreference(this.storage, this.view()));
+  }
+
+  goToCreate(): void {
+    this.router.navigate(['/dashboard/jobtrack/new']);
+  }
+}
+
+/** `localStorage` peut lever à la simple lecture (cookies bloqués) : absent dans ce cas, comme en SSR. */
+function browserStorage(isBrowser: boolean): Storage | undefined {
+  if (!isBrowser) return undefined;
+  try {
+    return localStorage;
+  } catch {
+    return undefined;
+  }
+}

@@ -1,0 +1,248 @@
+<div
+  class="bg-card border border-border-dark rounded-lg p-6 shadow-md sm:rounded-xl sm:p-8 md:shadow-lg"
+>
+  <h2
+    id="signin-title"
+    class="text-2xl font-bold text-center mb-6 text-text sm:text-3xl sm:mb-8 md:text-4xl"
+  >
+    Se connecter
+  </h2>
+
+  <form data-testid="signin-form" [formRoot]="signinForm" class="space-y-4 sm:space-y-6">
+    <fieldset>
+      <legend class="sr-only">Identifiants de connexion</legend>
+
+      <div class="space-y-4 sm:space-y-6">
+        <div class="space-y-1 sm:space-y-2">
+          @let emailInError = signinForm.email().touched() && signinForm.email().invalid();
+          <label for="email" class="block text-sm font-medium text-text sm:text-base">
+            Email
+          </label>
+          <input
+            id="email"
+            data-testid="signin-email"
+            type="email"
+            [formField]="signinForm.email"
+            autocomplete="email"
+            aria-required="true"
+            [attr.aria-invalid]="emailInError"
+            [attr.aria-describedby]="emailInError ? 'signin-email-error' : null"
+            class="w-full px-3 py-2 border border-input rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:rounded-lg aria-invalid:border-error"
+            placeholder="votre@email.com"
+          />
+          <app-field-error
+            [field]="signinForm.email"
+            errorId="signin-email-error"
+            testId="signin-email-error"
+          />
+        </div>
+
+        <div class="space-y-1 sm:space-y-2">
+          @let passwordInError =
+            signinForm.password().touched() && signinForm.password().invalid();
+          <label for="password" class="block text-sm font-medium text-text sm:text-base">
+            Mot de passe
+          </label>
+          <div class="relative">
+            <input
+              id="password"
+              data-testid="signin-password"
+              [type]="showPassword() ? 'text' : 'password'"
+              [formField]="signinForm.password"
+              autocomplete="current-password"
+              aria-required="true"
+              [attr.aria-invalid]="passwordInError"
+              [attr.aria-describedby]="passwordInError ? 'signin-password-error' : null"
+              class="w-full px-3 py-2 pr-10 border border-input rounded-md bg-background text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-3 sm:pr-12 sm:rounded-lg aria-invalid:border-error"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              data-testid="signin-password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-text transition-colors duration-200 hover:scale-110 sm:right-3"
+              tabindex="-1"
+            >
+              <app-icon [name]="showPassword() ? 'lucide-eye' : 'lucide-eye-off'" cssClass="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
+          <app-field-error
+            [field]="signinForm.password"
+            errorId="signin-password-error"
+            testId="signin-password-error"
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <app-button
+      data-testid="signin-submit"
+      type="submit"
+      color="primary"
+      [disabled]="authService.isLoading() || signinForm().submitting()"
+      [isLoading]="authService.isLoading()"
+      customClass="w-full py-3 text-base font-semibold mt-6 sm:py-4 sm:text-lg sm:mt-8"
+    >
+      {{ submitLabel() }}
+    </app-button>
+  </form>
+
+  <div class="mt-4 text-center space-y-3 sm:mt-6">
+    <p class="text-muted text-sm sm:text-base">
+      <button
+        type="button"
+        data-testid="signin-forgot-password"
+        (click)="openForgotPasswordModal()"
+        class="text-primary-800 hover:text-primary-900 font-medium transition-colors duration-200 underline-offset-4 hover:underline"
+      >
+        Mot de passe oublié ?
+      </button>
+    </p>
+    <p class="text-muted text-sm sm:text-base">
+      Pas encore de compte ?
+      <a
+        routerLink="/auth/signup"
+        class="text-primary-800 hover:text-primary-900 font-medium ml-1 transition-colors duration-200 underline-offset-4 hover:underline"
+      >
+        Créer un compte
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- Modal TOTP 2FA -->
+@if (authService.hasPending2FA()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="totp-modal-title"
+  >
+    <div class="bg-surface border border-border rounded-xl p-6 shadow-xl w-full max-w-sm sm:p-8 animate-in fade-in zoom-in duration-200">
+      <div class="flex items-center justify-center mb-4 sm:mb-6">
+        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center sm:w-14 sm:h-14">
+          <app-icon name="lucide-shield-check" cssClass="w-6 h-6 text-primary sm:w-7 sm:h-7" />
+        </div>
+      </div>
+
+      <h2
+        id="totp-modal-title"
+        class="text-xl font-bold text-center mb-2 text-text sm:text-2xl"
+      >
+        Vérification 2FA
+      </h2>
+      <p class="text-muted text-sm text-center mb-6 sm:text-base">
+        @if (useRecoveryMode()) {
+          Entrez un de vos codes de récupération
+        } @else {
+          Entrez le code à 6 chiffres de votre application d'authentification
+        }
+      </p>
+
+      @if (!useRecoveryMode()) {
+        <form data-testid="totp-form" [formRoot]="totpForm" class="space-y-4 sm:space-y-6">
+          <div class="space-y-1 sm:space-y-2">
+            @let tokenInError = totpForm.token().touched() && totpForm.token().invalid();
+            <label for="totp-token" class="block text-sm font-medium text-text sm:text-base">
+              Code TOTP
+            </label>
+            <input
+              id="totp-token"
+              data-testid="totp-token"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              [formField]="totpForm.token"
+              aria-required="true"
+              [attr.aria-invalid]="tokenInError"
+              [attr.aria-describedby]="tokenInError ? 'totp-token-error' : null"
+              class="w-full px-3 py-3 border border-input rounded-md bg-background text-text text-center text-2xl font-mono tracking-widest placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-3xl aria-invalid:border-error"
+              placeholder="000000"
+            />
+            <app-field-error
+              [field]="totpForm.token"
+              errorId="totp-token-error"
+              testId="totp-token-error"
+            />
+          </div>
+
+          <app-button
+            data-testid="totp-submit"
+            type="submit"
+            color="primary"
+            [disabled]="authService.isLoading() || totpForm().submitting()"
+            [isLoading]="authService.isLoading()"
+            customClass="w-full py-3 text-base font-semibold sm:py-4 sm:text-lg"
+          >
+            {{ totpSubmitLabel() }}
+          </app-button>
+        </form>
+      } @else {
+        <form data-testid="recovery-form" [formRoot]="recoveryForm" class="space-y-4 sm:space-y-6">
+          <div class="space-y-1 sm:space-y-2">
+            @let recoveryCodeInError =
+              recoveryForm.recoveryCode().touched() && recoveryForm.recoveryCode().invalid();
+            <label for="recovery-code" class="block text-sm font-medium text-text sm:text-base">
+              Code de récupération
+            </label>
+            <input
+              id="recovery-code"
+              data-testid="recovery-code"
+              type="text"
+              [formField]="recoveryForm.recoveryCode"
+              aria-required="true"
+              [attr.aria-invalid]="recoveryCodeInError"
+              [attr.aria-describedby]="recoveryCodeInError ? 'recovery-code-error' : null"
+              class="w-full px-3 py-3 border border-input rounded-md bg-background text-text text-center text-lg font-mono tracking-wider placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-xl aria-invalid:border-error"
+              placeholder="xxxx-xxxx-xxxx"
+            />
+            <app-field-error
+              [field]="recoveryForm.recoveryCode"
+              errorId="recovery-code-error"
+              testId="recovery-code-error"
+            />
+          </div>
+
+          <app-button
+            data-testid="recovery-submit"
+            type="submit"
+            color="primary"
+            [disabled]="authService.isLoading() || recoveryForm().submitting()"
+            [isLoading]="authService.isLoading()"
+            customClass="w-full py-3 text-base font-semibold sm:py-4 sm:text-lg"
+          >
+            {{ totpSubmitLabel() }}
+          </app-button>
+        </form>
+      }
+
+      <div class="mt-4 text-center space-y-3 sm:mt-6">
+        <p>
+          <button
+            type="button"
+            data-testid="totp-toggle-recovery"
+            (click)="toggleRecoveryMode()"
+            class="text-primary-800 hover:text-primary-900 text-sm font-medium transition-colors duration-200 underline-offset-4 hover:underline sm:text-base"
+          >
+            @if (useRecoveryMode()) {
+              Utiliser le code TOTP
+            } @else {
+              Utiliser un code de récupération
+            }
+          </button>
+        </p>
+        <p>
+          <button
+            type="button"
+            data-testid="totp-cancel"
+            (click)="cancelTotp()"
+            class="text-muted hover:text-text text-sm transition-colors duration-200 sm:text-base"
+          >
+            Retour à la connexion
+          </button>
+        </p>
+      </div>
+    </div>
+  </div>
+}

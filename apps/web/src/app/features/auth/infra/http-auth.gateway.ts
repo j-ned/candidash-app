@@ -1,0 +1,104 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { Config } from '@core/services/config';
+import { AuthGateway } from '../domain/gateways/auth.gateway';
+import type { AuthResponseApi, LoginResponseApi } from './auth.types';
+import { toAuthResponse, toLoginResponse } from './auth.adapter';
+import type {
+  AuthResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  LoginCredentials,
+  LoginResponse,
+  RefreshResponse,
+  RegisterData,
+  RegistrationResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  TotpRecoveryRequest,
+  TotpSetupResponse,
+  TotpVerifySetupResponse,
+  ValidateTotpRequest,
+  VerifyRegistrationRequest,
+} from '../domain/models/auth.model';
+
+@Injectable()
+export class HttpAuthGateway extends AuthGateway {
+  private readonly http = inject(HttpClient);
+  private readonly configService = inject(Config);
+
+  private get baseUrl(): string {
+    return this.configService.apiUrl;
+  }
+
+  signin(credentials: LoginCredentials): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponseApi>(`${this.baseUrl}/auth/login`, credentials)
+      .pipe(map(toLoginResponse));
+  }
+
+  signup(data: RegisterData): Observable<RegistrationResponse> {
+    return this.http.post<RegistrationResponse>(`${this.baseUrl}/auth/register`, data);
+  }
+
+  verifyRegistration(data: VerifyRegistrationRequest): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponseApi>(`${this.baseUrl}/auth/verify-registration`, data)
+      .pipe(map(toAuthResponse));
+  }
+
+  resendVerificationCode(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/resend-verification`, {
+      email,
+    });
+  }
+
+  forgotPassword(request: ForgotPasswordRequest): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(
+      `${this.baseUrl}/accounts/forgot-password`,
+      request,
+    );
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<ResetPasswordResponse> {
+    return this.http.post<ResetPasswordResponse>(
+      `${this.baseUrl}/accounts/reset-password`,
+      request,
+    );
+  }
+
+  signout(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/auth/logout`, {});
+  }
+
+  refreshToken(): Observable<RefreshResponse> {
+    return this.http.post<RefreshResponse>(`${this.baseUrl}/auth/refresh`, {});
+  }
+
+  setupTotp(): Observable<TotpSetupResponse> {
+    return this.http.post<TotpSetupResponse>(`${this.baseUrl}/auth/2fa/setup`, {});
+  }
+
+  verifyTotpSetup(token: string): Observable<TotpVerifySetupResponse> {
+    return this.http.post<TotpVerifySetupResponse>(`${this.baseUrl}/auth/2fa/verify-setup`, {
+      token,
+    });
+  }
+
+  disableTotp(password: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/2fa/disable`, { password });
+  }
+
+  validateTotp(request: ValidateTotpRequest): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponseApi>(`${this.baseUrl}/auth/2fa/validate`, request)
+      .pipe(map(toAuthResponse));
+  }
+
+  useRecoveryCode(request: TotpRecoveryRequest): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponseApi>(`${this.baseUrl}/auth/2fa/recovery`, request)
+      .pipe(map(toAuthResponse));
+  }
+}

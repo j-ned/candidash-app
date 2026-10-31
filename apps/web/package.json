@@ -1,0 +1,78 @@
+{
+  "name": "ng-candidash-app",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "icons:version": "node scripts/sprite-version.mjs",
+    "prestart": "pnpm icons:version && pnpm media:version",
+    "start": "ng serve",
+    "prebuild": "pnpm icons:version && pnpm media:version",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "pretest": "pnpm icons:version && pnpm media:version",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prelint": "pnpm icons:version && pnpm media:version",
+    "lint": "eslint src",
+    "capture": "node scripts/capture/capture.mjs",
+    "media:version": "node scripts/media-versions.mjs",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "pnpm build && wrangler deploy",
+    "typecheck:worker": "tsc -p cloudflare"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/cdk": "^22.2.3",
+    "@angular/common": "^22.2.3",
+    "@angular/compiler": "^22.2.3",
+    "@angular/core": "^22.2.3",
+    "@angular/forms": "^22.2.3",
+    "@angular/platform-browser": "^22.2.3",
+    "@angular/platform-server": "^22.2.3",
+    "@angular/router": "^22.2.3",
+    "@angular/ssr": "^22.2.3",
+    "dompurify": "^3.4.17",
+    "marked": "^18.1.1",
+    "pdfjs-dist": "6.4.299",
+    "rxjs": "~7.8.2",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@analogjs/platform": "^2.8.1",
+    "@analogjs/vite-plugin-angular": "^2.8.1",
+    "@angular/build": "^22.2.3",
+    "@angular/cli": "^22.2.3",
+    "@angular/compiler-cli": "^22.2.3",
+    "@eslint/js": "^9.39.5",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24.19.2",
+    "@vitest/ui": "^4.1.12",
+    "angular-eslint": "22.5.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.7",
+    "globals": "^16.5.0",
+    "jsdom": "^26.1.0",
+    "playwright": "1.63.0",
+    "postcss": "^8.5.30",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.60.0",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.151.1"
+  },
+  "packageManager": "pnpm@12.3.4"
+}

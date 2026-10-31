@@ -1,0 +1,127 @@
+<div
+  class="bg-surface border border-border rounded-lg p-6 shadow-sm sm:rounded-xl sm:p-8 md:shadow-lg"
+>
+  <div class="flex items-center justify-center mb-4 sm:mb-6">
+    <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center sm:w-14 sm:h-14">
+      <app-icon name="lucide-shield-check" cssClass="w-6 h-6 text-primary sm:w-7 sm:h-7" />
+    </div>
+  </div>
+
+  <h2
+    id="totp-title"
+    class="text-xl font-bold text-center mb-2 text-text sm:text-2xl md:text-3xl"
+  >
+    Vérification 2FA
+  </h2>
+  <p class="text-muted text-sm text-center mb-6 sm:text-base sm:mb-8">
+    @if (useRecoveryMode()) {
+      Entrez un de vos codes de récupération
+    } @else {
+      Entrez le code à 6 chiffres de votre application d'authentification
+    }
+  </p>
+
+  @if (!useRecoveryMode()) {
+    <form data-testid="totp-form" [formRoot]="totpForm" class="space-y-4 sm:space-y-6">
+      <div class="space-y-1 sm:space-y-2">
+        @let tokenInError = totpForm.token().touched() && totpForm.token().invalid();
+        <label for="totp-token" class="block text-sm font-medium text-text sm:text-base">
+          Code TOTP
+        </label>
+        <input
+          id="totp-token"
+          data-testid="totp-token"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          [formField]="totpForm.token"
+          aria-required="true"
+          [attr.aria-invalid]="tokenInError"
+          [attr.aria-describedby]="tokenInError ? 'totp-token-error' : null"
+          class="w-full px-3 py-3 border border-input rounded-md bg-background text-text text-center text-2xl font-mono tracking-widest placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-3xl aria-invalid:border-error"
+          placeholder="000000"
+        />
+        <app-field-error
+          [field]="totpForm.token"
+          errorId="totp-token-error"
+          testId="totp-token-error"
+        />
+      </div>
+
+      <app-button
+        data-testid="totp-submit"
+        type="submit"
+        color="primary"
+        [disabled]="authService.isLoading() || totpForm().submitting()"
+        [isLoading]="authService.isLoading()"
+        customClass="w-full py-3 text-base font-semibold sm:py-4 sm:text-lg"
+      >
+        {{ submitLabel() }}
+      </app-button>
+    </form>
+  } @else {
+    <form data-testid="recovery-form" [formRoot]="recoveryForm" class="space-y-4 sm:space-y-6">
+      <div class="space-y-1 sm:space-y-2">
+        @let recoveryCodeInError =
+          recoveryForm.recoveryCode().touched() && recoveryForm.recoveryCode().invalid();
+        <label for="recovery-code" class="block text-sm font-medium text-text sm:text-base">
+          Code de récupération
+        </label>
+        <input
+          id="recovery-code"
+          data-testid="recovery-code"
+          type="text"
+          [formField]="recoveryForm.recoveryCode"
+          aria-required="true"
+          [attr.aria-invalid]="recoveryCodeInError"
+          [attr.aria-describedby]="recoveryCodeInError ? 'recovery-code-error' : null"
+          class="w-full px-3 py-3 border border-input rounded-md bg-background text-text text-center text-lg font-mono tracking-wider placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 sm:px-4 sm:py-4 sm:rounded-lg sm:text-xl aria-invalid:border-error"
+          placeholder="xxxx-xxxx-xxxx"
+        />
+        <app-field-error
+          [field]="recoveryForm.recoveryCode"
+          errorId="recovery-code-error"
+          testId="recovery-code-error"
+        />
+      </div>
+
+      <app-button
+        data-testid="recovery-submit"
+        type="submit"
+        color="primary"
+        [disabled]="authService.isLoading() || recoveryForm().submitting()"
+        [isLoading]="authService.isLoading()"
+        customClass="w-full py-3 text-base font-semibold sm:py-4 sm:text-lg"
+      >
+        {{ submitLabel() }}
+      </app-button>
+    </form>
+  }
+
+  <div class="mt-4 text-center space-y-3 sm:mt-6">
+    <p>
+      <button
+        type="button"
+        data-testid="totp-toggle-recovery"
+        (click)="toggleRecoveryMode()"
+        class="text-primary-800 hover:text-primary-900 text-sm font-medium transition-colors duration-200 underline-offset-4 hover:underline sm:text-base"
+      >
+        @if (useRecoveryMode()) {
+          Utiliser le code TOTP
+        } @else {
+          Utiliser un code de récupération
+        }
+      </button>
+    </p>
+    <p>
+      <button
+        type="button"
+        data-testid="totp-back"
+        (click)="goBack()"
+        class="text-muted hover:text-text text-sm transition-colors duration-200 sm:text-base"
+      >
+        Retour à la connexion
+      </button>
+    </p>
+  </div>
+</div>
