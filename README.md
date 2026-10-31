@@ -13,4 +13,6 @@ pnpm test        # intégration sous Node, app.request() contre ce Postgres
 pnpm dev         # runtime Workers local (workerd), Hyperdrive → localConnectionString
 ```
 
-Secrets locaux dans `.dev.vars` (ignoré par git) : `JWT_SECRET`, `TOTP_ENCRYPTION_KEY`.
+Variables locales dans `.dev.vars` (ignoré par git) : `ENVIRONMENT=development` (codes de
+vérification affichés dans la console tant que le SMTP n'est pas branché), `JWT_SECRET`,
+`TOTP_ENCRYPTION_KEY` (64 caractères hex).
