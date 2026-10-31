@@ -10,7 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { HttpErrorResponse, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -34,7 +34,7 @@ import { toDocumentDetail } from '../../infra/document.adapter';
 import type { DocumentDetailApi } from '../../infra/document.types';
 import { HttpDocumentsGateway } from '../../infra/http-documents.gateway';
 import type { LeaveConfirmable } from '../../application/unsaved-changes-guard';
-import { downloadFile } from '@shared/utils/download-file';
+import { documentFileName } from '../../domain/document-file-name';
 import { pdfToMarkdown } from '../../domain/pdf-to-markdown';
 import { PDF_IMPORT_MAX_BYTES, PdfTextReader } from '../../infra/pdf-text-reader';
 import { DocumentAnalysis } from '../../application/components/document-analysis';
@@ -45,8 +45,6 @@ import { MarkdownToolbar } from '../../application/components/markdown-toolbar';
 type DocumentDraft = { title: string; markdown: string; jobTrackId: string };
 
 type Pane = 'edit' | 'preview';
-
-type PdfAction = 'export' | 'attach';
 
 type ImportedPdf = { readonly fileName: string; readonly markdown: string };
 
@@ -149,26 +147,33 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
               <button
                 type="button"
                 data-testid="document-export-pdf"
-                [disabled]="pdfAction() !== null"
-                [attr.aria-busy]="pdfAction() === 'export'"
+                title="Imprimer, ou « Enregistrer en PDF »"
                 [class]="secondaryButton"
                 (click)="exportPdf()"
               >
                 <app-icon name="lucide-download" cssClass="h-4 w-4" />
-                {{ pdfAction() === 'export' ? 'Génération…' : 'PDF' }}
+                PDF
               </button>
               @if (linkedJob(); as job) {
+                <input
+                  #attachInput
+                  type="file"
+                  accept="application/pdf"
+                  data-testid="document-attach-input"
+                  class="hidden"
+                  (change)="attachPdf($event)"
+                />
                 <button
                   type="button"
                   data-testid="document-attach"
-                  [disabled]="pdfAction() !== null"
-                  [attr.aria-busy]="pdfAction() === 'attach'"
-                  [attr.aria-label]="'Joindre le PDF à la candidature « ' + job + ' »'"
+                  [disabled]="attaching()"
+                  [attr.aria-busy]="attaching()"
+                  [attr.aria-label]="'Joindre un PDF à la candidature « ' + job + ' »'"
                   [class]="secondaryButton"
-                  (click)="attachPdf()"
+                  (click)="attachInput.click()"
                 >
                   <app-icon name="lucide-paperclip" cssClass="h-4 w-4" />
-                  {{ pdfAction() === 'attach' ? 'Envoi…' : 'Joindre à la candidature' }}
+                  {{ attaching() ? 'Envoi…' : 'Joindre à la candidature' }}
                 </button>
               }
               <button
@@ -380,6 +385,10 @@ function sameDraft(a: DocumentDraft, b: DocumentDraft): boolean {
       } @else {
         <p class="text-sm text-muted">Chargement…</p>
       }
+      <!-- Seule partie imprimée (styles.css) : l'export PDF passe par l'impression du navigateur -->
+      <div class="print-sheet hidden print:block">
+        <app-document-sheet [markdown]="docForm.markdown().value()" />
+      </div>
     </app-layout>
   `,
 })
@@ -408,7 +417,7 @@ export class DocumentEditor implements LeaveConfirmable {
   protected readonly fieldClass = FIELD_CLASS;
   protected readonly paneButton = PANE_BUTTON;
   protected readonly secondaryButton = SECONDARY_BUTTON;
-  protected readonly pdfAction = signal<PdfAction | null>(null);
+  protected readonly attaching = signal(false);
   protected readonly importing = signal(false);
   protected readonly imported = signal<ImportedPdf | null>(null);
   protected readonly analysisOpen = signal(false);
@@ -482,19 +491,44 @@ export class DocumentEditor implements LeaveConfirmable {
     await submit(this.docForm);
   }
 
-  async exportPdf(): Promise<void> {
-    await this.withSavedDocument('export', async () => {
-      const { blob, fileName } = await firstValueFrom(this.gateway.pdf(this.id()));
-      downloadFile(this.dom, blob, fileName);
-    });
+  /**
+   * Le navigateur imprime l'aperçu (feuille A4, styles.css) : « Enregistrer en PDF » donne un PDF
+   * au texte sélectionnable, nommé d'après le titre. Aucun serveur de rendu.
+   */
+  exportPdf(): void {
+    const pageTitle = this.dom.title;
+    this.dom.title = documentFileName(this.model().title);
+    try {
+      this.dom.defaultView?.print();
+    } finally {
+      this.dom.title = pageTitle;
+    }
   }
 
-  async attachPdf(): Promise<void> {
+  /** Le PDF choisi (par exemple celui de « PDF ») devient le CV ou la lettre de la candidature liée. */
+  async attachPdf(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
     const job = this.linkedJob();
-    await this.withSavedDocument('attach', async () => {
-      const { type, fileName } = await firstValueFrom(this.gateway.attach(this.id()));
+    const jobTrackId = this.saved().jobTrackId;
+    if (!file || !job || !jobTrackId) return;
+    if (file.type !== 'application/pdf' || file.size > PDF_IMPORT_MAX_BYTES) {
+      this.toaster.danger('Format non pris en charge', 'Choisissez un fichier PDF de 5 Mo au plus.');
+      return;
+    }
+    const type = this.document()?.kind === 'LETTER' ? 'lm' : 'cv';
+    this.attaching.set(true);
+    try {
+      const { fileName } = await firstValueFrom(
+        this.jobtrackGateway.uploadDocument(jobTrackId, type, file),
+      );
       this.toaster.success(`${ATTACHED_LABELS[type]} à la candidature`, `« ${job} » : ${fileName}`);
-    });
+    } catch {
+      this.toaster.danger('Pièce jointe impossible', 'Réessayez dans un instant.');
+    } finally {
+      this.attaching.set(false);
+    }
   }
 
   /** Le texte du PDF est lu dans le navigateur, puis proposé en aperçu avant de remplacer quoi que ce soit. */
@@ -571,32 +605,6 @@ export class DocumentEditor implements LeaveConfirmable {
 
   protected warnBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.dirty()) event.preventDefault();
-  }
-
-  // Le PDF part de la version enregistrée : les modifications en cours sont d'abord enregistrées,
-  // pour que le fichier corresponde à l'aperçu. Un enregistrement refusé arrête l'action.
-  private async withSavedDocument(action: PdfAction, run: () => Promise<void>): Promise<void> {
-    if (this.pdfAction()) return;
-    this.pdfAction.set(action);
-    try {
-      if (this.dirty()) await this.saveDocument();
-      if (this.dirty()) return;
-      await run();
-    } catch (error) {
-      if (error instanceof HttpErrorResponse && error.status === 503) {
-        this.toaster.danger(
-          'Export PDF indisponible',
-          'Le service de génération ne répond pas, réessayez plus tard.',
-        );
-      } else {
-        this.toaster.danger(
-          action === 'export' ? 'Génération du PDF impossible' : 'Pièce jointe impossible',
-          'Réessayez dans un instant.',
-        );
-      }
-    } finally {
-      this.pdfAction.set(null);
-    }
   }
 
   // Le brouillon envoyé devient la référence : ce qui est tapé pendant la requête reste « non enregistré ».
