@@ -95,11 +95,21 @@ describe('ProfileInfo', () => {
     expect(byTestId(fixture, 'profile-email-error')).toBeNull();
   });
 
-  it('saves the profile once with the typed values', async () => {
+  it('asks for no password while the email is unchanged', () => {
+    // Given / When
+    const fixture = setup();
+    type(fixture, 'profile-username', 'jane');
+
+    // Then
+    expect(byTestId(fixture, 'profile-current-password')).toBeNull();
+  });
+
+  it('saves a new email once with the current password', async () => {
     // Given
     const fixture = setup();
     type(fixture, 'profile-email', 'jane@example.com');
     type(fixture, 'profile-username', 'jane');
+    type(fixture, 'profile-current-password', 'mon-mot-de-passe');
 
     // When
     await submit(fixture);
@@ -109,7 +119,23 @@ describe('ProfileInfo', () => {
     expect(profileState.updateProfile).toHaveBeenCalledWith({
       email: 'jane@example.com',
       username: 'jane',
+      currentPassword: 'mon-mot-de-passe',
     });
+  });
+
+  it('saves no new email without the current password', async () => {
+    // Given
+    const fixture = setup();
+    type(fixture, 'profile-email', 'jane@example.com');
+
+    // When
+    await submit(fixture);
+
+    // Then
+    expect(profileState.updateProfile).not.toHaveBeenCalled();
+    expect(byTestId(fixture, 'profile-current-password-error').textContent).toContain(
+      'Mot de passe actuel requis',
+    );
   });
 
   it('sends no username when the field is emptied', async () => {

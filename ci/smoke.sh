@@ -21,4 +21,11 @@ grep -q "nonce=\"$nonce\"" page.html
 ! grep -q 'CSP_NONCE' page.html
 curl -sf http://localhost:8080/config.json | grep -q '"apiUrl":"https://api.example.test/api/v1"'
 
+# Aperçu PDF : iframe sur un blob local
+grep -qi "frame-src blob:" headers.txt
+# Route sans page prérendue : coquille CSR (pas l'accueil prérendu), jamais en cache
+curl -sf -D route-headers.txt -o route.html http://localhost:8080/dashboard
+! grep -q 'ng-server-context="ssg"' route.html
+grep -qi '^cache-control: no-cache' route-headers.txt
+
 echo "test de fumée OK"
