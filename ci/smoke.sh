@@ -28,4 +28,12 @@ curl -sf -D route-headers.txt -o route.html http://localhost:8080/dashboard
 ! grep -q 'ng-server-context="ssg"' route.html
 grep -qi '^cache-control: no-cache' route-headers.txt
 
+# Cache : immutable pour un chunk haché, un jour pour une URL fixe (favicon)
+chunk=$(grep -oE 'src="[^"]*main-[A-Za-z0-9_-]{8}\.js"' page.html | head -1 | cut -d'"' -f2)
+curl -sf -D chunk-headers.txt -o /dev/null "http://localhost:8080/${chunk#/}"
+grep -qi '^cache-control: public, max-age=31536000, immutable' chunk-headers.txt
+curl -sf -D favicon-headers.txt -o /dev/null http://localhost:8080/favicon.svg
+grep -qi '^cache-control: public, max-age=86400' favicon-headers.txt
+grep -qi '^x-content-type-options: nosniff' favicon-headers.txt
+
 echo "test de fumée OK"
