@@ -12,6 +12,8 @@ export type Bindings = {
   STRICT_LIMITER: RateLimiter;
   /** Toutes les routes : 30 requêtes / min / IP / route, comme le throttler Nest. */
   GLOBAL_LIMITER: RateLimiter;
+  /** Formulaire de contact : 2 messages / min / IP (le binding n'offre que 10 s ou 60 s). */
+  CONTACT_LIMITER: RateLimiter;
   ENVIRONMENT: 'production' | 'development' | 'test';
   ALLOWED_ORIGINS: string;
   JWT_SECRET: string;

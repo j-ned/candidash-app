@@ -15,6 +15,9 @@ import { accountRoutes } from './routes/accounts';
 import { jobTrackRoutes } from './routes/jobtrack';
 import { jobFileRoutes } from './routes/job-files';
 import { documentRoutes } from './routes/documents';
+import { analyticsRoutes } from './routes/analytics';
+import { adminRoutes } from './routes/admin';
+import { contactRoutes } from './routes/contact';
 
 // SMTP dès qu'il est configuré ; sinon la console en local, et aucun envoi en production.
 export function defaultMailer(env: Bindings): Mailer {
@@ -75,6 +78,9 @@ export function createApp({ mailer = defaultMailer }: AppOptions = {}) {
   app.route('/jobtrack', jobTrackRoutes);
   app.route('/jobtrack', jobFileRoutes);
   app.route('/documents', documentRoutes);
+  app.route('/analytics', analyticsRoutes);
+  app.route('/admin', adminRoutes);
+  app.route('/contact', contactRoutes);
 
   app.notFound((c) => c.json(errorBody(404, `Cannot ${c.req.method} ${c.req.path}`), 404));
   app.onError(handleError);

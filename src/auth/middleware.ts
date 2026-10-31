@@ -54,7 +54,7 @@ export const requireApiToken = createMiddleware<AppEnv>(async (c, next) => {
 });
 
 /** Limite par IP et par chemin (clé `ip:méthode:chemin`), comme le throttler de l'API Nest. */
-export function rateLimit(limiter: 'STRICT_LIMITER' | 'GLOBAL_LIMITER') {
+export function rateLimit(limiter: 'STRICT_LIMITER' | 'GLOBAL_LIMITER' | 'CONTACT_LIMITER') {
   return createMiddleware<AppEnv>(async (c, next) => {
     const ip = c.req.header('cf-connecting-ip') ?? 'local';
     const { success } = await c.env[limiter].limit({

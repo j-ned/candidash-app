@@ -23,6 +23,7 @@ export function testEnv(overrides: Partial<Bindings> = {}): Bindings {
     FILES: {} as R2Bucket,
     STRICT_LIMITER: memoryLimiter(1000),
     GLOBAL_LIMITER: memoryLimiter(1000),
+    CONTACT_LIMITER: memoryLimiter(1000),
     ENVIRONMENT: 'test',
     ALLOWED_ORIGINS: 'http://localhost:4200',
     JWT_SECRET: 'test-jwt-secret',
