@@ -18,10 +18,10 @@ npx vitest path/to/file   # Run a single test file
 npx eslint .              # Lint (no npm script defined)
 ```
 
-Docker build with API URL:
+Production (Cloudflare Workers + Static Assets, `wrangler.jsonc`, `cloudflare/worker.ts`):
 ```bash
-docker build -t candidash-frontend --build-arg API_URL=http://localhost:3000 .
-docker run --rm -p 8080:80 candidash-frontend
+pnpm cf:dev               # Build output served like production (nonce CSP, headers, config.json)
+pnpm cf:deploy            # Build + wrangler deploy (CI does it on master)
 ```
 
 ## Architecture

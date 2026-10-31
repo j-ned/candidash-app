@@ -309,15 +309,15 @@ pnpm build
 # → dist/ng-candidash-app/browser/
 ```
 
-### Docker
+### Production (Cloudflare)
+
+Le build (`dist/ng-candidash-app/browser`) est servi par Workers Static Assets ; un Worker
+(`cloudflare/worker.ts`) pose le nonce CSP, les en-têtes, le cache et `config.json` (variables
+`API_URL`, `EXTENSION_ID`, `FIREFOX_ADDON_URL` de `wrangler.jsonc`).
 
 ```bash
-# Build avec URL API injectée au runtime via config.json
-docker build -t candidash-frontend --build-arg API_URL=https://api.candidash.j-ned.dev .
-
-# Run
-docker run --rm -p 8080:80 candidash-frontend
-# → http://localhost:8080
+pnpm cf:dev      # comme en production, en local
+pnpm cf:deploy   # build + wrangler deploy (fait par la CI sur master)
 ```
 
 ---
