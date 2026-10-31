@@ -35,7 +35,7 @@ async function upload(c: Context<AppEnv>, type: DocumentType) {
   if (content.byteLength > MAX_FILE_SIZE) throw httpError(400, 'Le fichier ne doit pas dépasser 5 Mo');
 
   await c.env.FILES.put(jobFileKey(c.var.user.sub, job.id, type), content, {
-    httpMetadata: { contentType: 'application/pdf' },
+    contentType: 'application/pdf',
   });
   await c.var.db
     .update(jobTracks)

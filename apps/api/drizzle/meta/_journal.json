@@ -43,6 +43,13 @@
       "when": 1792327137210,
       "tag": "0005_offer_text",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793463562163,
+      "tag": "0006_rate_limits",
+      "breakpoints": true
     }
   ]
 }

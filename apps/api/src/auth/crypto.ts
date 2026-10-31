@@ -6,7 +6,7 @@ function toHex(bytes: ArrayBuffer | Uint8Array): string {
   return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function fromHex(hex: string): Uint8Array {
+function fromHex(hex: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(hex.match(/../g) ?? [], (byte) => parseInt(byte, 16));
 }
 
@@ -14,7 +14,7 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes));
 }
 
-function fromBase64(value: string): Uint8Array {
+function fromBase64(value: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
 }
 

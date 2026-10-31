@@ -309,16 +309,13 @@ pnpm build
 # → dist/ng-candidash-app/browser/
 ```
 
-### Production (Cloudflare)
+### Production (Vercel)
 
-Le build (`dist/ng-candidash-app/browser`) est servi par Workers Static Assets ; un Worker
-(`cloudflare/worker.ts`) pose le nonce CSP, les en-têtes, le cache et `config.json` (variables
-`API_URL`, `EXTENSION_ID`, `FIREFOX_ADDON_URL` de `wrangler.jsonc`).
-
-```bash
-pnpm cf:dev      # comme en production, en local
-pnpm cf:deploy   # build + wrangler deploy (fait par la CI sur master)
-```
+Le build (`dist/ng-candidash-app/browser`) est servi en statique par Vercel (`vercel.json` : en-têtes
+de sécurité, cache, coquille CSR pour les routes non prérendues). Après `ng build`,
+`scripts/csp-hashes.mjs` pose dans chaque page une CSP des scripts par empreintes SHA-256 (pas de
+nonce sans serveur) ; avant, `scripts/runtime-config.mjs` écrit `config.json` depuis `API_URL`,
+`EXTENSION_ID` et `FIREFOX_ADDON_URL`.
 
 ---
 

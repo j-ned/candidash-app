@@ -18,11 +18,11 @@ npx vitest path/to/file   # Run a single test file
 npx eslint .              # Lint (no npm script defined)
 ```
 
-Production (Cloudflare Workers + Static Assets, `wrangler.jsonc`, `cloudflare/worker.ts`):
-```bash
-pnpm cf:dev               # Build output served like production (nonce CSP, headers, config.json)
-pnpm cf:deploy            # Build + wrangler deploy (CI does it on master)
-```
+Production: static output on Vercel (`vercel.json`: headers, cache, CSR fallback). `postbuild`
+(`scripts/csp-hashes.mjs`) writes a per-page `<meta>` CSP with SHA-256 hashes of inline scripts
+(no per-request nonce on static hosting; Angular autoCsp is incompatible with prerendering), and
+`prebuild` writes `public/config.json` from `API_URL` when set. Never add inline `style=""` or
+inline event handlers: `ci/verify-build.sh` rejects them.
 
 ## Architecture
 

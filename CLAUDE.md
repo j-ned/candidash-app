@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Monorepo pnpm : `apps/web` (front Angular 22) et `apps/api` (API Hono sur Cloudflare Workers).
+Monorepo pnpm : `apps/web` (front Angular 22) et `apps/api` (API Hono, fonction Node sur Vercel).
 Chaque application a ses propres conventions : lire `apps/web/CLAUDE.md` avant de toucher au front,
 `apps/api/README.md` avant de toucher à l'API.
 

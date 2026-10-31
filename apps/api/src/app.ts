@@ -3,7 +3,8 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { sql } from 'drizzle-orm';
 import type { AppEnv, Bindings } from './env';
-import { openDb } from './db/client';
+import { getDb } from './db/client';
+import { nodeEnv } from './node-env';
 import { errorBody, handleError } from './http-errors';
 import { rateLimit } from './auth/middleware';
 import { consoleMailer, templatedMailer, unavailableMailer, type Mailer } from './mail/mailer';
@@ -18,6 +19,7 @@ import { documentRoutes } from './routes/documents';
 import { analyticsRoutes } from './routes/analytics';
 import { adminRoutes } from './routes/admin';
 import { contactRoutes } from './routes/contact';
+import { cronRoutes } from './routes/cron';
 
 // SMTP dès qu'il est configuré ; sinon la console en local, et aucun envoi en production.
 export function defaultMailer(env: Bindings): Mailer {
@@ -30,9 +32,15 @@ export type AppOptions = { mailer?: (env: Bindings) => Mailer };
 export function createApp({ mailer = defaultMailer }: AppOptions = {}) {
   const app = new Hono<AppEnv>().basePath('/api/v1');
 
+  // Sur Vercel, l'app reçoit la requête seule : les bindings viennent de process.env. Les tests
+  // passent les leurs à app.request().
+  app.use(async (c, next) => {
+    if (!c.env?.JWT_SECRET) c.env = nodeEnv();
+    await next();
+  });
+
   app.use(secureHeaders());
 
-  // Origines lues dans les vars du Worker (bindings disponibles seulement par requête)
   app.use((c, next) =>
     cors({
       origin: c.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()),
@@ -44,21 +52,14 @@ export function createApp({ mailer = defaultMailer }: AppOptions = {}) {
     })(c, next),
   );
 
-  // Avant d'ouvrir la base : une requête refusée ne coûte pas de connexion. /health n'est pas
-  // limité (sondes de disponibilité).
+  // /health n'est pas limité (sondes de disponibilité)
   app.use((c, next) =>
     c.req.path.endsWith('/health') ? next() : rateLimit('GLOBAL_LIMITER')(c, next),
   );
 
   app.use(async (c, next) => {
-    const { db, close } = await openDb(c.env.HYPERDRIVE.connectionString);
-    c.set('db', db);
-    try {
-      await next();
-    } finally {
-      // La connexion se ferme après l'envoi de la réponse, sans la retarder
-      c.executionCtx.waitUntil(close());
-    }
+    c.set('db', getDb(c.env.DATABASE_URL));
+    await next();
   });
 
   app.use(async (c, next) => {
@@ -81,6 +82,7 @@ export function createApp({ mailer = defaultMailer }: AppOptions = {}) {
   app.route('/analytics', analyticsRoutes);
   app.route('/admin', adminRoutes);
   app.route('/contact', contactRoutes);
+  app.route('/cron', cronRoutes);
 
   app.notFound((c) => c.json(errorBody(404, `Cannot ${c.req.method} ${c.req.path}`), 404));
   app.onError(handleError);

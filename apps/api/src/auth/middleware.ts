@@ -1,3 +1,4 @@
+import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { getCookie } from 'hono/cookie';
 import { and, eq } from 'drizzle-orm';
@@ -53,12 +54,18 @@ export const requireApiToken = createMiddleware<AppEnv>(async (c, next) => {
   await next();
 });
 
-/** Limite par IP et par chemin (clé `ip:méthode:chemin`), comme le throttler de l'API Nest. */
+/** Adresse du visiteur : Vercel la place dans x-real-ip (et en tête de x-forwarded-for). */
+export function clientIp(c: Context<AppEnv>): string {
+  return c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
+}
+
+/** Limite par IP et par chemin (clé `limiteur:ip:méthode:chemin`), comme le throttler Nest. */
 export function rateLimit(limiter: 'STRICT_LIMITER' | 'GLOBAL_LIMITER' | 'CONTACT_LIMITER') {
   return createMiddleware<AppEnv>(async (c, next) => {
-    const ip = c.req.header('cf-connecting-ip') ?? 'local';
+    const ip = clientIp(c) || 'local';
     const { success } = await c.env[limiter].limit({
-      key: `${ip}:${c.req.method}:${c.req.path}`,
+      // Préfixe du limiteur : global et strict comptent séparément pour une même route
+      key: `${limiter}:${ip}:${c.req.method}:${c.req.path}`,
     });
     if (!success) throw httpError(429, 'Trop de requêtes, réessayez dans une minute');
     await next();
