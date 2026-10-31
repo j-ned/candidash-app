@@ -11,7 +11,7 @@
     />
     <!-- Thème posé avant le premier rendu (même règle que ThemeManager : choix enregistré, sinon
          préférence système) : ni éclair clair en mode sombre, ni capture du mauvais thème. -->
-    <script nonce="**CSP_NONCE**">
+    <script>
       try {
         var theme =
           localStorage.getItem('theme') ||
@@ -29,7 +29,6 @@
     <link rel="preconnect" href="https://api-candidash.nedellec-julien.fr" crossorigin />
   </head>
   <body>
-    <!-- **CSP_NONCE** est remplacé à chaque requête (cloudflare/worker.ts), même valeur que l'en-tête CSP -->
-    <app-root ngCspNonce="**CSP_NONCE**"></app-root>
+    <app-root></app-root>
   </body>
 </html>

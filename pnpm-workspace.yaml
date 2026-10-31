@@ -10,9 +10,6 @@ allowBuilds:
   esbuild: true
   lmdb: true
   msgpackr-extract: true
-  # Moteur local de wrangler (wrangler dev, déploiement Cloudflare)
-  workerd: true
-  sharp: false
 
 # Le plugin Vitest d'Analog importe `typescript` sans le déclarer : il recevrait le TypeScript 7
 # hissé à la racine (celui de l'API, sans API JS). Déclaré en peer, il prend celui du front (6.x).
