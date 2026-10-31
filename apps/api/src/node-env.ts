@@ -1,7 +1,7 @@
-import type { Bindings } from './env';
-import { getDb } from './db/client';
-import { s3Bucket } from './files/bucket';
-import { dbLimiter } from './rate-limit';
+import type { Bindings } from './env.js';
+import { getDb } from './db/client.js';
+import { s3Bucket } from './files/bucket.js';
+import { dbLimiter } from './rate-limit.js';
 
 function required(name: string): string {
   const value = process.env[name];

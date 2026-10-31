@@ -1,7 +1,7 @@
-import { createApp } from '../src/create-app';
-import type { Bindings } from '../src/env';
-import type { Bucket } from '../src/files/bucket';
-import { templatedMailer, type Mailer, type OutgoingEmail } from '../src/mail/mailer';
+import { createApp } from '../src/create-app.js';
+import type { Bindings } from '../src/env.js';
+import type { Bucket } from '../src/files/bucket.js';
+import { templatedMailer, type Mailer, type OutgoingEmail } from '../src/mail/mailer.js';
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? 'postgresql://candidash:candidash@localhost:5432/candidash';

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { capturingMailer, uniqueEmail } from './helpers';
-import { createUser, withDb } from './db';
-import { purgeExpired, sendDueReminders } from '../src/jobs/scheduled';
-import { templatedMailer } from '../src/mail/mailer';
-import { jobTracks, pendingUsers, reminders, verificationCodes, visits, type JobStatus } from '../src/db/schema';
+import { capturingMailer, uniqueEmail } from './helpers.js';
+import { createUser, withDb } from './db.js';
+import { purgeExpired, sendDueReminders } from '../src/jobs/scheduled.js';
+import { templatedMailer } from '../src/mail/mailer.js';
+import { jobTracks, pendingUsers, reminders, verificationCodes, visits, type JobStatus } from '../src/db/schema.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

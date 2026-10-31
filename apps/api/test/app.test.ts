@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { request } from './helpers';
+import { request } from './helpers.js';
 
 describe('app', () => {
   it('reports health once the database answers', async () => {

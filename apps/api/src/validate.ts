@@ -1,7 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
 import type { ValidationTargets } from 'hono';
 import type { ZodType } from 'zod';
-import { errorBody } from './http-errors';
+import { errorBody } from './http-errors.js';
 
 // Comme le ZodValidationPipe Nest (schémas .strict()), mais le message est celui du premier
 // champ invalide : c'est `message` que le front et l'extension affichent.

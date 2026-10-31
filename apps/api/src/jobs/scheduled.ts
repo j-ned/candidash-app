@@ -1,7 +1,7 @@
 import { eq, lt, sql } from 'drizzle-orm';
-import type { Db } from '../db/client';
-import type { Mailer } from '../mail/mailer';
-import { pendingUsers, rateLimits, reminders, verificationCodes, visits } from '../db/schema';
+import type { Db } from '../db/client.js';
+import type { Mailer } from '../mail/mailer.js';
+import { pendingUsers, rateLimits, reminders, verificationCodes, visits } from '../db/schema.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Mesure d'audience gardée 90 jours (comme l'API Nest). */

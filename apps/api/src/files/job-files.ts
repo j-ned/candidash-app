@@ -1,4 +1,4 @@
-import type { Bucket } from './bucket';
+import type { Bucket } from './bucket.js';
 
 // CV et lettres de motivation joints aux candidatures, dans R2 :
 // une clé par fichier, `<userId>/<jobTrackId>/{cv,lm}.pdf` (même schéma que l'API Nest).

@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
-import type { AppEnv } from '../env';
-import { validate } from '../validate';
-import { httpError } from '../http-errors';
-import { rateLimit, requireUser } from '../auth/middleware';
-import { clearAuthCookies, setAuthCookies } from '../auth/cookies';
-import { authenticate, closeSession, openSession, refreshSession } from '../auth/sessions';
+import type { AppEnv } from '../env.js';
+import { validate } from '../validate.js';
+import { httpError } from '../http-errors.js';
+import { rateLimit, requireUser } from '../auth/middleware.js';
+import { clearAuthCookies, setAuthCookies } from '../auth/cookies.js';
+import { authenticate, closeSession, openSession, refreshSession } from '../auth/sessions.js';
 import {
   activatePendingUser,
   canResendCode,
@@ -14,8 +14,8 @@ import {
   hasPendingUser,
   newVerificationCode,
   saveVerificationCode,
-} from '../auth/registration';
-import { emailOnlySchema, loginSchema, registerSchema, verifyRegistrationSchema } from '../auth/schemas';
+} from '../auth/registration.js';
+import { emailOnlySchema, loginSchema, registerSchema, verifyRegistrationSchema } from '../auth/schemas.js';
 
 export const authRoutes = new Hono<AppEnv>()
   .post('/login', rateLimit('STRICT_LIMITER'), validate('json', loginSchema), async (c) => {

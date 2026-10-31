@@ -1,9 +1,9 @@
 import { and, eq, gte, isNull } from 'drizzle-orm';
-import type { Db } from '../db/client';
-import { apiTokens, users } from '../db/schema';
-import { randomHex, sha256Hex } from '../auth/crypto';
-import { hashPassword } from '../auth/passwords';
-import { closeSession } from '../auth/sessions';
+import type { Db } from '../db/client.js';
+import { apiTokens, users } from '../db/schema.js';
+import { randomHex, sha256Hex } from '../auth/crypto.js';
+import { hashPassword } from '../auth/passwords.js';
+import { closeSession } from '../auth/sessions.js';
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 

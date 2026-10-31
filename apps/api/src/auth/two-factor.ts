@@ -2,9 +2,9 @@ import * as OTPAuth from 'otpauth';
 import QRCode from 'qrcode';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
-import type { Db } from '../db/client';
-import { users, type UserRow } from '../db/schema';
-import { decryptAesGcm, encryptAesGcm, randomHex } from './crypto';
+import type { Db } from '../db/client.js';
+import { users, type UserRow } from '../db/schema.js';
+import { decryptAesGcm, encryptAesGcm, randomHex } from './crypto.js';
 
 const TOTP = { issuer: 'CandiDash', algorithm: 'SHA1', digits: 6, period: 30 } as const;
 

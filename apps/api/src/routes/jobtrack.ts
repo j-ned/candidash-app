@@ -1,18 +1,18 @@
 import { Hono } from 'hono';
 import { eq } from 'drizzle-orm';
-import type { AppEnv } from '../env';
-import { jobTracks } from '../db/schema';
-import { validate } from '../validate';
-import { requireApiToken, requireUser } from '../auth/middleware';
-import { deleteJobFiles } from '../files/job-files';
-import { createJob, findJobByUrl, findOwnJob, listJobs, toJob, updateJob } from '../jobtrack/jobs';
+import type { AppEnv } from '../env.js';
+import { jobTracks } from '../db/schema.js';
+import { validate } from '../validate.js';
+import { requireApiToken, requireUser } from '../auth/middleware.js';
+import { deleteJobFiles } from '../files/job-files.js';
+import { createJob, findJobByUrl, findOwnJob, listJobs, toJob, updateJob } from '../jobtrack/jobs.js';
 import {
   createWithReminderSchema,
   lookupSchema,
   quickAddSchema,
   statusParamSchema,
   updateWithReminderSchema,
-} from '../jobtrack/schemas';
+} from '../jobtrack/schemas.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

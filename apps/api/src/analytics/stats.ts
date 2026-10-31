@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import type { Db } from '../db/client';
+import type { Db } from '../db/client.js';
 
 const TIME_ZONE = 'Europe/Paris';
 const TOP_LIMIT = 10;

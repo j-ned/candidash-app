@@ -1,12 +1,12 @@
 import { eq } from 'drizzle-orm';
-import type { Db } from '../db/client';
-import type { Bindings } from '../env';
-import { users, type UserRow } from '../db/schema';
-import { httpError } from '../http-errors';
-import { sha256Hex, timingSafeEqualHex } from './crypto';
-import { REFRESH_TTL_S, signAccess, signRefresh, signTwoFactorPending, verifyTyped } from './tokens';
-import { checkPassword, findUserByEmail, findUserById, toSafeUser } from '../users/users';
-import { verifyTotp } from './two-factor';
+import type { Db } from '../db/client.js';
+import type { Bindings } from '../env.js';
+import { users, type UserRow } from '../db/schema.js';
+import { httpError } from '../http-errors.js';
+import { sha256Hex, timingSafeEqualHex } from './crypto.js';
+import { REFRESH_TTL_S, signAccess, signRefresh, signTwoFactorPending, verifyTyped } from './tokens.js';
+import { checkPassword, findUserByEmail, findUserById, toSafeUser } from '../users/users.js';
+import { verifyTotp } from './two-factor.js';
 
 export type TwoFactorPending = { requires2FA: true; tempToken: string; message: string };
 

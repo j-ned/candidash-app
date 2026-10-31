@@ -5,7 +5,7 @@ import {
   verificationEmail,
   type EmailContent,
   type ReminderEmailData,
-} from './templates';
+} from './templates.js';
 
 export type OutgoingEmail = EmailContent & { to: string; replyTo?: { name: string; email: string } };
 

@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import type { Bindings } from '../env';
-import type { Transport } from './mailer';
+import type { Bindings } from '../env.js';
+import type { Transport } from './mailer.js';
 
 export type SmtpConfig = Pick<
   Bindings,

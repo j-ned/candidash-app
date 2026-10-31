@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import * as OTPAuth from 'otpauth';
 import bcrypt from 'bcryptjs';
-import { capturingMailer, client, memoryLimiter, testEnv, uniqueEmail } from './helpers';
-import { ageApiToken, createUser, storedPassword } from './db';
+import { capturingMailer, client, memoryLimiter, testEnv, uniqueEmail } from './helpers.js';
+import { ageApiToken, createUser, storedPassword } from './db.js';
 
 const totpCode = (otpauthUri: string) => (OTPAuth.URI.parse(otpauthUri) as OTPAuth.TOTP).generate();
 

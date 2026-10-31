@@ -1,19 +1,19 @@
 import { Hono } from 'hono';
 import { and, eq, ne } from 'drizzle-orm';
-import type { AppEnv } from '../env';
-import { jobTracks, users } from '../db/schema';
-import { validate } from '../validate';
-import { httpError } from '../http-errors';
-import { rateLimit, requireUser } from '../auth/middleware';
-import { checkPassword, findUserByEmail, findUserById, toSafeUser } from '../users/users';
-import { createResetToken, resetWithToken, setPassword } from '../users/passwords-reset';
-import { deleteJobFiles } from '../files/job-files';
+import type { AppEnv } from '../env.js';
+import { jobTracks, users } from '../db/schema.js';
+import { validate } from '../validate.js';
+import { httpError } from '../http-errors.js';
+import { rateLimit, requireUser } from '../auth/middleware.js';
+import { checkPassword, findUserByEmail, findUserById, toSafeUser } from '../users/users.js';
+import { createResetToken, resetWithToken, setPassword } from '../users/passwords-reset.js';
+import { deleteJobFiles } from '../files/job-files.js';
 import {
   changePasswordSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   updateProfileSchema,
-} from '../users/schemas';
+} from '../users/schemas.js';
 
 /** Un utilisateur n'agit que sur son propre compte. */
 function ownAccount(id: string, userId: string, message: string): void {

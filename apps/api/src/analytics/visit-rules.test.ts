@@ -5,7 +5,7 @@ import {
   toReferrerHost,
   toTrackedPath,
   toVisitorHash,
-} from './visit-rules';
+} from './visit-rules.js';
 
 describe('visit rules', () => {
   describe('toVisitorHash', () => {

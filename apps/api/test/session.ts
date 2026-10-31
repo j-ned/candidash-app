@@ -1,5 +1,5 @@
-import { client, type Client } from './helpers';
-import { createUser } from './db';
+import { client, type Client } from './helpers.js';
+import { createUser } from './db.js';
 
 type Options = Parameters<typeof client>[0];
 

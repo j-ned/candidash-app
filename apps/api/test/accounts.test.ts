@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { capturingMailer, client, memoryBucket, testEnv } from './helpers';
+import { capturingMailer, client, memoryBucket, testEnv } from './helpers.js';
 import { eq } from 'drizzle-orm';
-import { jobTracks } from '../src/db/schema';
-import { createUser, storedPassword, withDb } from './db';
-import { loggedIn, extensionToken } from './session';
+import { jobTracks } from '../src/db/schema.js';
+import { createUser, storedPassword, withDb } from './db.js';
+import { loggedIn, extensionToken } from './session.js';
 
 describe('profil', () => {
   it("reads and updates one's own profile, never someone else's", async () => {

@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
-import { getDb, type Db } from '../src/db/client';
-import { users, apiTokens } from '../src/db/schema';
-import { hashPassword } from '../src/auth/passwords';
-import { testEnv, uniqueEmail } from './helpers';
+import { getDb, type Db } from '../src/db/client.js';
+import { users, apiTokens } from '../src/db/schema.js';
+import { hashPassword } from '../src/auth/passwords.js';
+import { testEnv, uniqueEmail } from './helpers.js';
 
 /** Accès direct à la base de test, pour préparer ou inspecter un état. */
 export function withDb<T>(fn: (db: Db) => Promise<T>): Promise<T> {

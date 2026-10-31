@@ -1,6 +1,6 @@
 import { argon2idAsync } from '@noble/hashes/argon2.js';
 import bcrypt from 'bcryptjs';
-import { sha256Hex, timingSafeEqualHex } from './crypto';
+import { sha256Hex, timingSafeEqualHex } from './crypto.js';
 
 // Paramètres minimaux recommandés par l'OWASP pour argon2id (19 Mio, 2 passes, 1 fil), identiques
 // à ceux de l'API Nest : les hachages déjà en base se vérifient sans changement. Argon2 en JS pur

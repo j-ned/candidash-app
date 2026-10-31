@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import type { AppEnv } from '../env';
-import type { Db } from '../db/client';
-import { documents, jobTracks, type DocumentRow } from '../db/schema';
-import { validate } from '../validate';
-import { httpError } from '../http-errors';
-import { requireUser } from '../auth/middleware';
+import type { AppEnv } from '../env.js';
+import type { Db } from '../db/client.js';
+import { documents, jobTracks, type DocumentRow } from '../db/schema.js';
+import { validate } from '../validate.js';
+import { httpError } from '../http-errors.js';
+import { requireUser } from '../auth/middleware.js';
 
 // CV et lettres rédigés en Markdown. L'export PDF se fait dans le navigateur : l'API ne fait
 // que stocker le texte (plus de Gotenberg).

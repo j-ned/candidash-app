@@ -1,8 +1,8 @@
 import type { Context } from 'hono';
 import { deleteCookie, setCookie } from 'hono/cookie';
 import type { CookieOptions } from 'hono/utils/cookie';
-import type { AppEnv } from '../env';
-import { ACCESS_TTL_S, REFRESH_TTL_S } from './tokens';
+import type { AppEnv } from '../env.js';
+import { ACCESS_TTL_S, REFRESH_TTL_S } from './tokens.js';
 
 // Cookie-only : les jetons ne transitent jamais par le body ni par le JS.
 function options(c: Context<AppEnv>): CookieOptions {

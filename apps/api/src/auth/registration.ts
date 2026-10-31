@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
-import type { Db } from '../db/client';
-import { pendingUsers, users, verificationCodes } from '../db/schema';
-import { httpError } from '../http-errors';
-import { hashPassword } from './passwords';
-import { findUserByEmail } from '../users/users';
+import type { Db } from '../db/client.js';
+import { pendingUsers, users, verificationCodes } from '../db/schema.js';
+import { httpError } from '../http-errors.js';
+import { hashPassword } from './passwords.js';
+import { findUserByEmail } from '../users/users.js';
 
 const CODE_TTL_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;

@@ -1,11 +1,11 @@
 import { Hono, type Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { and, eq } from 'drizzle-orm';
-import type { AppEnv } from '../env';
-import { jobTracks } from '../db/schema';
-import { httpError } from '../http-errors';
-import { requireUser } from '../auth/middleware';
-import { jobFileKey, type DocumentType } from '../files/job-files';
+import type { AppEnv } from '../env.js';
+import { jobTracks } from '../db/schema.js';
+import { httpError } from '../http-errors.js';
+import { requireUser } from '../auth/middleware.js';
+import { jobFileKey, type DocumentType } from '../files/job-files.js';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Mo
 const PDF_MAGIC = '%PDF-';

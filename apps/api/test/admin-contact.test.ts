@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { capturingMailer, client, memoryLimiter, testEnv } from './helpers';
-import { withDb } from './db';
-import { loggedIn } from './session';
-import { users, visits } from '../src/db/schema';
+import { capturingMailer, client, memoryLimiter, testEnv } from './helpers.js';
+import { withDb } from './db.js';
+import { loggedIn } from './session.js';
+import { users, visits } from '../src/db/schema.js';
 
 const FIREFOX = 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0';
 

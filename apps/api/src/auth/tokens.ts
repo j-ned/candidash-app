@@ -1,5 +1,5 @@
 import { sign, verify } from 'hono/jwt';
-import type { Role } from '../db/schema';
+import type { Role } from '../db/schema.js';
 
 const ALG = 'HS256';
 export const ACCESS_TTL_S = 24 * 60 * 60;

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { client, memoryBucket, testEnv } from './helpers';
-import { createUser, withDb } from './db';
-import { extensionToken, loggedIn } from './session';
-import { jobTracks } from '../src/db/schema';
+import { client, memoryBucket, testEnv } from './helpers.js';
+import { createUser, withDb } from './db.js';
+import { extensionToken, loggedIn } from './session.js';
+import { jobTracks } from '../src/db/schema.js';
 import { eq } from 'drizzle-orm';
 
 type Job = {
