@@ -17,6 +17,10 @@ Variables locales dans `.dev.vars` (ignoré par git) : `ENVIRONMENT=development`
 vérification affichés dans la console tant que le SMTP n'est pas branché), `JWT_SECRET`,
 `TOTP_ENCRYPTION_KEY` (64 caractères hex).
 
+## Mise en production
+
+Procédure de bascule depuis Dokploy, pas à pas et réversible : [docs/bascule.md](docs/bascule.md).
+
 ## Emails et tâches planifiées
 
 - SMTP depuis le Worker en **TLS implicite uniquement (port 465)** : worker-mailer repasse en
