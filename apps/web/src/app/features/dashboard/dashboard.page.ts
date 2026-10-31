@@ -50,11 +50,11 @@ import { readViewPreference, writeViewPreference } from './view-preference';
         ></div>
         <div class="relative">
           <!-- Header Navigation Bar -->
-          <nav aria-label="Navigation du dashboard" class="backdrop-blur-sm bg-background/95 border-b border-border/50">
-            <div
-              class="mx-auto w-full px-1 sm:px-6 lg:px-8"
-              [class.container]="view() !== 'board'"
-            >
+          <nav
+            aria-label="Navigation du dashboard"
+            class="backdrop-blur-sm bg-background/95 border-b border-border/50"
+          >
+            <div class="mx-auto w-full px-1 sm:px-6 lg:px-8" [class.container]="view() !== 'board'">
               <div class="flex items-center justify-between h-14 sm:h-20">
                 <div class="flex items-center gap-3">
                   <div class="relative">
@@ -79,9 +79,7 @@ import { readViewPreference, writeViewPreference } from './view-preference';
                     <span class="sr-only sm:not-sr-only">Mes documents</span>
                   </a>
                   <app-button
-                    [customClass]="
-                      '!w-auto inline-flex items-center justify-center !p-2 !rounded-xl !shadow-md !text-sm sm:!px-5 sm:!py-2.5 sm:!rounded-lg sm:!shadow-lg'
-                    "
+                    [customClass]="'!w-auto inline-flex items-center justify-center !p-2 !rounded-xl !shadow-md !text-sm sm:!px-5 sm:!py-2.5 sm:!rounded-lg sm:!shadow-lg'"
                     color="primary"
                     (buttonClick)="goToCreate()"
                   >
@@ -114,6 +112,14 @@ import { readViewPreference, writeViewPreference } from './view-preference';
         <div class="mb-4 flex justify-end">
           <app-view-toggle [(view)]="view" />
         </div>
+        @if (jobsResource.error()) {
+          <p role="alert" class="mb-4 text-sm text-error">
+            Les candidatures n’ont pas pu être chargées.
+            <button type="button" class="underline" (click)="jobsResource.reload()">
+              Réessayer
+            </button>
+          </p>
+        }
         @if (view() === 'board') {
           <h2 class="mb-2 text-xl font-bold text-text sm:text-2xl lg:text-3xl">Mes candidatures</h2>
           @if (jobsLoading()) {
@@ -140,13 +146,14 @@ export class DashboardPage {
   private readonly reminderChecker = inject(ReminderChecker);
 
   // Chargement full signal de la liste (la gateway fournit l'URL).
-  protected readonly jobsResource = httpResource<JobTrack[]>(
-    () => this.jobtrackGateway.listUrl(),
-    { parse: (raw) => (raw as JobTrackApi[]).map(toJobTrack) },
-  );
+  protected readonly jobsResource = httpResource<JobTrack[]>(() => this.jobtrackGateway.listUrl(), {
+    parse: (raw) => (raw as JobTrackApi[]).map(toJobTrack),
+  });
 
   /** Copie locale de la liste : le tableau Kanban y applique ses déplacements optimistes. */
-  protected readonly jobs = linkedSignal(() => this.jobsResource.value() ?? []);
+  protected readonly jobs = linkedSignal(() =>
+    this.jobsResource.hasValue() ? this.jobsResource.value() : [],
+  );
   protected readonly jobsLoading = computed(() => this.jobsResource.isLoading());
   protected readonly stats = computed(() => computeJobStats(this.jobs(), new Date()));
 
