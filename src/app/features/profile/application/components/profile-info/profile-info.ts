@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, computed, signal, DestroyRef, linkedSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormField, FormRoot, email, form, required, type FieldTree } from '@angular/forms/signals';
+import { FormField, FormRoot, email, form, hidden, required, type FieldTree } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { Button } from '@shared/ui/button/button';
 import { FieldError } from '@shared/ui/field-error/field-error';
@@ -14,6 +14,7 @@ import { Icon } from '@shared/ui/icon/icon';
 type ProfileInfoModel = {
   email: string;
   username: string;
+  currentPassword: string;
 };
 
 @Component({
@@ -38,7 +39,7 @@ export class ProfileInfo {
   // Brouillon lié à l'utilisateur connecté : repart de ses valeurs quand il change (ex. après sauvegarde)
   private readonly model = linkedSignal<ProfileInfoModel>(() => {
     const user = this.authService.user();
-    return { email: user?.email ?? '', username: user?.username ?? '' };
+    return { email: user?.email ?? '', username: user?.username ?? '', currentPassword: '' };
   });
 
   protected readonly profileForm = form(
@@ -46,6 +47,11 @@ export class ProfileInfo {
     (path) => {
       required(path.email, { message: 'Email invalide' });
       email(path.email, { message: 'Email invalide' });
+      // L'API exige le mot de passe actuel pour changer d'email
+      hidden(path.currentPassword, {
+        when: ({ valueOf }) => valueOf(path.email) === this.authService.user()?.email,
+      });
+      required(path.currentPassword, { message: 'Mot de passe actuel requis' });
     },
     {
       submission: {
@@ -56,10 +62,11 @@ export class ProfileInfo {
   );
 
   private async save(field: FieldTree<ProfileInfoModel>): Promise<void> {
-    const { email, username } = field().value();
+    const { email, username, currentPassword } = field().value();
     const updateData: UpdateProfileRequest = {
       email,
       username: username || undefined,
+      ...(field.currentPassword().hidden() ? {} : { currentPassword }),
     };
     try {
       await firstValueFrom(this.profileService.updateProfile(updateData));

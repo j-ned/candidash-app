@@ -14,7 +14,8 @@ export type ProfileData = {
 export type UpdateProfileRequest = {
   email?: string;
   username?: string;
-  password?: string;
+  // Exigé par l'API quand l'email change
+  currentPassword?: string;
 };
 
 export type UploadAvatarResponse = {
