@@ -1,0 +1,12 @@
+{
+  "name": "candidash-app",
+  "private": true,
+  "description": "Candidash : front Angular (apps/web) et API Hono (apps/api), sur Cloudflare Workers",
+  "scripts": {
+    "test": "pnpm -r test",
+    "build": "pnpm --filter web build",
+    "dev:api": "pnpm --filter api dev",
+    "dev:web": "pnpm --filter web start"
+  },
+  "packageManager": "pnpm@12.3.4"
+}

@@ -63,7 +63,7 @@ Postgres n'est exposé sur aucun port public : seul le jeton ouvre le tunnel.
 ## 4. Hyperdrive (aucun impact)
 
 ```bash
-cd hono-candidash-api
+cd apps/api
 pnpm exec wrangler login
 pnpm exec wrangler hyperdrive create candidash-db \
   --host=db-candidash.nedellec-julien.fr \
@@ -71,7 +71,7 @@ pnpm exec wrangler hyperdrive create candidash-db \
   --access-client-id=<Client ID> --access-client-secret=<Client Secret>
 ```
 
-Reporter l'`id` renvoyé dans `wrangler.jsonc` (`hyperdrive[0].id`).
+Reporter l'`id` renvoyé dans `apps/api/wrangler.jsonc` (`hyperdrive[0].id`).
 
 ## 5. R2 (aucun impact)
 
@@ -79,6 +79,8 @@ Vérifier que le bucket `candidash-app` (celui de `S3_BUCKET`) est dans **ce** c
 Cloudflare : le binding `FILES` y lit les CV/LM existants, mêmes clés `<userId>/<jobTrackId>/…`.
 
 ## 6. Secrets du Worker API (aucun impact)
+
+Depuis `apps/api` :
 
 ```bash
 for name in JWT_SECRET TOTP_ENCRYPTION_KEY MAIL_HOST MAIL_PORT MAIL_USER MAIL_PASSWORD MAIL_FROM_ADDRESS CONTACT_RECIPIENT; do
@@ -88,18 +90,21 @@ done
 
 `JWT_SECRET` et `TOTP_ENCRYPTION_KEY` : **valeurs de l'API Nest**. `MAIL_PORT` : `465`.
 
-## 7. Dépôts GitHub et CI
+## 7. Dépôt GitHub et CI
 
-- API : créer le dépôt `hono-candidash-api`, pousser `master`. Secrets du dépôt :
-  `CLOUDFLARE_API_TOKEN` (jeton *Edit Cloudflare Workers*) et `CLOUDFLARE_ACCOUNT_ID` ;
-  environnement `production`.
-- Front : mêmes secrets dans `ng-candidash-app`. Ne pas encore fusionner
-  `feat/cloudflare-front` (sa fusion déploie le front, étape 10).
+Dépôt unique `candidash-app` (front dans `apps/web`, API dans `apps/api`).
+
+1. **Avant le premier push**, créer l'environnement `production` (*Settings* → *Environments*)
+   avec toi en **Required reviewer** : chaque déploiement attend ton approbation. Sans cela, le
+   premier push sur `master` déploierait les deux Workers, domaines et cron compris.
+2. Secrets de l'environnement : `CLOUDFLARE_API_TOKEN` (jeton *Edit Cloudflare Workers*) et
+   `CLOUDFLARE_ACCOUNT_ID`.
+3. Pousser `master`. Les jobs *Deploy* attendent ; ne les approuver qu'aux étapes 9 et 10.
 
 ## 8. Répétition sur workers.dev (aucun impact)
 
 Déployer l'API sans prendre l'adresse publique **ni les cron** (l'API Nest envoie encore les
-relances : les deux en même temps doubleraient les emails). Dans une copie de travail, retirer
+relances : les deux en même temps doubleraient les emails). Dans `apps/api`, retirer
 temporairement `routes` et `triggers` de `wrangler.jsonc` et ajouter `"workers_dev": true`, puis :
 
 ```bash
@@ -115,8 +120,8 @@ il valide le SMTP en 465. Annuler ensuite ces modifications de `wrangler.jsonc`.
 ## 9. Bascule de l'API (coupure de 1 à 2 minutes)
 
 1. Cloudflare → DNS → supprimer l'enregistrement `api-candidash` (celui du VPS).
-2. `pnpm exec wrangler deploy` (ou fusion sur `master` : la CI déploie) : le domaine
-   personnalisé est créé avec son certificat.
+2. Depuis `apps/api` : `pnpm exec wrangler deploy` : le domaine personnalisé est créé avec son
+   certificat.
 3. **Arrêter le conteneur de l'API Nest** sur Dokploy (pas le supprimer) : sinon ses relances
    horaires partent en double avec les cron du Worker.
 4. Vérifier : `curl https://api-candidash.nedellec-julien.fr/api/v1/health`, connexion depuis le
@@ -124,10 +129,10 @@ il valide le SMTP en 465. Annuler ensuite ces modifications de `wrangler.jsonc`.
 
 ## 10. Bascule du front
 
-1. Renseigner `EXTENSION_ID` et `FIREFOX_ADDON_URL` dans `ng-candidash-app/wrangler.jsonc`.
-2. Fusionner `feat/pdf-navigateur` puis `feat/cloudflare-front` : la CI teste puis déploie.
-3. Cloudflare → DNS → supprimer l'enregistrement `candidash` (VPS), puis relancer le job *Deploy*
-   (ou `pnpm cf:deploy`) pour créer le domaine personnalisé.
+1. Renseigner `EXTENSION_ID` et `FIREFOX_ADDON_URL` dans `apps/web/wrangler.jsonc`.
+2. Cloudflare → DNS → supprimer l'enregistrement `candidash` (VPS).
+3. Pousser sur `master` puis **approuver** *Deploy web* dans GitHub (et *Deploy API* : l'API est
+   déjà en place, son redéploiement ne change rien).
 4. Vérifier : accueil, `/dashboard`, connexion, 2FA, dépôt et téléchargement d'un CV, export PDF,
    console du navigateur sans erreur CSP.
 
@@ -141,7 +146,7 @@ Les données sont communes (même Postgres, même R2) : rien à resynchroniser.
 
 - Supprimer sur Dokploy les conteneurs API Nest, nginx (front) et Gotenberg. Garder Postgres et
   `cloudflared`.
-- Archiver le dépôt `nest-candidash-app`.
+- Archiver les dépôts `nest-candidash-app` et `ng-candidash-app` (remplacés par `candidash-app`).
 
 ## Migrations de schéma, ensuite
 

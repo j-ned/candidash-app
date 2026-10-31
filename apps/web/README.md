@@ -282,8 +282,8 @@ sequenceDiagram
 
 ```bash
 # 1. Cloner
-git clone https://github.com/djoudj-dev/ng-candidash-app.git
-cd ng-candidash-app
+git clone https://github.com/j-ned/candidash-app.git
+cd candidash-app/apps/web
 
 # 2. Installer
 pnpm install

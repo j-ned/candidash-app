@@ -19,7 +19,7 @@ vérification affichés dans la console tant que le SMTP n'est pas branché), `J
 
 ## Mise en production
 
-Procédure de bascule depuis Dokploy, pas à pas et réversible : [docs/bascule.md](docs/bascule.md).
+Procédure de bascule depuis Dokploy, pas à pas et réversible : [docs/bascule.md](../../docs/bascule.md).
 
 ## Emails et tâches planifiées
 

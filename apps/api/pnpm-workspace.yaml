@@ -1,8 +1,0 @@
-# Délai de 14 jours avant d'adopter une version publiée (attaques supply chain).
-minimumReleaseAge: 20160
-# Les peers optionnelles (drivers drizzle…) ne s'installent pas d'office.
-autoInstallPeers: false
-allowBuilds:
-  esbuild: true
-  workerd: true
-  sharp: false

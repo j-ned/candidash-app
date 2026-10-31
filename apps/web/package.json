@@ -1,5 +1,5 @@
 {
-  "name": "ng-candidash-app",
+  "name": "web",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -73,6 +73,5 @@
     "typescript-eslint": "8.60.0",
     "vitest": "^4.1.12",
     "wrangler": "^4.151.1"
-  },
-  "packageManager": "pnpm@12.3.4"
+  }
 }

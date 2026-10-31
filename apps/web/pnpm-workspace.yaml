@@ -1,9 +1,0 @@
-allowBuilds:
-  '@parcel/watcher': true
-  esbuild: true
-  lmdb: true
-  msgpackr-extract: true
-  # Moteur local de wrangler (wrangler dev, déploiement Cloudflare)
-  workerd: true
-  sharp: false
-minimumReleaseAge: 20160
