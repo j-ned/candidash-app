@@ -1,7 +1,7 @@
 {
   "name": "candidash-app",
   "private": true,
-  "description": "Candidash : front Angular (apps/web) et API Hono (apps/api), sur Cloudflare Workers",
+  "description": "Candidash : front Angular (apps/web) et API Hono (apps/api), serverless sur Vercel",
   "scripts": {
     "test": "pnpm -r test",
     "build": "pnpm --filter web build",
