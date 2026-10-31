@@ -1,4 +1,13 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, linkedSignal, input, DestroyRef } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  computed,
+  linkedSignal,
+  input,
+  DestroyRef,
+} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { downloadFile } from '@shared/utils/download-file';
 import { httpResource } from '@angular/common/http';
@@ -13,7 +22,11 @@ import { Toaster } from '@shared/ui/toast/service/toast';
 import { STATUS_CONFIG, ALL_STATUSES } from '@features/jobtrack/domain/models/jobtrack.model';
 import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
 import { reminderNotice } from '@features/jobtrack/domain/job-board';
-import type { JobTrack, JobStatus, DocumentType } from '@features/jobtrack/domain/models/jobtrack.model';
+import type {
+  JobTrack,
+  JobStatus,
+  DocumentType,
+} from '@features/jobtrack/domain/models/jobtrack.model';
 import { PdfViewerModal } from '@shared/ui/pdf-viewer-modal/pdf-viewer-modal';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -40,7 +53,7 @@ export class JobtrackDetail {
     { parse: (raw) => toJobTrack(raw as JobTrackApi) },
   );
 
-  readonly job = computed(() => this.jobResource.value() ?? null);
+  readonly job = computed(() => (this.jobResource.hasValue() ? this.jobResource.value() : null));
   readonly loading = computed(() => this.jobResource.isLoading());
   readonly error = computed(() =>
     this.jobResource.error() ? 'Impossible de charger la candidature' : null,
@@ -65,23 +78,18 @@ export class JobtrackDetail {
     const j = this.job();
     if (!j) return null;
     const reminder = j.reminder ?? null;
-    const overdue =
-      !!reminder?.isActive && new Date(reminder.nextReminderAt) < new Date();
+    const overdue = !!reminder?.isActive && new Date(reminder.nextReminderAt) < new Date();
     const inactive = reminder !== null && !reminder.isActive;
     return {
       ...j,
-      appliedAtFormatted: j.appliedAt
-        ? this.dateFmt.format(new Date(j.appliedAt))
-        : null,
+      appliedAtFormatted: j.appliedAt ? this.dateFmt.format(new Date(j.appliedAt)) : null,
       createdAtFormatted: this.dateFmt.format(new Date(j.createdAt)),
       updatedAtFormatted: this.dateFmt.format(new Date(j.updatedAt)),
       reminderNextFormatted: reminder
         ? this.dateFmt.format(new Date(reminder.nextReminderAt))
         : null,
       reminderStatusLabel: this.reminderStatusLabel(j),
-      reminderFrequencyLabel: reminder
-        ? this.reminderFrequencyLabel(reminder.frequency)
-        : '',
+      reminderFrequencyLabel: reminder ? this.reminderFrequencyLabel(reminder.frequency) : '',
       reminderOverdue: overdue,
       reminderInactive: inactive,
     };
@@ -89,8 +97,8 @@ export class JobtrackDetail {
 
   // État dérivé MODIFIABLE : se resync sur le resource, mais set()-able pour
   // l'optimistic UI (changement de statut instantané + rollback si l'API échoue).
-  protected readonly status = linkedSignal(
-    () => this.jobResource.value()?.status ?? null,
+  protected readonly status = linkedSignal(() =>
+    this.jobResource.hasValue() ? this.jobResource.value().status : null,
   );
 
   protected readonly statusOptions = computed(() => {
@@ -157,7 +165,8 @@ export class JobtrackDetail {
     const uploading = type === 'cv' ? this.cvUploading : this.lmUploading;
     uploading.set(true);
 
-    this.jobtrackGateway.uploadDocument(this.id(), type, file)
+    this.jobtrackGateway
+      .uploadDocument(this.id(), type, file)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -177,7 +186,8 @@ export class JobtrackDetail {
     const currentJob = this.job();
     if (!currentJob) return;
 
-    this.jobtrackGateway.downloadDocument(this.id(), type)
+    this.jobtrackGateway
+      .downloadDocument(this.id(), type)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (blob) => {
@@ -194,15 +204,15 @@ export class JobtrackDetail {
     const currentJob = this.job();
     if (!currentJob) return;
 
-    this.jobtrackGateway.downloadDocument(this.id(), type)
+    this.jobtrackGateway
+      .downloadDocument(this.id(), type)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (blob) => {
           const fileName = type === 'cv' ? currentJob.cvFileName : currentJob.lmFileName;
           const blobUrl = URL.createObjectURL(blob);
-          this.pdfViewerModal.open(
-            { blobUrl, fileName: fileName ?? `${type}.pdf` },
-            () => this.downloadDocument(type),
+          this.pdfViewerModal.open({ blobUrl, fileName: fileName ?? `${type}.pdf` }, () =>
+            this.downloadDocument(type),
           );
         },
         error: () => {
@@ -222,7 +232,8 @@ export class JobtrackDetail {
 
     if (!confirmed) return;
 
-    this.jobtrackGateway.deleteDocument(this.id(), type)
+    this.jobtrackGateway
+      .deleteDocument(this.id(), type)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -274,10 +285,7 @@ export class JobtrackDetail {
       14: 'Suivi patient (2sem)',
       30: 'Suivi long terme (1mois)',
     };
-    return (
-      options[frequency as keyof typeof options] ??
-      `Tous les ${frequency} jours`
-    );
+    return options[frequency as keyof typeof options] ?? `Tous les ${frequency} jours`;
   }
 
   private reminderStatusLabel(job: JobTrack): string {
@@ -286,9 +294,7 @@ export class JobtrackDetail {
     const next = new Date(job.reminder.nextReminderAt);
     const now = new Date();
     if (next < now) return 'En retard';
-    const days = Math.ceil(
-      (next.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
-    );
+    const days = Math.ceil((next.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
     if (days === 0) return "Aujourd'hui";
     if (days === 1) return 'Demain';
     return `Dans ${days}j`;
