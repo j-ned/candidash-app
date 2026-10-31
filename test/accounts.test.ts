@@ -79,7 +79,7 @@ describe('mot de passe', () => {
     expect(wrong.status).toBe(401);
     const ok = await web.put('/accounts/change-password', { currentPassword: user.password, newPassword: 'Nouveau-456!' });
     expect(ok.status).toBe(200);
-    expect(changed).toEqual([user.email]);
+    expect(changed()).toEqual([user.email]);
     expect(await storedPassword(user.id)).toMatch(/^\$argon2id\$/);
   });
 });

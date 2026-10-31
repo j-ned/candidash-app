@@ -23,7 +23,12 @@
   "r2_buckets": [{ "binding": "FILES", "bucket_name": "candidash-app" }],
   "vars": {
     "ENVIRONMENT": "production",
-    "ALLOWED_ORIGINS": "https://candidash.nedellec-julien.fr"
+    "ALLOWED_ORIGINS": "https://candidash.nedellec-julien.fr",
+    // SMTP : MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASSWORD, MAIL_FROM_ADDRESS en secrets
+    // (`wrangler secret put`), mêmes valeurs que le .env de l'API Nest
+    "MAIL_FROM_NAME": "Candidash"
   },
+  // Relances toutes les heures ; purges à 2 h UTC (3 h ou 4 h à Paris)
+  "triggers": { "crons": ["0 * * * *", "0 2 * * *"] },
   "observability": { "enabled": true }
 }

@@ -16,6 +16,15 @@ export type Bindings = {
   ALLOWED_ORIGINS: string;
   JWT_SECRET: string;
   TOTP_ENCRYPTION_KEY: string;
+  // SMTP (vars, mot de passe en secret) : sans MAIL_USER ni MAIL_PASSWORD, pas d'envoi réel
+  MAIL_HOST?: string;
+  MAIL_PORT?: string;
+  MAIL_USER?: string;
+  MAIL_PASSWORD?: string;
+  MAIL_FROM_NAME?: string;
+  MAIL_FROM_ADDRESS?: string;
+  /** Destinataire du formulaire de contact (absent : le formulaire répond 503). */
+  CONTACT_RECIPIENT?: string;
 };
 
 export type AppEnv = {

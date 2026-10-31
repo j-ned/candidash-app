@@ -133,6 +133,9 @@ importers:
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
+      worker-mailer:
+        specifier: ^1.2.1
+        version: 1.2.1
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1753,6 +1756,9 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  worker-mailer@1.2.1:
+    resolution: {integrity: sha512-gS2ei/mrpRqNs+AHmqxhT6vFPwCLw2qnz5ShmyGD0ULaU0Q9hxnFAcx9jhAip/MnD6+MjgnQu6hQQgA8mlOkVA==}
+
   workerd@1.20261012.1:
     resolution: {integrity: sha512-tEHoMPsMga0seVjxfsR8Pd3f8IRqYwkq++dTUKI5Gdgj6zuSDluYwisydq+dn90SsIACwBquJUQ1nBpcOqaWTA==}
     engines: {node: '>=16'}
@@ -2921,6 +2927,8 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  worker-mailer@1.2.1: {}
 
   workerd@1.20261012.1:
     optionalDependencies:

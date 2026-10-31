@@ -1,6 +1,6 @@
 import { createApp } from '../src/app';
 import type { Bindings } from '../src/env';
-import type { Mailer } from '../src/mail/mailer';
+import { templatedMailer, type Mailer, type OutgoingEmail } from '../src/mail/mailer';
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? 'postgresql://candidash:candidash@localhost:5432/candidash';
@@ -31,26 +31,21 @@ export function testEnv(overrides: Partial<Bindings> = {}): Bindings {
   };
 }
 
-/** Faux mailer : garde le dernier code et le dernier lien de réinitialisation par adresse. */
+/** Faux mailer : les vrais gabarits, sans envoi ; garde chaque email par destinataire. */
 export function capturingMailer() {
-  const codes = new Map<string, string>();
-  const resetUrls = new Map<string, string>();
-  const changed: string[] = [];
-  const mailer: Mailer = {
-    async sendVerificationCode(email, code) {
-      codes.set(email, code);
-      return true;
-    },
-    async sendPasswordReset({ email, resetUrl }) {
-      resetUrls.set(email, resetUrl);
-      return true;
-    },
-    async sendPasswordChanged({ email }) {
-      changed.push(email);
-      return true;
-    },
+  const sent: OutgoingEmail[] = [];
+  const mailer = templatedMailer(async (email) => {
+    sent.push(email);
+    return true;
+  });
+  const last = (to: string) => sent.findLast((email) => email.to === to);
+  return {
+    mailer,
+    sent,
+    codes: { get: (to: string) => last(to)?.text.match(/Code : (\d{6})/)?.[1] },
+    resetUrls: { get: (to: string) => last(to)?.text.match(/https?:\/\/\S+reset-password\?token=\w+/)?.[0] },
+    changed: () => sent.filter((email) => email.subject === 'Votre mot de passe a été modifié').map((email) => email.to),
   };
-  return { mailer, codes, resetUrls, changed };
 }
 
 /** Faux bucket R2 en mémoire : dépôt, lecture et suppression, comme le binding. */

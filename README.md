@@ -16,3 +16,11 @@ pnpm dev         # runtime Workers local (workerd), Hyperdrive → localConnecti
 Variables locales dans `.dev.vars` (ignoré par git) : `ENVIRONMENT=development` (codes de
 vérification affichés dans la console tant que le SMTP n'est pas branché), `JWT_SECRET`,
 `TOTP_ENCRYPTION_KEY` (64 caractères hex).
+
+## Emails et tâches planifiées
+
+- SMTP depuis le Worker en **TLS implicite uniquement (port 465)** : worker-mailer repasse en
+  clair si un serveur 587 n'annonce pas STARTTLS, donc tout autre port est refusé. Secrets :
+  `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`.
+- Cron Triggers : relances toutes les heures (`0 * * * *`), purges à 2 h UTC (`0 2 * * *`).
+  En local : `wrangler dev --test-scheduled` puis `curl "localhost:8787/__scheduled?cron=0+*+*+*+*"`.
