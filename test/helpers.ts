@@ -31,16 +31,37 @@ export function testEnv(overrides: Partial<Bindings> = {}): Bindings {
   };
 }
 
-/** Faux mailer : garde le dernier code envoyé à chaque adresse. */
+/** Faux mailer : garde le dernier code et le dernier lien de réinitialisation par adresse. */
 export function capturingMailer() {
   const codes = new Map<string, string>();
+  const resetUrls = new Map<string, string>();
+  const changed: string[] = [];
   const mailer: Mailer = {
     async sendVerificationCode(email, code) {
       codes.set(email, code);
       return true;
     },
+    async sendPasswordReset({ email, resetUrl }) {
+      resetUrls.set(email, resetUrl);
+      return true;
+    },
+    async sendPasswordChanged({ email }) {
+      changed.push(email);
+      return true;
+    },
   };
-  return { mailer, codes };
+  return { mailer, codes, resetUrls, changed };
+}
+
+/** Faux bucket R2 : seules les suppressions sont observées ici. */
+export function memoryBucket() {
+  const deleted: string[] = [];
+  const bucket = {
+    async delete(keys: string | string[]) {
+      deleted.push(...[keys].flat());
+    },
+  } as unknown as R2Bucket;
+  return { bucket, deleted };
 }
 
 // waitUntil sans attente : la connexion se ferme en arrière-plan, comme sous Workers

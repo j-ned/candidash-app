@@ -6,13 +6,12 @@ import type { AppEnv, Bindings } from './env';
 import { openDb } from './db/client';
 import { errorBody, handleError } from './http-errors';
 import { rateLimit } from './auth/middleware';
-import { consoleMailer, type Mailer } from './mail/mailer';
+import { consoleMailer, unavailableMailer, type Mailer } from './mail/mailer';
 import { authRoutes } from './routes/auth';
 import { twoFactorRoutes } from './routes/two-factor';
 import { apiTokenRoutes } from './routes/api-tokens';
-
-// En production sans SMTP branché, aucun code ne doit finir dans les logs : l'envoi échoue.
-const unavailableMailer: Mailer = { sendVerificationCode: async () => false };
+import { accountRoutes } from './routes/accounts';
+import { jobTrackRoutes } from './routes/jobtrack';
 
 function defaultMailer(env: Bindings): Mailer {
   return env.ENVIRONMENT === 'production' ? unavailableMailer : consoleMailer;
@@ -67,6 +66,8 @@ export function createApp({ mailer = defaultMailer }: AppOptions = {}) {
   app.route('/auth', authRoutes);
   app.route('/auth/2fa', twoFactorRoutes);
   app.route('/api-tokens', apiTokenRoutes);
+  app.route('/accounts', accountRoutes);
+  app.route('/jobtrack', jobTrackRoutes);
 
   app.notFound((c) => c.json(errorBody(404, `Cannot ${c.req.method} ${c.req.path}`), 404));
   app.onError(handleError);
