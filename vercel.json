@@ -4,7 +4,8 @@
     "api": {
       "root": "apps/api/",
       "framework": "hono",
-      "entrypoint": "src/index.ts"
+      "buildCommand": "pnpm build",
+      "entrypoint": "dist/index.js"
     },
     "web": {
       "root": "apps/web/",
