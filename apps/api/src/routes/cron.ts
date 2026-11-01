@@ -4,7 +4,7 @@ import { httpError } from '../http-errors.js';
 import { sha256Hex, timingSafeEqualHex } from '../auth/crypto.js';
 import { purgeExpired, sendDueReminders } from '../jobs/scheduled.js';
 
-// Appelé une fois par jour par Vercel Cron (vercel.json) avec `Authorization: Bearer CRON_SECRET`.
+// Appelé une fois par jour par Vercel Cron (vercel.json racine) avec `Authorization: Bearer CRON_SECRET`.
 export const cronRoutes = new Hono<AppEnv>().get('/daily', async (c) => {
   const secret = c.env.CRON_SECRET;
   const given = c.req.header('authorization') ?? '';

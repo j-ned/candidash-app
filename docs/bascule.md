@@ -1,5 +1,9 @@
 # Bascule de Dokploy (Nest + nginx) vers Vercel (Hono + Angular statique) et Neon
 
+> **Depuis le 2026-11-01**, les deux projets ci-dessous n'en font plus qu'un : `candidash-app`, en
+> mode Services (`vercel.json` racine, services `web` et `api`, mêmes variables et mêmes domaines).
+> Ce runbook garde la trace de la bascule initiale.
+
 Cible : deux projets Vercel (plan **Hobby, usage non commercial**) depuis ce dépôt, base **Neon**
 (Postgres serverless, intégré à Vercel), fichiers toujours sur **R2** (API S3), DNS toujours chez
 **Infomaniak**. Les adresses ne changent pas : `candidash.nedellec-julien.fr` (front) et

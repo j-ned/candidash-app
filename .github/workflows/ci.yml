@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   api:
-    name: API · Typecheck · Test
+    name: API · Typecheck · Test · Bundle
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -66,6 +66,9 @@ jobs:
 
       - name: Tests
         run: pnpm test
+
+      - name: Bundle Vercel
+        run: pnpm build
 
   web:
     name: Web · Lint · Test · Build

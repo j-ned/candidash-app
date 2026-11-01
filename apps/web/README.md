@@ -17,7 +17,7 @@ build) : `http://localhost:3000/api/v1` en local, donc lancer l'API avec `PORT=3
 
 ## Production (Vercel)
 
-Le build (`dist/ng-candidash-app/browser`) est servi en statique par Vercel (`vercel.json` : en-têtes
+Le build (`dist/ng-candidash-app/browser`) est servi en statique par le service Vercel `web` (`vercel.json` racine : en-têtes
 de sécurité, cache, coquille CSR pour les routes non prérendues). Après `ng build`,
 `scripts/csp-hashes.mjs` pose dans chaque page une CSP des scripts par empreintes SHA-256 (pas de
 nonce sans serveur) ; avant, `scripts/runtime-config.mjs` écrit `config.json` depuis `API_URL`,
