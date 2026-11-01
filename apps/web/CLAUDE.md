@@ -18,7 +18,8 @@ npx vitest path/to/file   # Run a single test file
 npx eslint .              # Lint (no npm script defined)
 ```
 
-Production: static output on Vercel (`vercel.json`: headers, cache, CSR fallback). `postbuild`
+Production: static output served by the `web` service of the root `vercel.json` (Vercel Services:
+headers, cache, CSR fallback). `postbuild`
 (`scripts/csp-hashes.mjs`) writes a per-page `<meta>` CSP with SHA-256 hashes of inline scripts
 (no per-request nonce on static hosting; Angular autoCsp is incompatible with prerendering), and
 `prebuild` writes `public/config.json` from `API_URL` when set. Never add inline `style=""` or

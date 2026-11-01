@@ -114,7 +114,9 @@ Les tableurs **ne tiennent pas la distance**, les CRM SaaS sont **surdimensionn�
 
 ## 🏗️ Architecture serverless
 
-Un **monorepo pnpm** et deux projets Vercel : un front **statique** et une API en **fonction Node**.
+Un **monorepo pnpm** et un seul projet Vercel en mode **Services** ([`vercel.json`](vercel.json)) : un
+service `web` (front **statique**) et un service `api` (**fonction Node**). `/api/*` part vers l'API,
+tout le reste vers le front, sur les deux domaines.
 
 ```mermaid
 graph LR
@@ -129,8 +131,8 @@ graph LR
 
 | Dossier | Contenu | Production |
 |---------|---------|------------|
-| [`apps/web`](apps/web) | Front Angular 22 zoneless, Tailwind 4 ; pages publiques prérendues, espace connecté en rendu client | Vercel (statique) — `candidash.nedellec-julien.fr` |
-| [`apps/api`](apps/api) | API Hono, Drizzle + Neon, fichiers R2 via l'API S3, cron Vercel | Vercel (fonction Node) — `api-candidash.nedellec-julien.fr` |
+| [`apps/web`](apps/web) | Front Angular 22 zoneless, Tailwind 4 ; pages publiques prérendues, espace connecté en rendu client | Service Vercel `web` (statique) — `candidash.nedellec-julien.fr` |
+| [`apps/api`](apps/api) | API Hono, Drizzle + Neon, fichiers R2 via l'API S3, cron Vercel | Service Vercel `api` (fonction Node) — `api-candidash.nedellec-julien.fr` |
 
 ### Front — clean architecture par feature
 

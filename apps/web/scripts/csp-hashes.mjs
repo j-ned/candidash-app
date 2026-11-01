@@ -1,7 +1,7 @@
 // CSP des scripts par empreintes, posée dans chaque page du build (après `ng build`). Le front est
 // servi en statique par Vercel : pas de nonce par requête possible, et l'auto-CSP d'Angular refuse
 // le prérendu. Chaque script inline exécutable reçoit son SHA-256 dans un <meta> CSP placé en tête
-// de <head> ; vercel.json pose le reste de la politique (frame-ancestors, connect-src…), et un
+// de <head> ; le vercel.json racine pose le reste de la politique (frame-ancestors, connect-src…), et un
 // script injecté sans empreinte reste bloqué par ce <meta>.
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
