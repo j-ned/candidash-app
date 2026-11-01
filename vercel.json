@@ -5,7 +5,7 @@
       "root": "apps/api/",
       "framework": "hono",
       "buildCommand": "pnpm build",
-      "entrypoint": "dist/index.js"
+      "entrypoint": "server.js"
     },
     "web": {
       "root": "apps/web/",
