@@ -1,4 +1,5 @@
 import { AwsClient } from 'aws4fetch';
+import { httpError } from '../http-errors.js';
 
 /** Ce que l'API utilise du stockage : dépôt, lecture en flux, suppression. */
 export type Bucket = {
@@ -45,3 +46,15 @@ export function s3Bucket(config: S3Config): Bucket {
     },
   };
 }
+
+const storageDisabled = () => httpError(503, 'Stockage de fichiers désactivé sur cet environnement');
+
+/**
+ * Environnement sans bucket (preview) : dépôt et lecture refusés en 503. La suppression ne fait
+ * rien, aucun fichier n'ayant pu y être déposé : supprimer une candidature reste possible.
+ */
+export const disabledBucket: Bucket = {
+  put: () => Promise.reject(storageDisabled()),
+  get: () => Promise.reject(storageDisabled()),
+  delete: () => Promise.resolve(),
+};

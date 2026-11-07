@@ -16,7 +16,8 @@ export type Bindings = {
   GLOBAL_LIMITER: RateLimiter;
   /** Formulaire de contact : 2 messages / min / IP. */
   CONTACT_LIMITER: RateLimiter;
-  ENVIRONMENT: 'production' | 'development' | 'test';
+  /** Déduit de VERCEL_ENV ; 'preview' n'envoie aucun email et peut tourner sans stockage. */
+  ENVIRONMENT: 'production' | 'preview' | 'development' | 'test';
   ALLOWED_ORIGINS: string;
   JWT_SECRET: string;
   TOTP_ENCRYPTION_KEY: string;

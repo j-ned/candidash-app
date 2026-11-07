@@ -9,7 +9,9 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed-demo": "tsx scripts/seed-demo.ts",
+    "db:init-demo": "pnpm db:migrate && pnpm db:seed-demo"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.1",

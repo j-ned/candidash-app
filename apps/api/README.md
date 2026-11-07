@@ -30,6 +30,13 @@ Sans SMTP configuré, les emails (codes de vérification, liens) s'affichent dan
   relances réservées en base avant envoi (un cron déclenché deux fois n'envoie qu'une fois), puis
   purges. En local : `curl -H "Authorization: Bearer $CRON_SECRET" localhost:8787/api/v1/cron/daily`.
 
+## Previews
+
+En preview (`VERCEL_ENV=preview`) : aucun email envoyé (destinataire masqué et sujet dans les
+logs), fichiers en 503 sans bucket dédié, base Neon `preview` initialisée par
+`pnpm db:init-demo` (migrations + compte de démo fictif). Variables et procédure :
+[docs/preview-env.md](../../docs/preview-env.md).
+
 ## Mise en production
 
 Procédure pas à pas et réversible : [docs/bascule.md](../../docs/bascule.md).
