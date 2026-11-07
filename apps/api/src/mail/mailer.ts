@@ -46,5 +46,17 @@ export const consoleMailer = templatedMailer(async ({ to, subject, text }) => {
   return true;
 });
 
+/** `julien@example.com` → `j***@example.com` : assez pour reconnaître un compte de démo. */
+export function maskEmail(email: string): string {
+  const at = email.lastIndexOf('@');
+  return at < 1 ? '***' : `${email[0]}***${email.slice(at)}`;
+}
+
+/** Preview : aucun envoi ; ni code, ni lien, ni adresse complète dans les logs. */
+export const logMailer = templatedMailer(async ({ to, subject }) => {
+  console.info(`Email non envoyé (preview) : ${maskEmail(to)} — ${subject}`);
+  return true;
+});
+
 /** Production sans SMTP : aucun code ni lien ne doit finir dans les logs, l'envoi échoue. */
 export const unavailableMailer = templatedMailer(async () => false);
