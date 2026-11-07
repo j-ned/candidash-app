@@ -1,69 +1,84 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "fra1"
+  ],
   "services": {
     "api": {
       "root": "apps/api/",
       "framework": "hono",
+      "installCommand": "pnpm install --frozen-lockfile --filter api",
       "buildCommand": "pnpm build",
+      "ignoreCommand": "cd \"$(git rev-parse --show-toplevel)\" && git diff --quiet \"${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}\" HEAD -- . \":(exclude,glob)**/*.md\" \":(exclude)docs\" \":(exclude)apps/web/docs\" \":(exclude).github\"",
       "entrypoint": "server.js"
     },
     "web": {
       "root": "apps/web/",
+      "installCommand": "pnpm install --frozen-lockfile --filter web",
       "buildCommand": "pnpm build",
+      "ignoreCommand": "cd \"$(git rev-parse --show-toplevel)\" && git diff --quiet \"${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}\" HEAD -- . \":(exclude,glob)**/*.md\" \":(exclude)docs\" \":(exclude)apps/web/docs\" \":(exclude).github\"",
       "outputDirectory": "dist/ng-candidash-app/browser",
-      "headers": [
+      "routes": [
         {
-          "source": "/(.*)",
-          "headers": [
-            {
-              "key": "Content-Security-Policy",
-              "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; frame-src blob:; connect-src 'self' https://api-candidash.nedellec-julien.fr; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
-            },
-            {
-              "key": "X-Content-Type-Options",
-              "value": "nosniff"
-            },
-            {
-              "key": "X-Frame-Options",
-              "value": "DENY"
-            },
-            {
-              "key": "Referrer-Policy",
-              "value": "strict-origin-when-cross-origin"
-            },
-            {
-              "key": "Permissions-Policy",
-              "value": "geolocation=(), microphone=(), camera=()"
-            },
-            {
-              "key": "Strict-Transport-Security",
-              "value": "max-age=31536000; includeSubDomains"
-            }
-          ]
+          "src": "^/(.*)$",
+          "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; frame-src blob:; connect-src 'self' https://api-candidash.nedellec-julien.fr; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+          },
+          "continue": true
         },
         {
-          "source": "/(.*)\\.(js|mjs|css)",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=31536000, immutable"
-            }
-          ]
+          "src": "^/(?:main|chunk|styles|polyfills|worker)-[A-Za-z0-9_-]{8}\\.(?:js|css)$",
+          "headers": {
+            "Cache-Control": "public, max-age=31536000, immutable"
+          },
+          "continue": true
         },
         {
-          "source": "/config.json",
-          "headers": [
+          "src": "^/(?:icons|demo|badges)/(.*)$",
+          "has": [
             {
-              "key": "Cache-Control",
-              "value": "no-cache"
+              "type": "query",
+              "key": "v"
             }
-          ]
-        }
-      ],
-      "rewrites": [
+          ],
+          "headers": {
+            "Cache-Control": "public, max-age=31536000, immutable"
+          },
+          "continue": true
+        },
         {
-          "source": "/(.*)",
-          "destination": "/index.csr.html"
+          "src": "^/fonts/(.*)$",
+          "headers": {
+            "Cache-Control": "public, max-age=2592000, stale-while-revalidate=86400"
+          },
+          "continue": true
+        },
+        {
+          "src": "^/config\\.json$",
+          "headers": {
+            "Cache-Control": "no-cache"
+          },
+          "continue": true
+        },
+        {
+          "handle": "filesystem"
+        },
+        {
+          "src": "^/((?!.*\\.[a-zA-Z0-9]+$).*)$",
+          "dest": "/index.csr.html",
+          "check": true
+        },
+        {
+          "src": "^/(.*)$",
+          "status": 404,
+          "headers": {
+            "Cache-Control": "no-cache"
+          }
         }
       ]
     }

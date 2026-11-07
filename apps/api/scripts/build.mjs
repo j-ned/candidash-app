@@ -9,7 +9,12 @@ await build({
   bundle: true,
   platform: 'node',
   format: 'esm',
-  target: 'node22',
+  target: 'node24',
+  // Bundle ~2 Mo chargé à chaque démarrage à froid : la minification réduit la lecture et le parsing.
+  minify: true,
+  // drizzle reconnaît un Pool pg à son nom de classe (constructor.name.includes('Pool')) ; garder
+  // les noms préserve aussi des traces d'erreur lisibles dans les logs Vercel.
+  keepNames: true,
   // pg charge pg-native de façon optionnelle ; les modules CommonJS (pg, nodemailer) ont besoin de require.
   external: ['pg-native'],
   banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
