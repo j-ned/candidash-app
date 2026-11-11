@@ -214,6 +214,7 @@ sequenceDiagram
 
 - **Jetons typés** (`hono/jwt`, HS256) : un refresh ou un jeton 2FA temporaire ne peut jamais servir de jeton d'accès.
 - **Refresh token** en cookie HttpOnly ; seul son hachage SHA-256 est gardé en base (rotation à chaque usage).
+- **Révocation immédiate** : le jeton d'accès porte la version de session de l'utilisateur, relue en base à chaque requête ; déconnexion, changement ou réinitialisation du mot de passe l'incrémentent.
 - **Migration progressive des mots de passe** : les anciens hachages bcrypt ou SHA-256 sont vérifiés puis re-hachés en argon2id à la connexion.
 - **Côté Angular** : jeton d'accès en mémoire (signal), intercepteur fonctionnel qui rejoue la requête après un refresh, guards fonctionnels.
 

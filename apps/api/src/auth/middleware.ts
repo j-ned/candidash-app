@@ -9,13 +9,23 @@ import { verifyAccess } from './tokens.js';
 import { sha256Hex } from './crypto.js';
 import { activeApiToken } from '../api-tokens/active-api-token.js';
 
-/** Session web : jeton d'accès dans le cookie HttpOnly `access_token`, jamais en en-tête. */
+/**
+ * Session web : jeton d'accès dans le cookie HttpOnly `access_token`, jamais en en-tête.
+ * Sa version est comparée à celle de l'utilisateur en base : déconnexion, changement de mot de
+ * passe ou suppression du compte invalident aussitôt un jeton encore signé et non expiré.
+ */
 export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
   const token = getCookie(c, 'access_token');
   if (!token) throw httpError(401, "Jeton d'authentification manquant");
   const payload = await verifyAccess(token, c.env.JWT_SECRET);
   if (!payload) throw httpError(401, "Jeton d'authentification invalide");
-  c.set('user', payload);
+  const [row] = await c.var.db
+    .select({ tokenVersion: users.tokenVersion })
+    .from(users)
+    .where(eq(users.id, payload.sub))
+    .limit(1);
+  if (row?.tokenVersion !== payload.ver) throw httpError(401, 'Session expirée ou révoquée');
+  c.set('user', { sub: payload.sub, email: payload.email, role: payload.role });
   await next();
 });
 

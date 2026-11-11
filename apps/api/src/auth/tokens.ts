@@ -6,7 +6,10 @@ export const ACCESS_TTL_S = 24 * 60 * 60;
 export const REFRESH_TTL_S = 7 * 24 * 60 * 60;
 const TWO_FACTOR_TTL_S = 5 * 60;
 
-export type AccessPayload = { sub: string; email: string; role: Role };
+/** Identité posée sur la requête, que la session vienne du cookie ou d'un jeton d'API. */
+export type AuthUser = { sub: string; email: string; role: Role };
+/** `ver` : version de session de l'utilisateur à l'émission (colonne `tokenVersion`). */
+export type AccessPayload = AuthUser & { ver: number };
 
 const now = () => Math.floor(Date.now() / 1000);
 
@@ -35,6 +38,8 @@ async function decode(token: string, secret: string): Promise<Record<string, unk
 export async function verifyAccess(token: string, secret: string): Promise<AccessPayload | null> {
   const payload = await decode(token, secret);
   if (!payload || payload.type !== undefined || typeof payload.sub !== 'string') return null;
+  // Sans version, le jeton ne peut être comparé à la base : il est refusé, le client renouvelle
+  if (!Number.isInteger(payload.ver)) return null;
   return payload as AccessPayload;
 }
 
