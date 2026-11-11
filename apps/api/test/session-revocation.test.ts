@@ -40,6 +40,19 @@ describe("révocation du jeton d'accès", () => {
     expect((await thief.get(PROTECTED_ROUTE)).status).toBe(401);
   });
 
+  it("garde connecté l'appareil qui vient de changer le mot de passe", async () => {
+    const { mailer } = capturingMailer();
+    const { user, web } = await loggedIn({ mailer });
+
+    const changed = await web.put('/accounts/change-password', {
+      currentPassword: user.password,
+      newPassword: 'Nouveau-456!',
+    });
+    expect(changed.status).toBe(200);
+
+    expect((await web.get(PROTECTED_ROUTE)).status).toBe(200);
+  });
+
   it("refuse un jeton d'accès encore présenté après une réinitialisation du mot de passe", async () => {
     const { mailer, resetUrls } = capturingMailer();
     const { user, web } = await loggedIn({ mailer });
