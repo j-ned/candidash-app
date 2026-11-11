@@ -60,6 +60,8 @@ export const users = pgTable(
     role: roleEnum('role').notNull().default('USER'),
     refreshToken: text('refreshToken'),
     refreshTokenExpires: ts('refreshTokenExpires'),
+    // Incrémenté à chaque coupure de session : un jeton d'accès émis avant ne vaut plus rien
+    tokenVersion: integer('tokenVersion').notNull().default(0),
     resetPasswordToken: text('resetPasswordToken'),
     resetPasswordExpires: ts('resetPasswordExpires'),
     totpSecret: text('totpSecret'),

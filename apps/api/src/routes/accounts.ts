@@ -5,6 +5,8 @@ import { jobTracks, users } from '../db/schema.js';
 import { validate } from '../validate.js';
 import { httpError } from '../http-errors.js';
 import { rateLimit, requireUser } from '../auth/middleware.js';
+import { setAuthCookies } from '../auth/cookies.js';
+import { openSession } from '../auth/sessions.js';
 import { checkPassword, findUserByEmail, findUserById, toSafeUser } from '../users/users.js';
 import { createResetToken, resetWithToken, setPassword } from '../users/passwords-reset.js';
 import { deleteJobFiles } from '../files/job-files.js';
@@ -103,6 +105,11 @@ export const accountRoutes = new Hono<AppEnv>()
       throw httpError(401, 'Mot de passe actuel incorrect');
     }
     await setPassword(c.var.db, user.id, newPassword);
+    // Toutes les sessions viennent d'être coupées, celle-ci comprise : on la rouvre pour que
+    // l'appareil qui change le mot de passe reste connecté, les autres devant se reconnecter.
+    const current = await findUserById(c.var.db, user.id);
+    if (!current) throw httpError(401, 'Session expirée ou révoquée');
+    setAuthCookies(c, await openSession(c.var.db, c.env, current));
     await c.var.mailer.sendPasswordChanged({ email: user.email, userName: user.username ?? undefined });
     return c.json({ message: 'Mot de passe modifié avec succès' });
   });

@@ -1,5 +1,5 @@
 import type { Db } from './db/client.js';
-import type { AccessPayload } from './auth/tokens.js';
+import type { AuthUser } from './auth/tokens.js';
 import type { Mailer } from './mail/mailer.js';
 import type { Bucket } from './files/bucket.js';
 
@@ -38,7 +38,7 @@ export type AppEnv = {
   Variables: {
     db: Db;
     mailer: Mailer;
-    user: AccessPayload;
+    user: AuthUser;
     /** Présent quand la requête est authentifiée par un jeton d'API (extension). */
     apiTokenId: string;
   };

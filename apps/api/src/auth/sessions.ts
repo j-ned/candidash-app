@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { Db } from '../db/client.js';
 import type { Bindings } from '../env.js';
 import { users, type UserRow } from '../db/schema.js';
@@ -12,7 +12,10 @@ export type TwoFactorPending = { requires2FA: true; tempToken: string; message: 
 
 /** Ouvre une session : jetons signés, et seul le hachage du refresh est gardé (rotation). */
 export async function openSession(db: Db, env: Bindings, user: UserRow) {
-  const accessToken = await signAccess({ sub: user.id, email: user.email, role: user.role }, env.JWT_SECRET);
+  const accessToken = await signAccess(
+    { sub: user.id, email: user.email, role: user.role, ver: user.tokenVersion },
+    env.JWT_SECRET,
+  );
   const refreshToken = await signRefresh(user.id, env.JWT_SECRET);
   await db
     .update(users)
@@ -79,9 +82,18 @@ export async function refreshSession(db: Db, env: Bindings, refreshToken: string
   return openSession(db, env, user);
 }
 
+/**
+ * Coupe toutes les sessions web de l'utilisateur : plus de renouvellement possible, et la
+ * version incrémentée (en SQL, sans lecture préalable) périme les jetons d'accès déjà émis.
+ */
 export async function closeSession(db: Db, userId: string): Promise<void> {
   await db
     .update(users)
-    .set({ refreshToken: null, refreshTokenExpires: null, updatedAt: new Date() })
+    .set({
+      refreshToken: null,
+      refreshTokenExpires: null,
+      tokenVersion: sql`${users.tokenVersion} + 1`,
+      updatedAt: new Date(),
+    })
     .where(eq(users.id, userId));
 }
