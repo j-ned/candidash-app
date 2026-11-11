@@ -20,7 +20,7 @@
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.13",
-    "nodemailer": "^10.1.2",
+    "nodemailer": "^10.2.1",
     "otpauth": "^9.5.2",
     "pg": "^8.23.1",
     "qrcode": "^1.5.4",
