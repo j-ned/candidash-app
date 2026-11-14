@@ -2,8 +2,9 @@
 # Dokploy ne construit rien : il tire les images publiées sur GHCR par la CI.
 #
 # - Aucun port publié : le trafic arrive par le tunnel Cloudflare, puis le Traefik de Dokploy, qui
-#   joint `candidash-web` (port 8080) et `candidash-api` (port 3000) par `dokploy-network`. Les deux
-#   domaines se règlent dans l'onglet Domains de Dokploy, qui ajoute les labels Traefik.
+#   joint `candidash-web` par `dokploy-network`. Le domaine se règle dans l'onglet Domains de Dokploy
+#   (service `candidash-web`, port 8080), qui ajoute les labels Traefik. L'API n'est pas exposée :
+#   le front la relaie sous `/api/` par le réseau interne de la pile.
 # - Variables : onglet Environment de Dokploy, écrit dans le `.env` voisin (modèle :
 #   `candidash.env.example`). Chaque service ne reçoit que les siennes.
 # - Noms de service préfixés : `dokploy-network` est partagé avec les autres piles du serveur, où un
@@ -18,9 +19,12 @@ services:
     image: ${WEB_IMAGE:-ghcr.io/j-ned/candidash-web:latest}
     pull_policy: ${PULL_POLICY:-always}
     restart: unless-stopped
+    depends_on:
+      - candidash-api
     environment:
-      # Écrites dans config.json et dans la CSP au démarrage du conteneur.
-      API_URL: ${API_URL:?}
+      # Adresse interne de l'API, relayée sous /api/ ; le navigateur ne connaît que /api/v1.
+      API_UPSTREAM: http://candidash-api:3000
+      # Écrites dans config.json au démarrage du conteneur.
       EXTENSION_ID: ${EXTENSION_ID:-}
       FIREFOX_ADDON_URL: ${FIREFOX_ADDON_URL:-}
     networks:
@@ -37,8 +41,9 @@ services:
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@candidash-db:5432/${POSTGRES_DB:?}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:?}
-      # Derrière le tunnel Cloudflare, Traefik ne voit que l'adresse du tunnel : celle du visiteur
-      # est dans cet en-tête. Sûr tant qu'aucun port du serveur n'est ouvert sur Internet.
+      # Derrière le tunnel Cloudflare, Traefik puis le front ne voient que l'adresse du tunnel :
+      # celle du visiteur est dans cet en-tête, que le front relaie tel quel. Sûr tant qu'aucun port
+      # du serveur n'est ouvert sur Internet.
       - CLIENT_IP_HEADER=${CLIENT_IP_HEADER:-cf-connecting-ip}
       - JWT_SECRET=${JWT_SECRET:?}
       - TOTP_ENCRYPTION_KEY=${TOTP_ENCRYPTION_KEY:?}
@@ -53,9 +58,6 @@ services:
       # Facultatives : transmises seulement si elles sont définies.
       - MAIL_FROM_NAME
       - CONTACT_RECIPIENT
-    networks:
-      - default
-      - dokploy-network
 
   # Tâches quotidiennes de l'API (relances, purges), à 7 h UTC comme l'ancien cron Vercel. Un échec
   # est journalisé et la boucle continue : les relances dues partent au passage suivant.

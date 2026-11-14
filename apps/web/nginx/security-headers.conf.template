@@ -1,8 +1,9 @@
 # En-têtes de sécurité de toutes les réponses, erreurs comprises (`always`). nginx n'hérite pas
 # des add_header d'un bloc parent dès qu'un bloc en déclare un : ce fichier est inclus dans chaque
-# location. `__API_ORIGIN__` est remplacé au démarrage du conteneur par l'origine de API_URL
+# location. `__CONNECT_SRC__` est remplacé au démarrage du conteneur par l'origine de API_URL, ou
+# par rien quand l'API est sur la même origine
 # (40-candidash-config.sh). Les scripts inline sont couverts par le <meta> CSP à empreintes (scripts/csp-hashes.mjs).
-add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; frame-src blob:; connect-src 'self' __API_ORIGIN__; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; frame-src blob:; connect-src 'self'__CONNECT_SRC__; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-Frame-Options "DENY" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;

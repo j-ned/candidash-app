@@ -1,6 +1,6 @@
 # Image du front (nginx, fichiers statiques). Contexte de build : la racine du dépôt.
 #   docker build -f apps/web/Dockerfile -t candidash-web .
-# Variables du conteneur : API_URL (obligatoire), EXTENSION_ID, FIREFOX_ADDON_URL.
+# Variables du conteneur : API_UPSTREAM (obligatoire), API_URL, EXTENSION_ID, FIREFOX_ADDON_URL.
 FROM node:26-slim AS build
 WORKDIR /repo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
