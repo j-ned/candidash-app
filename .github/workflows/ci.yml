@@ -2,8 +2,8 @@ name: CI
 
 # API (apps/api) et front (apps/web) vérifiés en parallèle sur chaque PR et sur master, puis
 # leurs images Docker construites et vérifiées. Sur master, les images partent sur GHCR et
-# Dokploy redéploie la pile (le compose collé dans son éditeur, copie de deploy/compose.yaml : voir
-# deploy/README.md) ; l'API applique ses migrations au démarrage.
+# Dokploy redéploie la pile en relisant deploy/compose.yaml dans le dépôt (voir deploy/README.md) ;
+# l'API applique ses migrations au démarrage.
 on:
   pull_request:
   push:
@@ -159,6 +159,10 @@ jobs:
       # doivent échouer, jamais passer pour un déploiement.
       - name: Vérification du déclencheur Dokploy
         run: deploy/trigger-deploy.check.sh
+
+      # Dokploy lit deploy/compose.yaml dans le dépôt : un fichier invalide ne doit pas atteindre master.
+      - name: Vérification du compose
+        run: deploy/compose.check.sh
 
       - name: Publication sur GHCR
         if: env.PUBLISH == 'true'
