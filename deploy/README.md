@@ -120,5 +120,5 @@ Une migration déjà appliquée ne se défait pas ainsi : l'ancienne image doit 
   fois les anciennes versions éteintes, retirer `api-candidash.nedellec-julien.fr` du tunnel et de
   l'onglet Domains.
 - Retirer du dépôt ce qui ne sert plus qu'à Vercel : `vercel.json`, `apps/api/server.js`, le bundle
-  `dist/index.js`, la lecture de `VERCEL_ENV`, le job CI `preview-db`, `docs/preview-env.md`,
+  `dist/index.js`, la lecture de `VERCEL_ENV`, `docs/preview-env.md`,
   `apps/web/scripts/runtime-config.mjs`.
