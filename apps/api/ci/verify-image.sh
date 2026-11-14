@@ -26,7 +26,6 @@ env_args=(
   -e ALLOWED_ORIGINS=https://candidash.example.test
   -e JWT_SECRET=jwt-de-verification -e TOTP_ENCRYPTION_KEY="$(printf '0%.0s' $(seq 1 64))"
   -e S3_ENDPOINT=https://s3.example.test -e S3_ACCESS_KEY=cle -e S3_SECRET_KEY=secret -e S3_BUCKET=candidash
-  -e MAIL_USER=robot@example.test -e MAIL_PASSWORD=mdp
 )
 
 docker network create "$id" >/dev/null
@@ -34,13 +33,17 @@ docker run -d --name "$id-db" --network "$id" \
   -e POSTGRES_USER=candidash -e POSTGRES_PASSWORD=candidash -e POSTGRES_DB=candidash postgres:18-alpine >/dev/null
 wait_for "Postgres ne démarre pas" docker exec "$id-db" pg_isready -q -U candidash -h 127.0.0.1
 
-# Production sans SMTP : le conteneur refuse de démarrer.
+# Production sans envoi d'email configuré, ou avec une clé Resend sans expéditeur : le conteneur
+# refuse de démarrer.
 if docker run --rm --network "$id" "${env_args[@]}" "$image" >/dev/null 2>&1; then
-  fail "l'image démarre en production sans MAIL_HOST"
+  fail "l'image démarre en production sans configuration de mail"
+fi
+if docker run --rm --network "$id" "${env_args[@]}" -e RESEND_API_KEY=re_verification "$image" >/dev/null 2>&1; then
+  fail "l'image démarre avec RESEND_API_KEY sans MAIL_FROM"
 fi
 
 docker run -d --name "$id-api" --network "$id" -p 127.0.0.1::3000 \
-  "${env_args[@]}" -e MAIL_HOST=smtp.example.test "$image" >/dev/null
+  "${env_args[@]}" -e RESEND_API_KEY=re_verification -e MAIL_FROM=candidash@example.test "$image" >/dev/null
 healthy() { test "$(docker inspect -f '{{.State.Health.Status}}' "$id-api")" = healthy; }
 wait_for "le conteneur n'est jamais déclaré sain" healthy
 

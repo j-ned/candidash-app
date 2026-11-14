@@ -18,7 +18,8 @@ précède est sans impact.
    branche `master`, chemin `deploy/compose.yaml`. **Auto Deploy désactivé** : c'est la CI qui
    déclenche, une fois les images publiées.
 4. **Environment** : coller `candidash.env.example` rempli. `JWT_SECRET`, `TOTP_ENCRYPTION_KEY`, les
-   `S3_*`, les `MAIL_*` et `CRON_SECRET` se reprennent à l'identique du projet Vercel.
+   `S3_*` et `CRON_SECRET` se reprennent à l'identique du projet Vercel. Le mail part par l'API de
+   Resend (`RESEND_API_KEY`, `MAIL_FROM` sur un domaine vérifié), plus par SMTP.
 5. **Domains**, en HTTP (le TLS est celui de Cloudflare) :
    - service `candidash-web`, port `8080`, `candidash.nedellec-julien.fr` ;
    - service `candidash-api`, port `3000`, `api-candidash.nedellec-julien.fr`.
