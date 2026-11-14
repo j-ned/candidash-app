@@ -273,8 +273,8 @@ Un cron déclenché deux fois n'envoie donc **qu'une seule fois** chaque relance
 
 ### Infrastructure
 
-- **Docker Compose + Dokploy** — front nginx, API Node, tâches quotidiennes, Postgres et sauvegarde sur un serveur personnel
-- **PostgreSQL 18** — en conteneur, dump chiffré chaque nuit vers un bucket R2
+- **Docker Compose + Dokploy** — front nginx, API Node, tâches quotidiennes et sauvegarde en pile Compose, Postgres en service Dokploy à part, sur un serveur personnel
+- **PostgreSQL 18** — service de base de Dokploy, hors de la pile ; dump chiffré chaque nuit vers un bucket R2
 - **Cloudflare Tunnel** — seule entrée du serveur, TLS compris
 - **Cloudflare R2** — stockage des CV et lettres (API S3)
 - **GitHub Actions** — typecheck, migrations et tests sur Postgres 17, lint et build du front, images construites et vérifiées à chaque PR ; publication sur GHCR et déploiement sur `master`

@@ -5,6 +5,9 @@
 #   joint `candidash-web` par `dokploy-network`. Le domaine se règle dans l'onglet Domains de Dokploy
 #   (service `candidash-web`, port 8080), qui ajoute les labels Traefik. L'API n'est pas exposée :
 #   le front la relaie sous `/api/` par le réseau interne de la pile.
+# - Base de données hors de la pile : un service Postgres de Dokploy (`POSTGRES_HOST`), joint par
+#   `dokploy-network`. L'API et la sauvegarde sont donc aussi sur ce réseau, sans label Traefik :
+#   rien ne les route depuis l'extérieur. Redéployer ou supprimer la pile ne touche pas aux données.
 # - Variables : onglet Environment de Dokploy, écrit dans le `.env` voisin (modèle :
 #   `candidash.env.example`). Chaque service ne reçoit que les siennes.
 # - Noms de service préfixés : `dokploy-network` est partagé avec les autres piles du serveur, où un
@@ -35,11 +38,10 @@ services:
     image: ${API_IMAGE:-ghcr.io/j-ned/candidash-api:latest}
     pull_policy: ${PULL_POLICY:-always}
     restart: unless-stopped
-    depends_on:
-      candidash-db:
-        condition: service_healthy
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@candidash-db:5432/${POSTGRES_DB:?}
+      # Base hors de la pile : si elle ne répond pas encore, l'API s'arrête au démarrage et Docker la
+      # relance jusqu'à ce qu'elle réponde.
+      - DATABASE_URL=postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@${POSTGRES_HOST:?}:5432/${POSTGRES_DB:?}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:?}
       # Derrière le tunnel Cloudflare, Traefik puis le front ne voient que l'adresse du tunnel :
       # celle du visiteur est dans cet en-tête, que le front relaie tel quel. Sûr tant qu'aucun port
@@ -58,6 +60,9 @@ services:
       # Facultatives : transmises seulement si elles sont définies.
       - MAIL_FROM_NAME
       - CONTACT_RECIPIENT
+    networks:
+      - default
+      - dokploy-network
 
   # Tâches quotidiennes de l'API (relances, purges), à 7 h UTC comme l'ancien cron Vercel. Un échec
   # est journalisé et la boucle continue : les relances dues partent au passage suivant.
@@ -84,33 +89,13 @@ services:
           fi
         done
 
-  candidash-db:
-    image: postgres:18-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:?}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
-      POSTGRES_DB: ${POSTGRES_DB:?}
-    volumes:
-      # Postgres 18 range ses données dans un sous-dossier par version
-      # (PGDATA=/var/lib/postgresql/18/docker) : le volume se monte un cran au-dessus.
-      - candidash-db-data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   # Sauvegarde quotidienne chiffrée de la base vers un bucket hors du serveur (`backup/backup.sh`).
   candidash-backup:
     image: ${BACKUP_IMAGE:-ghcr.io/j-ned/candidash-backup:latest}
     pull_policy: ${PULL_POLICY:-always}
     restart: unless-stopped
-    depends_on:
-      candidash-db:
-        condition: service_healthy
     environment:
-      PGHOST: candidash-db
+      PGHOST: ${POSTGRES_HOST:?}
       PGUSER: ${POSTGRES_USER:?}
       PGPASSWORD: ${POSTGRES_PASSWORD:?}
       PGDATABASE: ${POSTGRES_DB:?}
@@ -119,9 +104,9 @@ services:
       BACKUP_S3_ACCESS_KEY: ${BACKUP_S3_ACCESS_KEY:?}
       BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:?}
       BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:?}
-
-volumes:
-  candidash-db-data:
+    networks:
+      - default
+      - dokploy-network
 
 networks:
   dokploy-network:
