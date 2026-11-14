@@ -55,7 +55,7 @@ import { RouterLink } from '@angular/router';
               <li>
                 <strong>Adresse e-mail, mot de passe et code de double authentification :</strong>
                 saisis par vous à la connexion. Ils sont envoyés en HTTPS à l'API Candidash
-                (api-candidash.nedellec-julien.fr) pour obtenir un jeton d'accès personnel. Le mot
+                (candidash.nedellec-julien.fr/api) pour obtenir un jeton d'accès personnel. Le mot
                 de passe n'est jamais stocké par l'extension.
               </li>
               <li>
@@ -126,7 +126,7 @@ import { RouterLink } from '@angular/router';
   `,
 })
 export class ExtensionPrivacy {
-  protected readonly lastUpdated = new Date('2026-10-18').toLocaleDateString('fr-FR', {
+  protected readonly lastUpdated = new Date('2026-11-14').toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
