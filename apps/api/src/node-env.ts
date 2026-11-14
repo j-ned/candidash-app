@@ -5,11 +5,13 @@ import { dbLimiter } from './rate-limit.js';
 
 type Vars = Readonly<Record<string, string | undefined>>;
 
-// Posé par Vercel lui-même (et non par une variable du projet) : une preview ne peut pas se
-// déclarer production par erreur de configuration.
-function environment(vercelEnv: string | undefined): Bindings['ENVIRONMENT'] {
-  if (vercelEnv === 'production') return 'production';
-  if (vercelEnv === 'preview') return 'preview';
+// Sur Vercel, VERCEL_ENV est posé par la plateforme (et non par une variable du projet) : une
+// preview ne peut pas se déclarer production par erreur de configuration, APP_ENV y est ignoré.
+// Hors Vercel, l'image Docker de production déclare APP_ENV=production (apps/api/Dockerfile).
+function environment(vars: Vars): Bindings['ENVIRONMENT'] {
+  if (vars.VERCEL_ENV === 'production') return 'production';
+  if (vars.VERCEL_ENV === 'preview') return 'preview';
+  if (vars.VERCEL_ENV === undefined && vars.APP_ENV === 'production') return 'production';
   return 'development';
 }
 
@@ -27,7 +29,7 @@ export function readBindings(vars: Vars): Bindings {
     if (!value) throw new Error(`Variable d'environnement manquante : ${name}`);
     return value;
   };
-  const env = environment(vars.VERCEL_ENV);
+  const env = environment(vars);
   // En production, sans SMTP, inscriptions et réinitialisations seraient silencieusement cassées
   if (env === 'production') ['MAIL_HOST', 'MAIL_USER', 'MAIL_PASSWORD'].forEach(required);
   // Hors production, le stockage est facultatif : sans bucket, les routes de fichiers répondent 503

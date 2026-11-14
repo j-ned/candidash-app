@@ -1,0 +1,14 @@
+# Contexte de build = racine du dépôt (lockfile pnpm unique). Rien de local ni de secret dans l'image.
+.git
+.github
+docs
+**/node_modules
+**/dist
+**/coverage
+**/.angular
+**/.env
+**/.env.*
+!**/.env.example
+**/.dev.vars
+**/.wrangler
+**/*.md
