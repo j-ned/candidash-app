@@ -131,8 +131,8 @@ graph LR
 
 | Dossier | Contenu | Production |
 |---------|---------|------------|
-| [`apps/web`](apps/web) | Front Angular 22 zoneless, Tailwind 4 ; pages publiques prérendues, espace connecté en rendu client | Service Vercel `web` (statique) — `candidash.nedellec-julien.fr` |
-| [`apps/api`](apps/api) | API Hono, Drizzle + Neon, fichiers R2 via l'API S3, cron Vercel | Service Vercel `api` (fonction Node) — `api-candidash.nedellec-julien.fr` |
+| [`apps/web`](apps/web) | Front Angular 22 zoneless, Tailwind 4 ; pages publiques prérendues, espace connecté en rendu client | Conteneur nginx sur le serveur (Dokploy) — `candidash.nedellec-julien.fr` |
+| [`apps/api`](apps/api) | API Hono, Drizzle + Neon, fichiers R2 via l'API S3, cron Vercel | Conteneur Node sur le serveur (Dokploy), sans domaine à lui : le front le relaie sous `candidash.nedellec-julien.fr/api/` ([deploy/README.md](deploy/README.md)) |
 
 ### Front — clean architecture par feature
 
