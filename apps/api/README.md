@@ -36,8 +36,10 @@ Sans SMTP configuré, les emails (codes de vérification, liens) s'affichent dan
 valide les variables, applique les migrations en attente puis écoute sur `PORT` (3000). L'image
 déclare `APP_ENV=production` (SMTP et S3 exigés) ; hors Vercel, c'est elle qui fait foi, à la place
 de `VERCEL_ENV`. `ci/verify-image.sh <image>` démarre l'image face à un Postgres vide et vérifie
-santé, migrations, refus de démarrer sans SMTP et arrêt propre. Le cron quotidien devient une
-tâche planifiée Dokploy. Procédure : [docs/bascule-dokploy.md](../../docs/bascule-dokploy.md).
+santé, migrations, refus de démarrer sans SMTP et arrêt propre. Dans la pile
+[deploy/compose.yaml](../../deploy/compose.yaml), le cron quotidien est le service `candidash-cron`
+et `CLIENT_IP_HEADER=cf-connecting-ip` désigne l'en-tête qui porte l'adresse du visiteur derrière le
+tunnel Cloudflare. Procédure : [deploy/README.md](../../deploy/README.md).
 
 ## Previews
 

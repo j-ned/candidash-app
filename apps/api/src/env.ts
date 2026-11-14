@@ -19,6 +19,12 @@ export type Bindings = {
   /** Déduit de VERCEL_ENV ; 'preview' n'envoie aucun email et peut tourner sans stockage. */
   ENVIRONMENT: 'production' | 'preview' | 'development' | 'test';
   ALLOWED_ORIGINS: string;
+  /**
+   * En-tête où le proxy de confiance écrit l'adresse du visiteur (`cf-connecting-ip` derrière le
+   * tunnel Cloudflare). Absent : `x-real-ip`. À ne poser que si rien d'autre que ce proxy ne peut
+   * joindre l'API, sinon un client choisirait lui-même l'adresse comptée par les limites de débit.
+   */
+  CLIENT_IP_HEADER?: string;
   JWT_SECRET: string;
   TOTP_ENCRYPTION_KEY: string;
   /** Envoyé par Vercel Cron dans `Authorization: Bearer …`. */

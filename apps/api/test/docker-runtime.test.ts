@@ -4,7 +4,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from 'pg';
 import { readBindings } from '../src/node-env.js';
 import { runMigrations } from '../src/db/migrate.js';
-import { testEnv } from './helpers.js';
+import type { Bindings } from '../src/env.js';
+import { dbLimiter } from '../src/rate-limit.js';
+import { client, testEnv, uniqueEmail } from './helpers.js';
+import { withDb } from './db.js';
 
 const base = {
   DATABASE_URL: testEnv().DATABASE_URL,
@@ -96,5 +99,57 @@ describe('migrations au démarrage du conteneur', () => {
     unreachable.port = '1';
 
     await expect(runMigrations(unreachable.toString(), folder)).rejects.toThrow();
+  });
+});
+
+describe('adresse du visiteur derrière un proxy (CLIENT_IP_HEADER)', () => {
+  const login = { email: uniqueEmail('nobody'), password: 'Secret-123!' };
+
+  async function loginStatuses(env: Partial<Bindings>, headers: (attempt: number) => Record<string, string>) {
+    const strict = await withDb(async (db) => dbLimiter(db, 2));
+    const api = client({ env: testEnv({ STRICT_LIMITER: strict, ...env }) });
+    const statuses = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      statuses.push((await api.post('/auth/login', login, headers(attempt))).status);
+    }
+    return statuses;
+  }
+
+  it('counts each visitor apart behind Cloudflare, where the proxy address is shared', async () => {
+    const proxy = `proxy-${crypto.randomUUID()}`;
+
+    const statuses = await loginStatuses({ CLIENT_IP_HEADER: 'cf-connecting-ip' }, (attempt) => ({
+      'X-Real-IP': proxy,
+      'CF-Connecting-IP': `visiteur-${attempt}-${crypto.randomUUID()}`,
+    }));
+
+    expect(statuses).toEqual([401, 401, 401]);
+  });
+
+  it('limits a visitor by the configured header, whatever X-Real-IP says', async () => {
+    const visitor = `visiteur-${crypto.randomUUID()}`;
+
+    const statuses = await loginStatuses({ CLIENT_IP_HEADER: 'cf-connecting-ip' }, (attempt) => ({
+      'X-Real-IP': `proxy-${attempt}-${crypto.randomUUID()}`,
+      'CF-Connecting-IP': visitor,
+    }));
+
+    expect(statuses).toEqual([401, 401, 429]);
+  });
+
+  it('ignores a CF-Connecting-IP sent by the client when the header is not configured', async () => {
+    const real = `reelle-${crypto.randomUUID()}`;
+
+    const statuses = await loginStatuses({}, (attempt) => ({
+      'X-Real-IP': real,
+      'CF-Connecting-IP': `usurpee-${attempt}-${crypto.randomUUID()}`,
+    }));
+
+    expect(statuses).toEqual([401, 401, 429]);
+  });
+
+  it('reads the header name from the environment', () => {
+    expect(readBindings({ ...base, CLIENT_IP_HEADER: 'cf-connecting-ip' }).CLIENT_IP_HEADER).toBe('cf-connecting-ip');
+    expect(readBindings({ ...base }).CLIENT_IP_HEADER).toBeUndefined();
   });
 });
