@@ -17,11 +17,14 @@ précède est sans impact.
 2. **Bucket de sauvegarde** : bucket R2 privé (`candidash-backups`), jeton d'API limité à ce bucket,
    règle de cycle de vie qui supprime les objets après la durée voulue (30 jours par exemple).
 3. **Dokploy** : dans le projet, un service **Database** PostgreSQL 18, sans port externe ; puis un
-   service de type **Compose** en mode **Raw**, avec le contenu de `deploy/compose.yaml` collé dans
-   son éditeur. **Auto Deploy désactivé** : c'est la CI qui déclenche, une fois les images publiées.
-   Dokploy rejoue ce YAML collé, pas le fichier du dépôt : **toute modification de
-   `deploy/compose.yaml` se recolle à la main dans l'éditeur, puis Deploy**. Sans cela, la CI
-   redéploie l'ancienne pile avec les nouvelles images, sans erreur.
+   service de type **Compose** dont la source est le dépôt : fournisseur **Git**, URL
+   `https://github.com/j-ned/candidash-app.git`, branche `master`, Compose Path
+   `./deploy/compose.yaml` (la valeur par défaut, `./docker-compose.yml`, échoue avec « Compose file
+   not found »). **Auto Deploy désactivé** : c'est la CI qui déclenche, une fois les images
+   publiées. Dokploy clone le dépôt à chaque déploiement : une modification de
+   `deploy/compose.yaml` part donc à la fusion, comme le code. La CI valide ce fichier avant
+   (`deploy/compose.check.sh`). En mode **Raw**, Dokploy rejouerait le YAML collé dans son éditeur
+   et ignorerait le dépôt.
 4. **Environment** : coller `candidash.env.example` rempli. `POSTGRES_HOST`, `POSTGRES_USER`,
    `POSTGRES_DB` et `POSTGRES_PASSWORD` se recopient de la fiche du service de base (Internal
    Credentials). `JWT_SECRET`, `TOTP_ENCRYPTION_KEY`, les
@@ -130,16 +133,17 @@ minutes où le site s'affiche mais ne permet ni connexion ni enregistrement. À 
 5. Dans Environment : ajouter `POSTGRES_HOST`, et mettre `POSTGRES_USER`, `POSTGRES_DB`,
    `POSTGRES_PASSWORD` aux valeurs du service de base. Ne pas croiser hôte et nom de base : ici
    `candidash-db` était l'hôte de l'ancienne et le nom de la nouvelle.
-6. Coller le nouveau `compose.yaml` dans l'éditeur du service Compose, puis Deploy. L'API démarre
-   sur la nouvelle base et n'y trouve aucune migration à appliquer.
+6. Fusionner le nouveau `compose.yaml` (ou Deploy à la main s'il est déjà sur `master`). L'API
+   démarre sur la nouvelle base et n'y trouve aucune migration à appliquer.
 7. Vérifier : `/api/v1/health`, connexion, une candidature existante, puis
    `docker exec <backup> backup.sh once`.
 
 Le déploiement retire l'ancien conteneur `…-candidash-db-1`, devenu orphelin, mais pas son volume
 `…_candidash-db-data` : le garder quelques jours comme retour arrière, puis `docker volume rm`.
 
-**Retour arrière** : remettre les quatre variables à leurs anciennes valeurs, recoller la version
-précédente de `compose.yaml` dans l'éditeur et redéployer : la base de la pile repart sur son volume. Les écritures faites entre-temps sont dans la nouvelle
+**Retour arrière** : remettre les quatre variables à leurs anciennes valeurs, rétablir par un
+`git revert` la version précédente de `compose.yaml` et laisser la CI redéployer : la base de la
+pile repart sur son volume. Les écritures faites entre-temps sont dans la nouvelle
 base : les recopier dans l'autre sens par la même commande, conteneurs inversés.
 
 ## Sauvegardes
