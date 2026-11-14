@@ -52,6 +52,7 @@ export function readBindings(vars: Vars): Bindings {
     CONTACT_LIMITER: dbLimiter(db, 2),
     ENVIRONMENT: env,
     ALLOWED_ORIGINS: required('ALLOWED_ORIGINS'),
+    CLIENT_IP_HEADER: vars.CLIENT_IP_HEADER || undefined,
     JWT_SECRET: required('JWT_SECRET'),
     TOTP_ENCRYPTION_KEY: required('TOTP_ENCRYPTION_KEY'),
     CRON_SECRET: vars.CRON_SECRET,
