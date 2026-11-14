@@ -32,8 +32,10 @@ précède est sans impact.
    `DOKPLOY_API_KEY` (profil → API) et `DOKPLOY_COMPOSE_ID` (dernier segment de l'URL du service). Le
    panneau étant derrière Cloudflare Access, il faut aussi un jeton de service (Zero Trust → Service
    Tokens), autorisé par une règle **Service Auth** sur l'application du panneau, dans
-   `CF_ACCESS_CLIENT_ID` et `CF_ACCESS_CLIENT_SECRET`. Tant que les secrets Dokploy manquent, la CI
-   publie les images sans déployer ; une fois posés, une redirection ou un refus la font échouer.
+   `CF_ACCESS_CLIENT_ID` et `CF_ACCESS_CLIENT_SECRET`. Variable facultative `DEPLOY_HEALTH_URL`
+   (`https://candidash.nedellec-julien.fr/api/v1/health`) pour sonder le site après coup. Tant que les
+   secrets Dokploy manquent, la CI publie les images sans déployer ; une fois posés, une redirection
+   ou un refus la font échouer.
 
 ## Adresse du visiteur et limites de débit
 
