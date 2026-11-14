@@ -1,11 +1,11 @@
-// Bundle de l'API pour le service Vercel « api » : le builder Services déploie dist/ seul,
-// sans node_modules, d'où un fichier unique avec ses dépendances.
+// Bundles autonomes de l'API, dépendances incluses (dist/ est déployé sans node_modules) :
+// dist/index.js pour le service Vercel « api », dist/main.js pour l'image Docker (serveur Node).
 import { writeFileSync } from 'node:fs';
 import { build } from 'esbuild';
 
 await build({
-  entryPoints: ['src/index.ts'],
-  outfile: 'dist/index.js',
+  entryPoints: ['src/index.ts', 'src/main.ts'],
+  outdir: 'dist',
   bundle: true,
   platform: 'node',
   format: 'esm',

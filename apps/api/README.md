@@ -30,6 +30,15 @@ Sans SMTP configuré, les emails (codes de vérification, liens) s'affichent dan
   relances réservées en base avant envoi (un cron déclenché deux fois n'envoie qu'une fois), puis
   purges. En local : `curl -H "Authorization: Bearer $CRON_SECRET" localhost:8787/api/v1/cron/daily`.
 
+## Image Docker (VPS, Dokploy)
+
+`apps/api/Dockerfile` (contexte : racine du dépôt) produit un serveur Node : `dist/main.js`
+valide les variables, applique les migrations en attente puis écoute sur `PORT` (3000). L'image
+déclare `APP_ENV=production` (SMTP et S3 exigés) ; hors Vercel, c'est elle qui fait foi, à la place
+de `VERCEL_ENV`. `ci/verify-image.sh <image>` démarre l'image face à un Postgres vide et vérifie
+santé, migrations, refus de démarrer sans SMTP et arrêt propre. Le cron quotidien devient une
+tâche planifiée Dokploy. Procédure : [docs/bascule-dokploy.md](../../docs/bascule-dokploy.md).
+
 ## Previews
 
 En preview (`VERCEL_ENV=preview`) : aucun email envoyé (destinataire masqué et sujet dans les
