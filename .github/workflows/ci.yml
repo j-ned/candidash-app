@@ -2,7 +2,8 @@ name: CI
 
 # API (apps/api) et front (apps/web) vérifiés en parallèle sur chaque PR et sur master, puis
 # leurs images Docker construites et vérifiées. Sur master, les images partent sur GHCR et
-# Dokploy redéploie la pile deploy/compose.yaml (deploy/README.md) ; l'API applique ses migrations au démarrage.
+# Dokploy redéploie la pile (le compose collé dans son éditeur, copie de deploy/compose.yaml : voir
+# deploy/README.md) ; l'API applique ses migrations au démarrage.
 on:
   pull_request:
   push:
