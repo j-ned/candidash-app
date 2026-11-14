@@ -17,9 +17,11 @@ précède est sans impact.
 2. **Bucket de sauvegarde** : bucket R2 privé (`candidash-backups`), jeton d'API limité à ce bucket,
    règle de cycle de vie qui supprime les objets après la durée voulue (30 jours par exemple).
 3. **Dokploy** : dans le projet, un service **Database** PostgreSQL 18, sans port externe ; puis un
-   service de type **Compose**, fournisseur GitHub, dépôt `j-ned/candidash-app`, branche `master`,
-   chemin `deploy/compose.yaml`. **Auto Deploy désactivé** : c'est la CI qui déclenche, une fois les
-   images publiées.
+   service de type **Compose** en mode **Raw**, avec le contenu de `deploy/compose.yaml` collé dans
+   son éditeur. **Auto Deploy désactivé** : c'est la CI qui déclenche, une fois les images publiées.
+   Dokploy rejoue ce YAML collé, pas le fichier du dépôt : **toute modification de
+   `deploy/compose.yaml` se recolle à la main dans l'éditeur, puis Deploy**. Sans cela, la CI
+   redéploie l'ancienne pile avec les nouvelles images, sans erreur.
 4. **Environment** : coller `candidash.env.example` rempli. `POSTGRES_HOST`, `POSTGRES_USER`,
    `POSTGRES_DB` et `POSTGRES_PASSWORD` se recopient de la fiche du service de base (Internal
    Credentials). `JWT_SECRET`, `TOTP_ENCRYPTION_KEY`, les
@@ -107,8 +109,8 @@ repart d'un déploiement antérieur gardé par Vercel, ou d'un commit d'avant ce
 
 ## Sortir la base de la pile (une fois, depuis l'ancienne pile qui embarquait `candidash-db`)
 
-Jusqu'ici la base était un service de la pile. La procédure copie ses données vers le service de
-base de Dokploy, puis déploie la pile sans base. L'API est arrêtée pendant la copie : compter cinq
+Faite le 14 novembre 2026 ; gardée comme modèle. La base était un service de la pile. La procédure
+copie ses données vers le service de base de Dokploy, puis déploie la pile sans base. L'API est arrêtée pendant la copie : compter cinq
 minutes où le site s'affiche mais ne permet ni connexion ni enregistrement. À lancer sur le serveur ;
 `<ancienne>` est le conteneur `…-candidash-db-1`, `<nouvelle>` celui du service de base
 (`docker ps`).
@@ -116,26 +118,28 @@ minutes où le site s'affiche mais ne permet ni connexion ni enregistrement. À 
 1. Vérifier que la pile joint le service de base par son hôte interne (celui de sa fiche Dokploy) :
    `docker exec <web> nc -z -w 3 <hôte interne> 5432; echo "code=$?"` doit rendre `code=0`.
 2. Arrêter les écritures : `docker stop <api> <cron>`.
-3. Copier les données, sans fichier intermédiaire, dans une seule transaction :
+3. Copier les données, sans fichier intermédiaire, dans une seule transaction. Comptes et noms de
+   base s'écrivent en clair : chaque conteneur a ses propres `POSTGRES_*`, et un redéploiement peut
+   les avoir changés.
 
    ```bash
-   docker exec <ancienne> sh -c 'pg_dump -Fc --no-owner --no-acl -U "$POSTGRES_USER" -d "$POSTGRES_DB"' | docker exec -i <nouvelle> sh -c 'pg_restore --clean --if-exists --single-transaction --no-owner --no-acl --exit-on-error -U "$POSTGRES_USER" -d "$POSTGRES_DB"'; echo "code=$?"
+   docker exec <ancienne> pg_dump -Fc --no-owner --no-acl -U <compte> -d <ancienne base> | docker exec -i <nouvelle> pg_restore --clean --if-exists --single-transaction --no-owner --no-acl --exit-on-error -U <compte> -d <nouvelle base>; echo "code=$?"
    ```
 
 4. Comparer les comptes de lignes des deux côtés (`Utilisateurs`, `Annonces`, `Relance`).
 5. Dans Environment : ajouter `POSTGRES_HOST`, et mettre `POSTGRES_USER`, `POSTGRES_DB`,
-   `POSTGRES_PASSWORD` aux valeurs du service de base.
-6. Fusionner le changement de `compose.yaml` : la CI déploie la pile sans base. L'API démarre sur la
-   nouvelle base et n'y trouve aucune migration à appliquer.
+   `POSTGRES_PASSWORD` aux valeurs du service de base. Ne pas croiser hôte et nom de base : ici
+   `candidash-db` était l'hôte de l'ancienne et le nom de la nouvelle.
+6. Coller le nouveau `compose.yaml` dans l'éditeur du service Compose, puis Deploy. L'API démarre
+   sur la nouvelle base et n'y trouve aucune migration à appliquer.
 7. Vérifier : `/api/v1/health`, connexion, une candidature existante, puis
    `docker exec <backup> backup.sh once`.
 
-L'ancien conteneur `…-candidash-db-1` et son volume `…_candidash-db-data` ne sont pas supprimés par
-le déploiement : les garder quelques jours comme retour arrière, puis `docker rm` et
-`docker volume rm`.
+Le déploiement retire l'ancien conteneur `…-candidash-db-1`, devenu orphelin, mais pas son volume
+`…_candidash-db-data` : le garder quelques jours comme retour arrière, puis `docker volume rm`.
 
-**Retour arrière** : remettre les quatre variables à leurs anciennes valeurs, revenir au commit
-précédent de `compose.yaml` et redéployer. Les écritures faites entre-temps sont dans la nouvelle
+**Retour arrière** : remettre les quatre variables à leurs anciennes valeurs, recoller la version
+précédente de `compose.yaml` dans l'éditeur et redéployer : la base de la pile repart sur son volume. Les écritures faites entre-temps sont dans la nouvelle
 base : les recopier dans l'autre sens par la même commande, conteneurs inversés.
 
 ## Sauvegardes
