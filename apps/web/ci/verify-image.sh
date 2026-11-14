@@ -1,18 +1,34 @@
 #!/usr/bin/env bash
 # Garanties de l'image du front, jugées sur les réponses HTTP du conteneur : mêmes règles que
-# l'ancien service Vercel « web » (en-têtes de sécurité, caches, repli SPA, 404 des assets).
-# Usage : ci/verify-image.sh <image> <API_URL attendue dans config.json>
+# l'ancien service Vercel « web » (en-têtes de sécurité, caches, repli SPA, 404 des assets), et
+# configuration écrite au démarrage depuis les variables du conteneur.
+# Usage : ci/verify-image.sh <image>
 set -euo pipefail
 image=${1:?image attendue}
-api_url=${2:?API_URL attendue}
 name="candidash-verify-web-$$"
 tmp=$(mktemp -d)
+
+API_URL=https://api.candidash.example.test/api/v1
+API_ORIGIN=https://api.candidash.example.test
+EXTENSION_ID=abcdefghijklmnopabcdefghijklmnop
+FIREFOX_ADDON_URL=https://addons.mozilla.org/firefox/addon/candidash-exemple/
 
 cleanup() { docker rm -f "$name" >/dev/null 2>&1 || true; rm -rf "$tmp"; }
 trap cleanup EXIT
 fail() { echo "ÉCHEC : $1" >&2; exit 1; }
 
-docker run -d --name "$name" -p 127.0.0.1::8080 "$image" >/dev/null
+# Une configuration absente ou mal formée arrête le conteneur au lieu de servir un front cassé.
+refuses() {
+  local label=$1; shift
+  if timeout 20 docker run --rm "$@" "$image" nginx -t >/dev/null 2>&1; then fail "l'image démarre $label"; fi
+}
+refuses "sans API_URL"
+refuses "avec une API_URL qui injecte du JSON" -e 'API_URL=https://x.test/", "apiUrl": "https://pirate.test'
+refuses "avec une API_URL qui injecte un en-tête" -e 'API_URL=https://x.test; script-src *'
+refuses "avec un EXTENSION_ID mal formé" -e "API_URL=$API_URL" -e 'EXTENSION_ID=pas-un-identifiant'
+
+docker run -d --name "$name" -p 127.0.0.1::8080 \
+  -e "API_URL=$API_URL" -e "EXTENSION_ID=$EXTENSION_ID" -e "FIREFOX_ADDON_URL=$FIREFOX_ADDON_URL" "$image" >/dev/null
 port=$(docker port "$name" 8080/tcp | head -1 | sed 's/.*://')
 base="http://127.0.0.1:$port"
 for _ in $(seq 1 30); do curl -fsS -o /dev/null "$base/config.json" 2>/dev/null && break; sleep 1; done
@@ -41,9 +57,8 @@ cmp -s "$tmp/route.html" "$tmp/csr.html" || fail "une route d'application ne ser
 # En-têtes de sécurité, y compris sur une erreur.
 for path in / /absent.js; do
   case "$(header "$path" Content-Security-Policy)" in
-    *"frame-ancestors 'none'"*"connect-src 'self' https://api-candidash.nedellec-julien.fr"* | \
-    *"connect-src 'self' https://api-candidash.nedellec-julien.fr"*"frame-ancestors 'none'"*) ;;
-    *) fail "CSP absente ou incomplète sur $path" ;;
+    *"connect-src 'self' $API_ORIGIN;"*"frame-ancestors 'none'"*) ;;
+    *) fail "CSP absente, incomplète ou sans l'origine de l'API sur $path" ;;
   esac
   expect "X-Frame-Options de $path" "$(header "$path" X-Frame-Options)" DENY
   expect "X-Content-Type-Options de $path" "$(header "$path" X-Content-Type-Options)" nosniff
@@ -68,9 +83,12 @@ expect "cache de /icons/sprite.svg?v=abc" "$(header '/icons/sprite.svg?v=abc' Ca
 expect "cache de /icons/sprite.svg" "$(header /icons/sprite.svg Cache-Control)" no-cache
 expect "cache des polices" "$(header /fonts/outfit-latin.woff2 Cache-Control)" 'public, max-age=2592000, stale-while-revalidate=86400'
 
-# Configuration lue au démarrage du front : celle du build, jamais mise en cache.
+# Configuration lue au démarrage du front : celle des variables du conteneur, jamais mise en cache.
 expect "cache de /config.json" "$(header /config.json Cache-Control)" no-cache
-expect "apiUrl de config.json" "$(curl -s "$base/config.json" | node -pe 'JSON.parse(require("fs").readFileSync(0, "utf8")).apiUrl')" "$api_url"
+expect "type de /config.json" "$(header /config.json Content-Type)" application/json
+expect "config.json" \
+  "$(curl -s "$base/config.json" | node -pe 'const c = JSON.parse(require("fs").readFileSync(0, "utf8")); [c.apiUrl, c.extensionId, c.firefoxAddonUrl].join(" ")')" \
+  "$API_URL $EXTENSION_ID $FIREFOX_ADDON_URL"
 
 test "$(docker exec "$name" id -u)" != 0 || fail "le conteneur tourne en root"
 
