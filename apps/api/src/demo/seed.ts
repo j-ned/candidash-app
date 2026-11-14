@@ -3,7 +3,7 @@ import type { Db } from '../db/client.js';
 import { documents, jobTracks, reminders, users } from '../db/schema.js';
 import { hashPassword } from '../auth/passwords.js';
 
-// Données fictives uniquement (domaine réservé .test) : la base de preview ne reçoit jamais de copie
+// Données fictives uniquement (domaine réservé .test) : une base de démo ne reçoit jamais de copie
 // de production.
 export const DEMO_EMAIL = 'demo@demo.candidash.test';
 

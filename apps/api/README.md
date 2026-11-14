@@ -47,16 +47,7 @@ refus de démarrer sans configuration de mail et arrêt propre.
 Pile complète : [deploy/compose.yaml](../../deploy/compose.yaml). Mise en place, sauvegardes et
 retour à une version : [deploy/README.md](../../deploy/README.md).
 
-## Restes de l'étape Vercel
+## Historique
 
-L'API a tourné en fonction Node sur Vercel, avec une base Neon, jusqu'au 14 novembre 2026. Ce code
-est encore dans le dépôt, en attente de retrait (liste dans
-[deploy/README.md](../../deploy/README.md)) :
-
-- `src/index.ts`, `server.js` et le bundle `dist/index.js` : point d'entrée du service Vercel `api`
-  du `vercel.json` racine.
-- `VERCEL_ENV`, lu par `src/node-env.ts` : il prime sur `APP_ENV` quand il est défini.
-- Le mode preview (`VERCEL_ENV=preview`) : aucun email envoyé, fichiers en 503 sans bucket dédié,
-  base de démonstration initialisée par `pnpm db:init-demo`
-  ([docs/preview-env.md](../../docs/preview-env.md)).
-- La procédure de bascule vers Vercel et Neon : [docs/bascule.md](../../docs/bascule.md).
+L'API a tourné en fonction Node sur Vercel, avec une base Neon, jusqu'au 14 novembre 2026. La
+procédure de cette bascule-là reste dans [docs/bascule.md](../../docs/bascule.md).

@@ -4,9 +4,9 @@ import { createApp } from './create-app.js';
 import { runMigrations } from './db/migrate.js';
 import { nodeEnv } from './node-env.js';
 
-// Point d'entrée de l'image Docker (`node dist/main.js`) : un serveur Node au long cours, là où
-// Vercel appelle `index.ts` requête par requête. Une variable manquante ou une migration en échec
-// arrête le démarrage, avant que le conteneur ne soit déclaré sain.
+// Point d'entrée de l'image Docker (`node dist/main.js`) : un serveur Node au long cours. Une
+// variable manquante ou une migration en échec arrête le démarrage, avant que le conteneur ne soit
+// déclaré sain.
 const env = nodeEnv();
 // `drizzle/` est voisin de `src/` dans le dépôt et de `dist/` dans l'image.
 await runMigrations(env.DATABASE_URL, fileURLToPath(new URL('../drizzle', import.meta.url)));

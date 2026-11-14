@@ -50,7 +50,7 @@ export function s3Bucket(config: S3Config): Bucket {
 const storageDisabled = () => httpError(503, 'Stockage de fichiers désactivé sur cet environnement');
 
 /**
- * Environnement sans bucket (preview) : dépôt et lecture refusés en 503. La suppression ne fait
+ * Environnement sans bucket (hors production) : dépôt et lecture refusés en 503. La suppression ne fait
  * rien, aucun fichier n'ayant pu y être déposé : supprimer une candidature reste possible.
  */
 export const disabledBucket: Bucket = {

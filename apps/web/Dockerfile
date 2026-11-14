@@ -10,7 +10,7 @@ COPY apps/web/package.json apps/web/
 RUN npm install --global "$(node -p "require('./package.json').packageManager")" \
  && pnpm install --frozen-lockfile --filter web
 COPY apps/web apps/web
-# Sans API_URL, le build garde le config.json versionné : celui de l'image est écrit au démarrage.
+# Le build garde le config.json versionné (API locale) : celui de l'image est écrit au démarrage.
 RUN pnpm --filter web build
 
 FROM nginxinc/nginx-unprivileged:stable-alpine

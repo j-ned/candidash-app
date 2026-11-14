@@ -138,15 +138,4 @@ describe('configuration du mail en production', () => {
     expect(String(fetchSpy.mock.calls[0]![0])).toBe('https://api.resend.com/emails');
     expect(sendMail).not.toHaveBeenCalled();
   });
-
-  it('never calls Resend from a preview, even when its key leaks there', async () => {
-    vi.spyOn(console, 'info').mockImplementation(() => undefined);
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => accepted());
-    const { APP_ENV: _unused, ...withoutAppEnv } = base;
-    const mailer = defaultMailer(readBindings({ ...withoutAppEnv, ...resend, VERCEL_ENV: 'preview' }));
-
-    expect(await mailer.sendVerificationCode('julien@example.com', '123456')).toBe(true);
-
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
 });

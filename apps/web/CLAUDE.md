@@ -18,11 +18,11 @@ npx vitest path/to/file   # Run a single test file
 npx eslint .              # Lint (no npm script defined)
 ```
 
-Production: static output served by the `web` service of the root `vercel.json` (Vercel Services:
-headers, cache, CSR fallback). `postbuild`
+Production: static output served by nginx in the `candidash-web` image (`nginx/default.conf`:
+headers, cache, CSR fallback, `/api/` relayed to the API). `postbuild`
 (`scripts/csp-hashes.mjs`) writes a per-page `<meta>` CSP with SHA-256 hashes of inline scripts
-(no per-request nonce on static hosting; Angular autoCsp is incompatible with prerendering), and
-`prebuild` writes `public/config.json` from `API_URL` when set. Never add inline `style=""` or
+(no per-request nonce on static hosting; Angular autoCsp is incompatible with prerendering). The
+container writes `config.json` at startup (`nginx/40-candidash-config.sh`). Never add inline `style=""` or
 inline event handlers: `ci/verify-build.sh` rejects them.
 
 ## Architecture

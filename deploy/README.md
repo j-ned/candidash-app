@@ -93,6 +93,10 @@ Vercel, rattacher les deux domaines au projet Vercel et réactiver son cron. **L
 sur le serveur depuis la bascule ne sont pas dans Neon** : si besoin, `pg_dump` de `candidash-db` →
 `pg_restore` vers Neon.
 
+Le dépôt ne contient plus ce qui servait à Vercel (`vercel.json`, point d'entrée et bundle de la
+fonction, lecture de `VERCEL_ENV`) : le projet Vercel ne construit plus `master`. Un retour arrière
+repart d'un déploiement antérieur gardé par Vercel, ou d'un commit d'avant ce retrait.
+
 ## Sauvegardes
 
 Le service `candidash-backup` envoie chaque nuit (3 h UTC) un dump chiffré dans le bucket. `<backup>`
@@ -119,6 +123,3 @@ Une migration déjà appliquée ne se défait pas ainsi : l'ancienne image doit 
 - Publier une version de l'extension qui appelle `https://candidash.nedellec-julien.fr`, puis, une
   fois les anciennes versions éteintes, retirer `api-candidash.nedellec-julien.fr` du tunnel et de
   l'onglet Domains.
-- Retirer du dépôt ce qui ne sert plus qu'à Vercel : `vercel.json`, `apps/api/server.js`, le bundle
-  `dist/index.js`, la lecture de `VERCEL_ENV`, `docs/preview-env.md`,
-  `apps/web/scripts/runtime-config.mjs`.

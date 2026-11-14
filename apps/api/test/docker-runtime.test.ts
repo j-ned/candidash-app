@@ -23,7 +23,7 @@ const s3 = {
 };
 const smtp = { MAIL_HOST: 'smtp.example.test', MAIL_USER: 'robot@example.test', MAIL_PASSWORD: 'mdp' };
 
-describe("environnement hors Vercel (image Docker, APP_ENV)", () => {
+describe('environnement (image Docker, APP_ENV)', () => {
   it('runs as production when the image declares APP_ENV=production', () => {
     expect(readBindings({ ...base, ...s3, ...smtp, APP_ENV: 'production' }).ENVIRONMENT).toBe('production');
   });
@@ -33,8 +33,11 @@ describe("environnement hors Vercel (image Docker, APP_ENV)", () => {
     expect(() => readBindings({ ...base, ...smtp, APP_ENV: 'production' })).toThrow('S3_ENDPOINT');
   });
 
-  it('keeps a Vercel preview a preview, whatever APP_ENV says', () => {
-    expect(readBindings({ ...base, VERCEL_ENV: 'preview', APP_ENV: 'production' }).ENVIRONMENT).toBe('preview');
+  it('ignores VERCEL_ENV: only APP_ENV declares production', () => {
+    expect(readBindings({ ...base, VERCEL_ENV: 'production' }).ENVIRONMENT).toBe('development');
+    expect(readBindings({ ...base, ...s3, ...smtp, VERCEL_ENV: 'preview', APP_ENV: 'production' }).ENVIRONMENT).toBe(
+      'production',
+    );
   });
 
   it('stays in development without any environment variable', () => {

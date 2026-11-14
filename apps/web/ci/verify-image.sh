@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Garanties de l'image du front, jugées sur les réponses HTTP du conteneur : mêmes règles que
-# l'ancien service Vercel « web » (en-têtes de sécurité, caches, repli SPA, 404 des assets),
+# Garanties de l'image du front, jugées sur les réponses HTTP du conteneur : en-têtes de
+# sécurité, caches, repli SPA, 404 des assets,
 # configuration écrite au démarrage depuis les variables du conteneur, et relais de /api/ vers
 # une API interne (ici une fausse API qui renvoie ce qu'elle a reçu).
 # Usage : ci/verify-image.sh <image>

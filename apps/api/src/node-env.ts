@@ -5,21 +5,17 @@ import { dbLimiter } from './rate-limit.js';
 
 type Vars = Readonly<Record<string, string | undefined>>;
 
-// Sur Vercel, VERCEL_ENV est posé par la plateforme (et non par une variable du projet) : une
-// preview ne peut pas se déclarer production par erreur de configuration, APP_ENV y est ignoré.
-// Hors Vercel, l'image Docker de production déclare APP_ENV=production (apps/api/Dockerfile).
+// L'image Docker de production déclare APP_ENV=production (apps/api/Dockerfile) ; partout ailleurs,
+// l'API tourne en développement.
 function environment(vars: Vars): Bindings['ENVIRONMENT'] {
-  if (vars.VERCEL_ENV === 'production') return 'production';
-  if (vars.VERCEL_ENV === 'preview') return 'preview';
-  if (vars.VERCEL_ENV === undefined && vars.APP_ENV === 'production') return 'production';
-  return 'development';
+  return vars.APP_ENV === 'production' ? 'production' : 'development';
 }
 
 const SENDER_ADDRESS = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 
 let cached: Bindings | undefined;
 
-/** Bindings de production, lus une fois dans process.env (variables du projet Vercel). */
+/** Bindings du serveur, lus une fois dans process.env. */
 export function nodeEnv(): Bindings {
   cached ??= readBindings(process.env);
   return cached;

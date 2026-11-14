@@ -3,7 +3,6 @@ name: CI
 # API (apps/api) et front (apps/web) vérifiés en parallèle sur chaque PR et sur master, puis
 # leurs images Docker construites et vérifiées. Sur master, les images partent sur GHCR et
 # Dokploy redéploie la pile deploy/compose.yaml (deploy/README.md) ; l'API applique ses migrations au démarrage.
-# Tant que le projet Vercel existe, son intégration Git déploie aussi master de son côté.
 on:
   pull_request:
   push:
@@ -68,7 +67,7 @@ jobs:
       - name: Tests
         run: pnpm test
 
-      - name: Bundles (Vercel et Docker)
+      - name: Bundle (image Docker)
         run: pnpm build
 
   web:

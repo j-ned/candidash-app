@@ -6,7 +6,7 @@
     "icons:version": "node scripts/sprite-version.mjs",
     "prestart": "pnpm icons:version && pnpm media:version",
     "start": "ng serve",
-    "prebuild": "pnpm icons:version && pnpm media:version && node scripts/runtime-config.mjs",
+    "prebuild": "pnpm icons:version && pnpm media:version",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "pretest": "pnpm icons:version && pnpm media:version",
