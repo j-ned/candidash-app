@@ -23,7 +23,7 @@ précède est sans impact.
    not found »). **Auto Deploy désactivé** : c'est la CI qui déclenche, une fois les images
    publiées. Dokploy clone le dépôt à chaque déploiement : une modification de
    `deploy/compose.yaml` part donc à la fusion, comme le code. La CI valide ce fichier avant
-   (`deploy/compose.check.sh`). En mode **Raw**, Dokploy rejouerait le YAML collé dans son éditeur
+   (`.github/scripts/compose.check.sh`). En mode **Raw**, Dokploy rejouerait le YAML collé dans son éditeur
    et ignorerait le dépôt.
 4. **Environment** : coller `candidash.env.example` rempli. `POSTGRES_HOST`, `POSTGRES_USER`,
    `POSTGRES_DB` et `POSTGRES_PASSWORD` se recopient de la fiche du service de base (Internal

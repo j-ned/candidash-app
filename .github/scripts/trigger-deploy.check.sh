@@ -2,7 +2,7 @@
 # Juge `trigger-deploy.sh` devant un faux Dokploy local protégé comme le vrai : sans jeton d'accès il
 # redirige vers une page de connexion (302), avec une mauvaise clé d'API il refuse (401), sinon il
 # accepte (200) et note ce qu'il a reçu.
-#   deploy/trigger-deploy.check.sh
+#   .github/scripts/trigger-deploy.check.sh
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
