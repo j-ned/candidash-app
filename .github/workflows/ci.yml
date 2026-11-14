@@ -2,7 +2,7 @@ name: CI
 
 # API (apps/api) et front (apps/web) vérifiés en parallèle sur chaque PR et sur master, puis
 # leurs images Docker construites et vérifiées. Sur master, les images partent sur GHCR et
-# Dokploy les redéploie (docs/bascule-dokploy.md) ; l'API applique ses migrations au démarrage.
+# Dokploy redéploie la pile deploy/compose.yaml (deploy/README.md) ; l'API applique ses migrations au démarrage.
 # Tant que le projet Vercel existe, son intégration Git déploie aussi master de son côté.
 on:
   pull_request:
@@ -112,51 +112,53 @@ jobs:
     name: Images · Build · Vérification · GHCR
     needs: [api, web]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: read
       packages: write
     env:
       REGISTRY: ghcr.io/${{ github.repository_owner }}
-      # Doit rester l'origine autorisée par connect-src (apps/web/nginx/security-headers.conf).
-      API_URL: https://api-candidash.nedellec-julien.fr/api/v1
-      EXTENSION_ID: ${{ vars.EXTENSION_ID }}
-      FIREFOX_ADDON_URL: ${{ vars.FIREFOX_ADDON_URL }}
       SOURCE: https://github.com/${{ github.repository }}
       PUBLISH: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Sans ces variables du dépôt, le front publié perdrait ses liens vers l'extension.
-      - name: Variables du front (publication)
-        if: env.PUBLISH == 'true' && (env.EXTENSION_ID == '' || env.FIREFOX_ADDON_URL == '')
-        run: |
-          echo "::error::Variables de dépôt EXTENSION_ID et FIREFOX_ADDON_URL requises (Settings → Variables)"
-          exit 1
-
       - name: Build API
         run: >-
           docker build -f apps/api/Dockerfile
           --label "org.opencontainers.image.source=$SOURCE"
           --label "org.opencontainers.image.revision=$GITHUB_SHA"
-          -t "$REGISTRY/candidash-api:$GITHUB_SHA" -t "$REGISTRY/candidash-api:latest" .
+          -t "$REGISTRY/candidash-api:sha-$GITHUB_SHA" -t "$REGISTRY/candidash-api:latest" .
 
       - name: Build web
         run: >-
           docker build -f apps/web/Dockerfile
-          --build-arg "API_URL=$API_URL"
-          --build-arg "EXTENSION_ID=$EXTENSION_ID"
-          --build-arg "FIREFOX_ADDON_URL=$FIREFOX_ADDON_URL"
           --label "org.opencontainers.image.source=$SOURCE"
           --label "org.opencontainers.image.revision=$GITHUB_SHA"
-          -t "$REGISTRY/candidash-web:$GITHUB_SHA" -t "$REGISTRY/candidash-web:latest" .
+          -t "$REGISTRY/candidash-web:sha-$GITHUB_SHA" -t "$REGISTRY/candidash-web:latest" .
+
+      - name: Build sauvegarde
+        run: >-
+          docker build
+          --label "org.opencontainers.image.source=$SOURCE"
+          --label "org.opencontainers.image.revision=$GITHUB_SHA"
+          -t "$REGISTRY/candidash-backup:sha-$GITHUB_SHA" -t "$REGISTRY/candidash-backup:latest" deploy/backup
 
       - name: Vérification de l'image API
-        run: apps/api/ci/verify-image.sh "$REGISTRY/candidash-api:$GITHUB_SHA"
+        run: apps/api/ci/verify-image.sh "$REGISTRY/candidash-api:sha-$GITHUB_SHA"
 
       - name: Vérification de l'image web
-        run: apps/web/ci/verify-image.sh "$REGISTRY/candidash-web:$GITHUB_SHA" "$API_URL"
+        run: apps/web/ci/verify-image.sh "$REGISTRY/candidash-web:sha-$GITHUB_SHA"
+
+      # Sauvegarde chiffrée puis restauration identique, devant un Postgres et un stockage S3 jetables.
+      - name: Vérification de l'image de sauvegarde
+        run: deploy/backup/check.sh "$REGISTRY/candidash-backup:sha-$GITHUB_SHA"
+
+      # Le script de déclenchement est jugé devant un faux Dokploy : une redirection ou un refus
+      # doivent échouer, jamais passer pour un déploiement.
+      - name: Vérification du déclencheur Dokploy
+        run: deploy/trigger-deploy.check.sh
 
       - name: Publication sur GHCR
         if: env.PUBLISH == 'true'
@@ -164,28 +166,27 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker push --all-tags "$REGISTRY/candidash-api"
-          docker push --all-tags "$REGISTRY/candidash-web"
+          for image in candidash-api candidash-web candidash-backup; do
+            docker push --all-tags "$REGISTRY/$image"
+          done
 
-      # API Dokploy (application.deploy) : l'API d'abord, elle porte les migrations. Sans les
-      # secrets (pas encore créés), les images sont publiées et le déploiement reste manuel.
+      # API Dokploy (`compose.deploy`) : la pile deploy/compose.yaml tire les images qui viennent
+      # d'être publiées. Sans les secrets, les images sont publiées et le déploiement reste manuel.
+      # Le panneau étant derrière Cloudflare Access, le jeton de service passe par CF_ACCESS_*.
       - name: Déploiement Dokploy
         if: env.PUBLISH == 'true'
         env:
           DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
           DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
-          DOKPLOY_API_APP_ID: ${{ secrets.DOKPLOY_API_APP_ID }}
-          DOKPLOY_WEB_APP_ID: ${{ secrets.DOKPLOY_WEB_APP_ID }}
+          DOKPLOY_COMPOSE_ID: ${{ secrets.DOKPLOY_COMPOSE_ID }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          if [ -z "$DOKPLOY_URL" ] || [ -z "$DOKPLOY_API_KEY" ] || [ -z "$DOKPLOY_API_APP_ID" ] || [ -z "$DOKPLOY_WEB_APP_ID" ]; then
-            echo "::notice::Secrets DOKPLOY_* absents, déploiement Dokploy ignoré"
+          if [ -z "$DOKPLOY_URL" ] || [ -z "$DOKPLOY_API_KEY" ] || [ -z "$DOKPLOY_COMPOSE_ID" ]; then
+            echo "::notice::Secrets DOKPLOY_URL, DOKPLOY_API_KEY ou DOKPLOY_COMPOSE_ID absents, aucun déploiement"
             exit 0
           fi
-          for application in "$DOKPLOY_API_APP_ID" "$DOKPLOY_WEB_APP_ID"; do
-            curl --fail-with-body --silent --show-error --max-time 60 -X POST "$DOKPLOY_URL/api/application.deploy" \
-              -H 'Content-Type: application/json' -H "x-api-key: $DOKPLOY_API_KEY" \
-              -d "{\"applicationId\":\"$application\"}"
-          done
+          deploy/trigger-deploy.sh
 
   # Base de la preview Vercel = branche Neon `preview` (schéma + seed de démo, jamais de copie de
   # prod). Les migrations de la PR y sont appliquées après validation sur le Postgres jetable du job
