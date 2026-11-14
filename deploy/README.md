@@ -20,12 +20,12 @@ précède est sans impact.
 4. **Environment** : coller `candidash.env.example` rempli. `JWT_SECRET`, `TOTP_ENCRYPTION_KEY`, les
    `S3_*` et `CRON_SECRET` se reprennent à l'identique du projet Vercel. Le mail part par l'API de
    Resend (`RESEND_API_KEY`, `MAIL_FROM` sur un domaine vérifié), plus par SMTP.
-5. **Domains**, en HTTP (le TLS est celui de Cloudflare) :
-   - service `candidash-web`, port `8080`, `candidash.nedellec-julien.fr` ;
-   - service `candidash-api`, port `3000`, `api-candidash.nedellec-julien.fr`.
-
-   Le bouton _Preview Compose_ doit montrer ces deux services sur `default` **et** `dokploy-network`,
-   et les autres sur `default` seulement.
+5. **Domains** : service `candidash-web`, port `8080`, HTTP (le TLS est celui de Cloudflare), pour
+   `candidash.nedellec-julien.fr`. L'API n'a pas de domaine à elle : le front la relaie sous
+   `/api/`. Tant que l'extension publiée appelle `api-candidash.nedellec-julien.fr`, ajouter ce
+   second domaine **sur le même service `candidash-web`**, port `8080` : le relais répond aussi sous
+   ce nom. Le bouton _Preview Compose_ doit montrer `candidash-web` sur `default` **et**
+   `dokploy-network`, et les autres services sur `default` seulement.
 6. **Premier déploiement** à la main (bouton Deploy) : l'API crée le schéma par ses migrations. Puis
    import des données (ci-dessous).
 7. **Déclenchement par la CI** : secrets du dépôt `DOKPLOY_URL` (adresse du panneau, sans `/` final),
@@ -37,11 +37,12 @@ précède est sans impact.
 
 ## Adresse du visiteur et limites de débit
 
-Derrière le tunnel, Traefik ne voit que l'adresse du tunnel. L'API lit donc l'adresse du visiteur
-dans `CF-Connecting-IP` (`CLIENT_IP_HEADER`, posé par le compose) : sans cela, tous les visiteurs
-partageraient les mêmes limites de débit. Cet en-tête n'est digne de confiance que si **rien d'autre
-que le tunnel ne joint Traefik** : aucun port 80/443 du serveur ouvert sur Internet (redirection de
-la box comprise), sinon un client choisirait lui-même l'adresse comptée.
+Derrière le tunnel, Traefik puis le front ne voient que l'adresse du tunnel. L'API lit donc l'adresse
+du visiteur dans `CF-Connecting-IP` (`CLIENT_IP_HEADER`, posé par le compose), que le front relaie tel
+quel : sans cela, tous les visiteurs partageraient les mêmes limites de débit. Cet en-tête n'est
+digne de confiance que si **rien d'autre que le tunnel ne joint Traefik** : aucun port 80/443 du
+serveur ouvert sur Internet (redirection de la box comprise), sinon un client choisirait lui-même
+l'adresse comptée.
 
 ## Import des données depuis Neon
 
@@ -81,7 +82,7 @@ des deux côtés et vérifier la connexion, puis effacer le fichier, qui contien
    les autres sites du serveur (le Traefik de Dokploy). Cloudflare remplace alors les
    enregistrements DNS qui pointaient vers Vercel ; s'il refuse parce qu'ils existent, les supprimer
    d'abord dans la zone DNS.
-4. Vérifier : `https://api-candidash.nedellec-julien.fr/api/v1/health`, connexion depuis le front,
+4. Vérifier : `https://candidash.nedellec-julien.fr/api/v1/health`, connexion depuis le front,
    2FA, dépôt et téléchargement d'un CV, export PDF, ajout depuis l'extension, console du navigateur
    sans erreur CSP, et les journaux de `candidash-cron` le lendemain de 7 h UTC.
 
@@ -115,6 +116,9 @@ Une migration déjà appliquée ne se défait pas ainsi : l'ancienne image doit 
 
 - Supprimer le projet Vercel et la base Neon (garder un dernier dump), et les anciens services
   Dokploy de Candidash (Backend, Frontend, gotenberg, database, et le Postgres 18 créé à part).
+- Publier une version de l'extension qui appelle `https://candidash.nedellec-julien.fr`, puis, une
+  fois les anciennes versions éteintes, retirer `api-candidash.nedellec-julien.fr` du tunnel et de
+  l'onglet Domains.
 - Retirer du dépôt ce qui ne sert plus qu'à Vercel : `vercel.json`, `apps/api/server.js`, le bundle
   `dist/index.js`, la lecture de `VERCEL_ENV`, le job CI `preview-db`, `docs/preview-env.md`,
   `apps/web/scripts/runtime-config.mjs`.
