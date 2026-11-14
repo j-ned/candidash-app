@@ -158,11 +158,11 @@ jobs:
       # Le script de déclenchement est jugé devant un faux Dokploy : une redirection ou un refus
       # doivent échouer, jamais passer pour un déploiement.
       - name: Vérification du déclencheur Dokploy
-        run: deploy/trigger-deploy.check.sh
+        run: .github/scripts/trigger-deploy.check.sh
 
       # Dokploy lit deploy/compose.yaml dans le dépôt : un fichier invalide ne doit pas atteindre master.
       - name: Vérification du compose
-        run: deploy/compose.check.sh
+        run: .github/scripts/compose.check.sh
 
       - name: Publication sur GHCR
         if: env.PUBLISH == 'true'
@@ -190,7 +190,7 @@ jobs:
             echo "::notice::Secrets DOKPLOY_URL, DOKPLOY_API_KEY ou DOKPLOY_COMPOSE_ID absents, aucun déploiement"
             exit 0
           fi
-          deploy/trigger-deploy.sh
+          .github/scripts/trigger-deploy.sh
 
       # Sonde du site après le déploiement, si son adresse est renseignée (variable du dépôt) : elle
       # prouve que le site répond, pas que la nouvelle version a remplacé l'ancienne.
