@@ -8,6 +8,7 @@ import { nodeEnv } from './node-env.js';
 import { errorBody, handleError } from './http-errors.js';
 import { rateLimit } from './auth/middleware.js';
 import { consoleMailer, logMailer, templatedMailer, unavailableMailer, type Mailer } from './mail/mailer.js';
+import { resendTransport } from './mail/resend.js';
 import { smtpTransport } from './mail/smtp.js';
 import { authRoutes } from './routes/auth.js';
 import { twoFactorRoutes } from './routes/two-factor.js';
@@ -21,10 +22,15 @@ import { adminRoutes } from './routes/admin.js';
 import { contactRoutes } from './routes/contact.js';
 import { cronRoutes } from './routes/cron.js';
 
-// Preview : jamais d'envoi, même si des variables SMTP y sont restées. Ailleurs, SMTP dès qu'il
-// est configuré ; sinon la console en local, et aucun envoi en production.
+// Preview : jamais d'envoi, même si des variables de mail y sont restées. Ailleurs, Resend dès
+// qu'il est configuré, sinon SMTP ; à défaut la console en local, et aucun envoi en production.
 export function defaultMailer(env: Bindings): Mailer {
   if (env.ENVIRONMENT === 'preview') return logMailer;
+  if (env.RESEND_API_KEY && env.MAIL_FROM) {
+    return templatedMailer(
+      resendTransport({ apiKey: env.RESEND_API_KEY, from: env.MAIL_FROM, fromName: env.MAIL_FROM_NAME ?? 'Candidash' }),
+    );
+  }
   if (env.MAIL_HOST && env.MAIL_USER && env.MAIL_PASSWORD) return templatedMailer(smtpTransport(env));
   return env.ENVIRONMENT === 'production' ? unavailableMailer : consoleMailer;
 }

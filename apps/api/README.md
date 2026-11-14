@@ -22,7 +22,8 @@ Sans SMTP configuré, les emails (codes de vérification, liens) s'affichent dan
 - Bindings lus dans `process.env` (`src/node-env.ts`) ; les tests passent les leurs.
 - Pool Postgres partagé par instance (`src/db/client.ts`), derrière le pooler de Neon.
 - Limites de débit comptées en base (`LimitesDebit`, fenêtres d'une minute).
-- SMTP par nodemailer : 465 en TLS implicite ou 587 avec STARTTLS exigé.
+- Mail : API HTTP de Resend dès que `RESEND_API_KEY` et `MAIL_FROM` sont définis (pile Dokploy) ;
+  sinon SMTP par nodemailer, 465 en TLS implicite ou 587 avec STARTTLS exigé (projet Vercel).
 - Service Vercel `api` du `vercel.json` racine : `pnpm build` regroupe l'API et ses dépendances
   dans `dist/index.js` (esbuild), exposé par `server.js` ; le builder Services ne déploie pas
   `node_modules` et ne sait pas vérifier les types avec TypeScript 7.

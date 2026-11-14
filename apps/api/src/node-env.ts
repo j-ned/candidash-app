@@ -15,6 +15,8 @@ function environment(vars: Vars): Bindings['ENVIRONMENT'] {
   return 'development';
 }
 
+const SENDER_ADDRESS = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+
 let cached: Bindings | undefined;
 
 /** Bindings de production, lus une fois dans process.env (variables du projet Vercel). */
@@ -30,8 +32,13 @@ export function readBindings(vars: Vars): Bindings {
     return value;
   };
   const env = environment(vars);
-  // En production, sans SMTP, inscriptions et réinitialisations seraient silencieusement cassées
-  if (env === 'production') ['MAIL_HOST', 'MAIL_USER', 'MAIL_PASSWORD'].forEach(required);
+  // En production, sans envoi d'email, inscriptions et réinitialisations seraient silencieusement
+  // cassées : il faut Resend (clé et expéditeur) ou, à défaut, SMTP.
+  if (vars.RESEND_API_KEY) {
+    if (!SENDER_ADDRESS.test(required('MAIL_FROM'))) throw new Error('MAIL_FROM doit être une adresse email seule');
+  } else if (env === 'production') {
+    ['MAIL_HOST', 'MAIL_USER', 'MAIL_PASSWORD'].forEach(required);
+  }
   // Hors production, le stockage est facultatif : sans bucket, les routes de fichiers répondent 503
   const files: Bucket =
     env !== 'production' && !vars.S3_BUCKET
@@ -56,6 +63,8 @@ export function readBindings(vars: Vars): Bindings {
     JWT_SECRET: required('JWT_SECRET'),
     TOTP_ENCRYPTION_KEY: required('TOTP_ENCRYPTION_KEY'),
     CRON_SECRET: vars.CRON_SECRET,
+    RESEND_API_KEY: vars.RESEND_API_KEY,
+    MAIL_FROM: vars.MAIL_FROM,
     MAIL_HOST: vars.MAIL_HOST,
     MAIL_PORT: vars.MAIL_PORT,
     MAIL_USER: vars.MAIL_USER,

@@ -29,6 +29,10 @@ export type Bindings = {
   TOTP_ENCRYPTION_KEY: string;
   /** Envoyé par Vercel Cron dans `Authorization: Bearer …`. */
   CRON_SECRET?: string;
+  /** Envoi par l'API de Resend, préféré à SMTP quand il est configuré (avec MAIL_FROM). */
+  RESEND_API_KEY?: string;
+  /** Adresse de l'expéditeur pour Resend, sur un domaine vérifié. */
+  MAIL_FROM?: string;
   MAIL_HOST?: string;
   MAIL_PORT?: string;
   MAIL_USER?: string;

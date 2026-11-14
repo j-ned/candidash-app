@@ -48,13 +48,10 @@ services:
       - S3_ACCESS_KEY=${S3_ACCESS_KEY:?}
       - S3_SECRET_KEY=${S3_SECRET_KEY:?}
       - S3_BUCKET=${S3_BUCKET:?}
-      - MAIL_HOST=${MAIL_HOST:?}
-      - MAIL_USER=${MAIL_USER:?}
-      - MAIL_PASSWORD=${MAIL_PASSWORD:?}
+      - RESEND_API_KEY=${RESEND_API_KEY:?}
+      - MAIL_FROM=${MAIL_FROM:?}
       # Facultatives : transmises seulement si elles sont définies.
-      - MAIL_PORT
       - MAIL_FROM_NAME
-      - MAIL_FROM_ADDRESS
       - CONTACT_RECIPIENT
     networks:
       - default
