@@ -186,3 +186,13 @@ jobs:
             exit 0
           fi
           deploy/trigger-deploy.sh
+
+      # Sonde du site après le déploiement, si son adresse est renseignée (variable du dépôt) : elle
+      # prouve que le site répond, pas que la nouvelle version a remplacé l'ancienne.
+      - name: Sonde du site
+        if: env.PUBLISH == 'true' && vars.DEPLOY_HEALTH_URL != ''
+        env:
+          DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL }}
+        run: |
+          curl --fail --silent --show-error --max-time 10 \
+            --retry 18 --retry-delay 10 --retry-all-errors "$DEPLOY_HEALTH_URL" -o /dev/null
