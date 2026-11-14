@@ -22,7 +22,7 @@ type ClaimedReminder = {
 /**
  * Envoie les relances échues (100 au plus par passage). Chacune est d'abord réservée en base —
  * reprogrammée à sa fréquence, lignes verrouillées en SKIP LOCKED — puis envoyée : un cron
- * déclenché deux fois (Vercel ne le garantit pas unique) ne l'envoie qu'une fois. Un envoi raté
+ * déclenché deux fois (rien ne le garantit unique) ne l'envoie qu'une fois. Un envoi raté
  * remet la relance dans son état précédent, elle repart au passage suivant.
  */
 export async function sendDueReminders(db: Db, mailer: Mailer): Promise<{ sent: number; failed: number }> {

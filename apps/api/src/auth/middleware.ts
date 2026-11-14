@@ -65,7 +65,7 @@ export const requireApiToken = createMiddleware<AppEnv>(async (c, next) => {
 });
 
 /**
- * Adresse du visiteur. Vercel et Traefik la placent dans x-real-ip (et en tête de x-forwarded-for) ;
+ * Adresse du visiteur. Traefik la place dans x-real-ip (et en tête de x-forwarded-for) ;
  * derrière le tunnel Cloudflare, x-real-ip est celle du tunnel et CLIENT_IP_HEADER désigne l'en-tête
  * qui porte celle du visiteur.
  */

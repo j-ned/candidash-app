@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { capturingMailer, client, testEnv, uniqueEmail } from './helpers.js';
 import { createUser, withDb } from './db.js';
+import { createApp } from '../src/create-app.js';
 import { sendDueReminders } from '../src/jobs/scheduled.js';
 import { dbLimiter } from '../src/rate-limit.js';
 import { s3Bucket } from '../src/files/bucket.js';
@@ -17,7 +18,7 @@ async function dueReminder() {
   return user;
 }
 
-describe('cron quotidien (Vercel Cron)', () => {
+describe('cron quotidien', () => {
   it('refuses a call without the cron secret', async () => {
     const api = client({ env: testEnv({ CRON_SECRET: 'cron-secret-de-test' }) });
 
@@ -107,7 +108,7 @@ describe('bucket R2 en S3', () => {
   });
 });
 
-describe('entrée Vercel', () => {
+describe('bindings du serveur Node', () => {
   it('reads its bindings from process.env when called with the request alone', async () => {
     const vars = {
       DATABASE_URL: testEnv().DATABASE_URL,
@@ -120,7 +121,7 @@ describe('entrée Vercel', () => {
       S3_BUCKET: 'candidash-app',
     };
     for (const [name, value] of Object.entries(vars)) vi.stubEnv(name, value);
-    const { default: app } = await import('../src/index.js');
+    const app = createApp();
 
     const res = await app.request('/api/v1/health', { headers: { Origin: 'https://candidash.example.test' } });
 

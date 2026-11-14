@@ -1,19 +1,19 @@
-// Bundles autonomes de l'API, dépendances incluses (dist/ est déployé sans node_modules) :
-// dist/index.js pour le service Vercel « api », dist/main.js pour l'image Docker (serveur Node).
+// Bundle autonome de l'API, dépendances incluses : dist/main.js, le serveur Node de l'image Docker
+// (qui n'embarque pas node_modules).
 import { writeFileSync } from 'node:fs';
 import { build } from 'esbuild';
 
 await build({
-  entryPoints: ['src/index.ts', 'src/main.ts'],
+  entryPoints: ['src/main.ts'],
   outdir: 'dist',
   bundle: true,
   platform: 'node',
   format: 'esm',
   target: 'node24',
-  // Bundle ~2 Mo chargé à chaque démarrage à froid : la minification réduit la lecture et le parsing.
+  // Bundle ~2 Mo chargé au démarrage du conteneur : la minification réduit la lecture et le parsing.
   minify: true,
   // drizzle reconnaît un Pool pg à son nom de classe (constructor.name.includes('Pool')) ; garder
-  // les noms préserve aussi des traces d'erreur lisibles dans les logs Vercel.
+  // les noms préserve aussi des traces d'erreur lisibles dans les journaux du conteneur.
   keepNames: true,
   // pg charge pg-native de façon optionnelle ; les modules CommonJS (pg, nodemailer) ont besoin de require.
   external: ['pg-native'],

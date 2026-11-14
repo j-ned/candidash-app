@@ -5,7 +5,7 @@ import type { Bucket } from './files/bucket.js';
 
 export type RateLimiter = { limit(options: { key: string }): Promise<{ success: boolean }> };
 
-// Variables d'environnement du projet Vercel (process.env), assemblées par nodeEnv() ; les
+// Variables d'environnement du serveur (process.env), assemblées par nodeEnv() ; les
 // tests passent leur propre objet. FILES et les limiteurs sont des objets prêts à l'emploi.
 export type Bindings = {
   DATABASE_URL: string;
@@ -16,8 +16,8 @@ export type Bindings = {
   GLOBAL_LIMITER: RateLimiter;
   /** Formulaire de contact : 2 messages / min / IP. */
   CONTACT_LIMITER: RateLimiter;
-  /** Déduit de VERCEL_ENV ; 'preview' n'envoie aucun email et peut tourner sans stockage. */
-  ENVIRONMENT: 'production' | 'preview' | 'development' | 'test';
+  /** Déduit de APP_ENV ; hors production, l'API peut tourner sans stockage ni envoi d'email. */
+  ENVIRONMENT: 'production' | 'development' | 'test';
   ALLOWED_ORIGINS: string;
   /**
    * En-tête où le proxy de confiance écrit l'adresse du visiteur (`cf-connecting-ip` derrière le
@@ -27,7 +27,7 @@ export type Bindings = {
   CLIENT_IP_HEADER?: string;
   JWT_SECRET: string;
   TOTP_ENCRYPTION_KEY: string;
-  /** Envoyé par Vercel Cron dans `Authorization: Bearer …`. */
+  /** Envoyé par le service `candidash-cron` dans `Authorization: Bearer …`. */
   CRON_SECRET?: string;
   /** Envoi par l'API de Resend, préféré à SMTP quand il est configuré (avec MAIL_FROM). */
   RESEND_API_KEY?: string;

@@ -7,7 +7,7 @@ import { createUser, withDb } from './db.js';
 
 const password = 'Demo-preview-123!';
 
-describe('seed de démo (base de preview)', () => {
+describe('seed de démo', () => {
   it('creates a demo account that can log in, with sample candidacies, idempotently', async () => {
     await withDb((db) => seedDemo(db, password));
     await withDb((db) => seedDemo(db, password));
