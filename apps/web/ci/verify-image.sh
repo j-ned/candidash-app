@@ -66,10 +66,24 @@ field() { printf '%s' "$1" | node -pe 'JSON.parse(require("fs").readFileSync(0, 
 IMMUTABLE='public, max-age=31536000, immutable'
 
 # Pages : prérendues servies sans redirection, HTML toujours revalidé.
-for page in / /features /features/ /contact /terms-of-service /extension-privacy; do
+for page in / /features /contact /terms-of-service /extension-privacy; do
   expect "statut de $page" "$(status "$page")" 200
   expect "cache de $page" "$(header "$page" Cache-Control)" no-cache
 done
+
+# Une seule adresse par page : la barre finale redirige pour de bon, paramètres conservés, vers une
+# adresse relative (le conteneur ne connaît pas son origine publique). L'API n'est pas concernée.
+expect "statut de /features/" "$(status /features/)" 301
+expect "cible de /features/" "$(header /features/ Location)" /features
+expect "cible de /features/?utm_source=x" "$(header '/features/?utm_source=x' Location)" '/features?utm_source=x'
+expect "cible de /features//" "$(header /features// Location)" /features
+expect "cible d'une route d'application avec barre finale" "$(header /dashboard/candidatures/42/ Location)" /dashboard/candidatures/42
+expect "chemin de l'API avec barre finale" "$(field "$(curl -s "$base/api/v1/jobtrack/")" url)" /api/v1/jobtrack/
+
+# Sitemap annoncé par robots.txt.
+expect "statut de /sitemap.xml" "$(status /sitemap.xml)" 200
+expect "type de /sitemap.xml" "$(header /sitemap.xml Content-Type)" 'text/xml; charset=utf-8'
+grep -qF 'Sitemap: https://candidash.nedellec-julien.fr/sitemap.xml' <(curl -s "$base/robots.txt") || fail "robots.txt n'annonce pas le sitemap"
 curl -s "$base/features" -o "$tmp/features.html"
 curl -s "$base/index.csr.html" -o "$tmp/csr.html"
 cmp -s "$tmp/features.html" "$tmp/csr.html" && fail "/features sert la coquille CSR au lieu de la page prérendue"
