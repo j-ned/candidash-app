@@ -80,13 +80,14 @@ expect "cible de /features//" "$(header /features// Location)" /features
 expect "cible d'une route d'application avec barre finale" "$(header /dashboard/candidatures/42/ Location)" /dashboard/candidatures/42
 expect "chemin de l'API avec barre finale" "$(field "$(curl -s "$base/api/v1/jobtrack/")" url)" /api/v1/jobtrack/
 
-# Pages d'authentification : servies, mais hors de l'index des moteurs de recherche. Les autres
-# pages, y compris une adresse qui commence seulement par les mêmes lettres, restent indexables.
-for page in /auth /auth/signin /auth/signup '/auth/reset-password?token=abc'; do
+# Authentification et espace connecté : servis, mais hors de l'index des moteurs de recherche. Les
+# autres pages, y compris une adresse qui commence seulement par les mêmes lettres, restent indexables.
+for page in /auth /auth/signin /auth/signup '/auth/reset-password?token=abc' \
+  /dashboard /dashboard/candidatures/42 '/dashboard?tab=stats'; do
   expect "statut de $page" "$(status "$page")" 200
   expect "X-Robots-Tag de $page" "$(header "$page" X-Robots-Tag)" noindex
 done
-for page in / /features /authentique /dashboard; do
+for page in / /features /authentique /dashboards; do
   expect "X-Robots-Tag de $page" "$(header "$page" X-Robots-Tag)" ''
 done
 
