@@ -19,6 +19,7 @@ export const routes: Routes = [
   },
   {
     path: 'terms-of-service',
+    title: "Conditions d'utilisation — Candidash",
     loadComponent: () =>
       import('./features/legal/terms-of-service/terms-of-service').then((m) => m.TermsOfService),
   },
@@ -37,6 +38,7 @@ export const routes: Routes = [
   },
   {
     path: 'features',
+    title: 'Fonctionnalités — Candidash',
     loadComponent: () => import('./features/legal/features/features').then((m) => m.Features),
   },
   {
