@@ -14,6 +14,7 @@ import { API_BASE_URL, Config } from '@core/services/config';
 import { AppTitleStrategy } from '@core/services/app-title-strategy';
 import { startPageTracking } from '@core/analytics/page-tracking';
 import { startCanonicalLink } from '@core/seo/canonical-link';
+import { startMetaDescription } from '@core/seo/meta-description';
 import { AuthGateway } from '@features/auth/domain/gateways/auth.gateway';
 import { HttpAuthGateway } from '@features/auth/infra/http-auth.gateway';
 import { JobtrackGateway } from '@features/jobtrack/domain/gateways/jobtrack.gateway';
@@ -40,6 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => inject(Config).loadConfig()),
     provideAppInitializer(() => startPageTracking()),
     provideAppInitializer(() => startCanonicalLink()),
+    provideAppInitializer(() => startMetaDescription()),
 
     // Clean Architecture: Gateway → HTTP implementation
     { provide: AuthGateway, useClass: HttpAuthGateway },
