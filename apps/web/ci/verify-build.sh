@@ -11,19 +11,23 @@ for page in index.html index.csr.html features/index.html terms-of-service/index
 done
 
 # Référencement : chaque page prérendue déclare son adresse canonique (sans barre finale), le
-# sitemap annoncé par robots.txt liste ces adresses et elles seules, et aucun titre n'est partagé.
+# sitemap annoncé par robots.txt liste ces adresses et elles seules, et ni le titre ni la
+# description d'une page ne sont partagés avec une autre.
 origin=https://candidash.nedellec-julien.fr
 pages=("" features terms-of-service extension-privacy contact)
 test -f "$browser/sitemap.xml" || { echo "manquant : sitemap.xml"; exit 1; }
 titles=$(mktemp)
-trap 'rm -f "$titles"' EXIT
+descriptions=$(mktemp)
+trap 'rm -f "$titles" "$descriptions"' EXIT
 for path in "${pages[@]}"; do
   page="$browser/${path:+$path/}index.html"
   grep -qF "<link rel=\"canonical\" href=\"$origin/$path\">" "$page" || { echo "canonical absent ou faux dans $page"; exit 1; }
   grep -qF "<loc>$origin/$path</loc>" "$browser/sitemap.xml" || { echo "$origin/$path absent du sitemap"; exit 1; }
   grep -o '<title>[^<]*' "$page" >> "$titles"
+  grep -o '<meta name="description" content="[^"]*"' "$page" >> "$descriptions" || { echo "description absente de $page"; exit 1; }
 done
 test -z "$(sort "$titles" | uniq -d)" || { echo "titre partagé par plusieurs pages : $(sort "$titles" | uniq -d)"; exit 1; }
+test -z "$(sort "$descriptions" | uniq -d)" || { echo "description partagée par plusieurs pages : $(sort "$descriptions" | uniq -d)"; exit 1; }
 test "$(grep -c '<loc>' "$browser/sitemap.xml")" = "${#pages[@]}" || { echo "le sitemap liste autre chose que les pages prérendues"; exit 1; }
 
 # CSP par empreintes (scripts/csp-hashes.mjs) : chaque page porte son <meta> CSP, et chaque script
